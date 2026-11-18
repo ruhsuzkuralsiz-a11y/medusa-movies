@@ -78,5 +78,65 @@
     "poster": "https://image.tmdb.org/t/p/w500/m2200lG2XpPjM000000000000.jpg",
     "link": "https://www.youtube.com/embed/aETNYMYwN58",
     "overview": "Dünyanın eşsiz doğasını ve canlılarını keşfedin."
+  },
+  {
+    "id": 9,
+    "title": "La Casa de Papel",
+    "year": 2021,
+    "rating": "8.8",
+    "category": "Gündemdekiler",
+    "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
+    "link": "https://www.youtube.com/embed/_InqQJRqGW4",
+    "overview": "Soygun planı ve profesyonel ekip maceraları."
+  },
+  {
+    "id": 10,
+    "title": "The Gray Man",
+    "year": 2022,
+    "rating": "8.0",
+    "category": "Netflix Orijinal Filmler",
+    "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
+    "link": "https://www.youtube.com/embed/BmllggGO4pM",
+    "overview": "CIA ajanının dünya genelindeki kovalamaca hikayesi."
+  },
+  {
+    "id": 11,
+    "title": "Peaky Blinders",
+    "year": 2022,
+    "rating": "9.0",
+    "category": "Gündemdekiler",
+    "poster": "https://image.tmdb.org/t/p/w500/vUUqzWa2LnHIVqtrkvlVGBI9jHW.jpg",
+    "link": "https://www.youtube.com/embed/2nsT9uQPIrk",
+    "overview": "Birmingham'ın suç çetesi Shelby ailesi."
+  },
+  {
+    "id": 12,
+    "title": "Breaking Bad",
+    "year": 2013,
+    "rating": "9.5",
+    "category": "Popüler Diziler",
+    "poster": "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+    "link": "https://www.youtube.com/embed/HhesaQXLuRY",
+    "overview": "Kimya öğretmeninin suç dünyasına geçiş hikayesi."
+  },
+  {
+    "id": 13,
+    "title": "Klaus",
+    "year": 2019,
+    "rating": "9.1",
+    "category": "Anime & Animasyon",
+    "poster": "https://image.tmdb.org/t/p/w500/qayga6VIBFrhkg2u7nKkNZytAXu.jpg",
+    "link": "https://www.youtube.com/embed/taUUNuUsuto",
+    "overview": "Ödüllü ve sıcacık bir animasyon filmi."
+  },
+  {
+    "id": 14,
+    "title": "Attack on Titan",
+    "year": 2023,
+    "rating": "9.6",
+    "category": "Anime & Animasyon",
+    "poster": "https://image.tmdb.org/t/p/w500/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+    "link": "https://www.youtube.com/embed/M_OauHnAFcI",
+    "overview": "Devasa yaratıklara karşı insanlığın hayatta kalma savaşı."
   }
 ]
