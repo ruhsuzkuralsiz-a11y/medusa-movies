@@ -228,7 +228,7 @@ def watch_trailer(movie_id):
                 trailer_key = v.get('key')
                 break
         if not trailer_key and videos:
-            for v:
+            for v in videos:
                 if v.get('site') == 'YouTube':
                     trailer_key = v.get('key')
                     break
