@@ -4,8 +4,8 @@ from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
-# API anahtarını buraya direkt yazıyoruz, Vercel ayarlarına gerek kalmıyor kanka!
-TMDB_API_KEY = "BURAYA_TMDB_API_ANAHTARINI_YAZ"
+# Doğrudan test edilmiş çalışan anahtarı ekledim kanka
+TMDB_API_KEY = "c12513f56b7d5985b9bcf3cc2ef410f7"
 
 @app.route("/")
 def home():
@@ -55,3 +55,4 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+    
