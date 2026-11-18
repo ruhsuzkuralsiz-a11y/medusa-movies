@@ -1,9 +1,10 @@
+import os
 import requests
 from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
-# Yeni ve güncel TMDB API Anahtarı
+# TMDB API Anahtarı
 TMDB_API_KEY = "abdea525bebc9ce403ea266dc78f3555"
 
 # Şık bir arayüz için basit HTML/CSS şablonu
@@ -56,5 +57,6 @@ def index():
     return render_template_string(HTML_TEMPLATE, movies=movies)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
     
