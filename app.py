@@ -95,7 +95,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Detay Sayfası Şablonu (ChatGPT'nin Kod Entegre Edilmiş Hali)
+# Detay Sayfası Şablonu
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -122,4 +122,120 @@ DETAIL_TEMPLATE = """
         .meta-row { display: flex; gap: 15px; font-size: 14px; color: #aaa; }
         .overview { line-height: 1.6; color: #ccc; font-size: 15px; }
         .dns-note { font-size: 12px; color: #888; padding: 0 20px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Ana Sayfaya Dön</a>
         
+        <!-- Kaynak Seçim Butonları -->
+        <div class="player-controls">
+            {% for source in sources %}
+                <button class="source-btn {% if loop.first %}active{% endif %}" onclick="changeSource('{{ source.url }}', this)">
+                    {{ source.name }}
+                </button>
+            {% endfor %}
+
+            {% if trailer_key %}
+                <button class="source-btn trailer-btn" onclick="changeSource('https://www.youtube.com/embed/{{ trailer_key }}?autoplay=1', this)">
+                    🎬 Fragman
+                </button>
+            {% endif %}
+        </div>
+
+        <!-- Duyarlı Oynatıcı Alanı -->
+        <div class="video-container">
+            <iframe 
+                id="main-player"
+                src="{{ sources[0].url if sources else '' }}" 
+                allowfullscreen
+                webkitallowfullscreen
+                mozallowfullscreen
+                referrerpolicy="origin"
+                allow="autoplay; fullscreen; picture-in-picture">
+            </iframe>
+        </div>
+
+        <div class="dns-note">
+            * Server 1 hata verirse yukarıdan hemen Server 2 veya Multiembed'e geçiş yapabilirsin kanka.
+        </div>
+
+        <div class="details-content">
+            <h1>{{ movie.title }}</h1>
+            <div class="meta-row">
+                <span>📅 {{ movie.release_date }}</span>
+                <span>⭐ {{ "%.1f"|format(movie.vote_average) }} / 10</span>
+            </div>
+            <p class="overview"><strong>Özet:</strong> {{ movie.overview if movie.overview else "Bu film için açıklama bulunmuyor." }}</p>
+        </div>
+    </div>
+
+    <script>
+        function changeSource(url, btnElement) {
+            const player = document.getElementById('main-player');
+            player.src = 'about:blank';
+            setTimeout(() => {
+                player.src = url;
+            }, 100);
+
+            document.querySelectorAll('.source-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+    </script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def index():
+    query = request.args.get('q', '').strip()
+    if query:
+        url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&language=tr-TR&query={query}"
+    else:
+        url = f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&language=tr-TR&page=1"
+    
+    response = requests.get(url)
+    if response.status_code != 200:
+        return f"API Hatası: {response.status_code}"
+    
+    data = response.json()
+    movies = data.get('results', [])
+    return render_template_string(HTML_TEMPLATE, movies=movies, query=query)
+
+@app.route('/movie/<int:movie_id>')
+def movie_detail(movie_id):
+    movie_url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=tr-TR"
+    movie_res = requests.get(movie_url)
+    if movie_res.status_code != 200:
+        return "Film detayları yüklenemedi."
+    movie = movie_res.json()
+
+    # Sağlam ve güncel alternatif oynatıcı sunucuları (vidsrc.cc çöktüğü için değiştirildi)
+    sources = [
+        {"name": "🎬 Server 1", "url": f"https://vidsrc.xyz/embed/movie?tmdb={movie_id}"},
+        {"name": "⚡ Server 2", "url": f"https://embed.su/embed/movie/{movie_id}"},
+        {"name": "🚀 Multiembed", "url": f"https://multiembed.mov/?video_id={movie_id}&tmdb=1"}
+    ]
+
+    # Fragman bulma
+    video_url = f"https://api.themoviedb.org/3/movie/{movie_id}/videos?api_key={TMDB_API_KEY}&language=tr-TR"
+    video_res = requests.get(video_url)
+    trailer_key = None
+    if video_res.status_code == 200:
+        videos = video_res.json().get('results', [])
+        for v in videos:
+            if v.get('site') == 'YouTube' and v.get('type') == 'Trailer':
+                trailer_key = v.get('key')
+                break
+        if not trailer_key and videos:
+            for v in videos:
+                if v.get('site') == 'YouTube':
+                    trailer_key = v.get('key')
+                    break
+
+    return render_template_string(DETAIL_TEMPLATE, movie=movie, sources=sources, trailer_key=trailer_key)
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+    
