@@ -83,5 +83,61 @@ HTML_TEMPLATE = """
             Filmler
         </a>
         <a href="/">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            Keşfet
+        </a>
+        <a href="/">
+            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            Menü
+        </a>
+    </nav>
+</body>
+</html>
+"""
+
+# Çoklu Sunucu Seçenekli Detay Sayfası
+DETAIL_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie.title }} - Medusa Movies</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+        .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        .player-container iframe { width: 100%; height: 100%; border: none; }
+        .no-video { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; color: #777; font-size: 16px; }
+        
+        .source-selector { display: flex; background: #161616; border-bottom: 1px solid #222; flex-wrap: wrap; }
+        .source-btn { flex: 1; min-width: 120px; padding: 12px; text-align: center; background: none; border: none; color: #aaa; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; text-decoration: none; border-right: 1px solid #222; }
+        .source-btn.active { background: #ff3d00; color: #fff; }
+        .source-btn:hover { background: #222; color: #fff; }
+
+        .details-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        h1 { margin: 0; color: #ff3d00; font-size: 24px; }
+        .meta-row { display: flex; gap: 15px; font-size: 14px; color: #aaa; }
+        .overview { line-height: 1.6; color: #ccc; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Ana Sayfaya Dön</a>
+        
+        <!-- Çoklu Sunucu ve Fragman Seçim Butonları -->
+        <div class="source-selector">
+            <a href="/movie/{{ movie.id }}?player=server1" class="source-btn {% if player_type == 'server1' %}active{% endif %}">🎬 Server 1 (Auto)</a>
+            <a href="/movie/{{ movie.id }}?player=server2" class="source-btn {% if player_type == 'server2' %}active{% endif %}">⚡ Server 2 (Vidsrc)</a>
+            <a href="/movie/{{ movie.id }}?player=server3" class="source-btn {% if player_type == 'server3' %}active{% endif %}">🚀 Server 3 (Multiembed)</a>
+            <a href="/movie/{{ movie.id }}?player=trailer" class="source-btn {% if player_type == 'trailer' %}active{% endif %}">▶️ Fragman</a>
+        </div>
+
+        <div class="player-container">
+            {% if player_type == 'server1' %}
+                <iframe src="https://autoembed.cc/embed/movie/tmdb/{{ movie.id }}" allowfullscreen></iframe>
+            {% elif player_type == 'server2' %}
+                <iframe src="https://vidsrc.xyz/embed/movie?tmdb={{ movie.id }}" allowfullscreen></iframe>
+            {% elif player_
             
