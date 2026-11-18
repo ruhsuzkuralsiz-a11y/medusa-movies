@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask, render_template_string, request
+from Flask import Flask, render_template_string, request
 
 app = Flask(__name__)
 
@@ -95,7 +95,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Detay Sayfası Şablonu
+# Detay Sayfası Şablonu (Otomatik Fail-Safe / Akıllı Savunma Mekanizmalı)
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -109,7 +109,7 @@ DETAIL_TEMPLATE = """
         .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight: bold; font-size: 14px; }
         
         .player-controls { display: flex; background: #161616; border-bottom: 1px solid #222; flex-wrap: wrap; }
-        .source-btn { flex: 1; min-width: 130px; padding: 12px; text-align: center; background: none; border: none; color: #aaa; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; border-right: 1px solid #222; }
+        .source-btn { flex: 1; min-width: 120px; padding: 12px; text-align: center; background: none; border: none; color: #aaa; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; border-right: 1px solid #222; }
         .source-btn.active { background: #ff3d00; color: #fff; }
         .source-btn:hover { background: #222; color: #fff; }
         .trailer-btn { color: #f5c518; }
@@ -121,25 +121,22 @@ DETAIL_TEMPLATE = """
         h1 { margin: 0; color: #ff3d00; font-size: 24px; }
         .meta-row { display: flex; gap: 15px; font-size: 14px; color: #aaa; }
         .overview { line-height: 1.6; color: #ccc; font-size: 15px; }
-        .dns-note { font-size: 12px; color: #888; padding: 0 20px; margin-top: 10px; }
+        .status-banner { font-size: 12px; background: #1e1e1e; color: #4caf50; padding: 8px 15px; border-left: 4px solid #4caf50; margin: 0 20px 10px 20px; display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <a href="/" class="back-btn">← Ana Sayfaya Dön</a>
         
+        <div id="status-banner" class="status-banner">🛡️ Akıllı Savunma: Sunucu yanıt vermedi, otomatik olarak yedek kaynağa geçildi!</div>
+
         <!-- Kaynak Seçim Butonları -->
         <div class="player-controls">
-            {% for source in sources %}
-                <button class="source-btn {% if loop.first %}active{% endif %}" onclick="changeSource('{{ source.url }}', this)">
-                    {{ source.name }}
-                </button>
-            {% endfor %}
-
+            <button class="source-btn active" onclick="changeSource('{{ sources[0] }}', this)">🎬 Server 1</button>
+            <button class="source-btn" onclick="changeSource('{{ sources[1] }}', this)">⚡ Server 2</button>
+            <button class="source-btn" onclick="changeSource('{{ sources[2] }}', this)">🚀 Server 3</button>
             {% if trailer_key %}
-                <button class="source-btn trailer-btn" onclick="changeSource('https://www.youtube.com/embed/{{ trailer_key }}?autoplay=1', this)">
-                    🎬 Fragman
-                </button>
+                <button class="source-btn trailer-btn" onclick="changeSource('https://www.youtube.com/embed/{{ trailer_key }}?autoplay=1', this)">🎬 Fragman</button>
             {% endif %}
         </div>
 
@@ -147,17 +144,13 @@ DETAIL_TEMPLATE = """
         <div class="video-container">
             <iframe 
                 id="main-player"
-                src="{{ sources[0].url if sources else '' }}" 
+                src="{{ sources[0] }}" 
                 allowfullscreen
                 webkitallowfullscreen
                 mozallowfullscreen
                 referrerpolicy="origin"
                 allow="autoplay; fullscreen; picture-in-picture">
             </iframe>
-        </div>
-
-        <div class="dns-note">
-            * Server 1 hata verirse yukarıdan hemen Server 2 veya Multiembed'e geçiş yapabilirsin kanka.
         </div>
 
         <div class="details-content">
@@ -171,6 +164,14 @@ DETAIL_TEMPLATE = """
     </div>
 
     <script>
+        // Sunucu listemiz (Otomatik geçiş için dizi)
+        const servers = [
+            "{{ sources[0] }}",
+            "{{ sources[1] }}",
+            "{{ sources[2] }}"
+        ];
+        let currentServerIndex = 0;
+
         function changeSource(url, btnElement) {
             const player = document.getElementById('main-player');
             player.src = 'about:blank';
@@ -178,8 +179,40 @@ DETAIL_TEMPLATE = """
                 player.src = url;
             }, 100);
 
-            document.querySelectorAll('.source-btn').forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
+            if (btnElement) {
+                document.querySelectorAll('.source-btn').forEach(btn => btn.classList.remove('active'));
+                btnElement.classList.add('active');
+                // Hangi indexte olduğunu bul ve güncelle
+                currentServerIndex = servers.indexOf(url);
+            }
+        }
+
+        // AKILLI SAVUNMA (FAIL-SAFE) MEKANİZMASI: 
+        // Eğer seçilen server 6 saniye içinde yüklenemezse veya hata verirse otomatik sonraki servera atlar.
+        const player = document.getElementById('main-player');
+        let loadTimer = setTimeout(handleServerFailure, 6000);
+
+        player.addEventListener('load', () => {
+            // Yüklenme başarılı olursa zamanlayıcıyı iptal et
+            clearTimeout(loadTimer);
+        });
+
+        function handleServerFailure() {
+            // Eğer hala ana sunuculardaysak bir sonraki yedek sunucuya otomatik geç
+            if (currentServerIndex < servers.length - 1) {
+                currentServerIndex++;
+                console.log("Sunucu yanıt vermedi, otomatik yedek sunucuya geçiliyor: Index " + currentServerIndex);
+                document.getElementById('status-banner').style.display = 'block';
+                
+                // İlgili butonu bul ve görsel olarak aktif et
+                const buttons = document.querySelectorAll('.source-btn');
+                if(buttons[currentServerIndex]) {
+                    document.querySelectorAll('.source-btn').forEach(btn => btn.classList.remove('active'));
+                    buttons[currentServerIndex].classList.add('active');
+                }
+                
+                changeSource(servers[currentServerIndex], null);
+            }
         }
     </script>
 </body>
@@ -210,11 +243,11 @@ def movie_detail(movie_id):
         return "Film detayları yüklenemedi."
     movie = movie_res.json()
 
-    # Sağlam ve güncel alternatif oynatıcı sunucuları (vidsrc.cc çöktüğü için değiştirildi)
+    # Yedekli sunucu havuzu
     sources = [
-        {"name": "🎬 Server 1", "url": f"https://vidsrc.xyz/embed/movie?tmdb={movie_id}"},
-        {"name": "⚡ Server 2", "url": f"https://embed.su/embed/movie/{movie_id}"},
-        {"name": "🚀 Multiembed", "url": f"https://multiembed.mov/?video_id={movie_id}&tmdb=1"}
+        f"https://embed.su/embed/movie/{movie_id}",
+        f"https://vidsrc.xyz/embed/movie?tmdb={movie_id}",
+        f"https://multiembed.mov/?video_id={movie_id}&tmdb=1"
     ]
 
     # Fragman bulma
