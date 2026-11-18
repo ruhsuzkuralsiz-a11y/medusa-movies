@@ -1,18 +1,110 @@
-import json
-import os
 from flask import Flask, render_template_string
+import json
 
 app = Flask(__name__)
-CATALOG_FILE = "medusa_catalog.json"
 
-def load_catalog():
-    if os.path.exists(CATALOG_FILE):
-        try:
-            with open(CATALOG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return []
+CATALOG = [
+    {
+        "id": 1,
+        "title": "Stranger Things",
+        "year": 2024,
+        "rating": "9.1",
+        "category": "Popüler Diziler",
+        "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+        "link": "https://www.youtube.com/embed/b9EkMc79ZSU",
+        "overview": "Stranger Things, netflix orijinal popüler dizi arşivi."
+    },
+    {
+        "id": 2,
+        "title": "Wednesday",
+        "year": 2024,
+        "rating": "8.9",
+        "category": "Popüler Diziler",
+        "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
+        "link": "https://www.youtube.com/embed/Di310WS8nLk",
+        "overview": "Wednesday Addams maceraları medusafilm'de."
+    },
+    {
+        "id": 3,
+        "title": "Squid Game",
+        "year": 2024,
+        "rating": "8.7",
+        "category": "Gündemdekiler",
+        "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
+        "link": "https://www.youtube.com/embed/oqxAJKy0ii4",
+        "overview": "Hayatta kalma mücadelesi ve oyunlar."
+    },
+    {
+        "id": 4,
+        "title": "The Witcher",
+        "year": 2024,
+        "rating": "8.6",
+        "category": "Popüler Diziler",
+        "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
+        "link": "https://www.youtube.com/embed/ndl1W4ltcmg",
+        "overview": "Rivyalı Geralt'ın efsanevi maceraları."
+    },
+    {
+        "id": 5,
+        "title": "Extraction 2",
+        "year": 2023,
+        "rating": "8.4",
+        "category": "Netflix Orijinal Filmler",
+        "poster": "https://image.tmdb.org/t/p/w500/7gKI9hpJcZUQzwsCUO2k8k5k20j.jpg",
+        "link": "https://www.youtube.com/embed/Y274jZs5s7s",
+        "overview": "Aksiyon dolu nefes kesen film."
+    },
+    {
+        "id": 6,
+        "title": "Dark",
+        "year": 2020,
+        "rating": "9.2",
+        "category": "Popüler Diziler",
+        "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
+        "link": "https://www.youtube.com/embed/rrwycJ08PSA",
+        "overview": "Zaman yolculuğu ve gizem dolu kasaba sırları."
+    },
+    {
+        "id": 7,
+        "title": "Arcane",
+        "year": 2021,
+        "rating": "9.4",
+        "category": "Anime & Animasyon",
+        "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
+        "link": "https://www.youtube.com/embed/fXmAurh012s",
+        "overview": "Piltover ve Zaun arasındaki nefis animasyon serisi."
+    },
+    {
+        "id": 8,
+        "title": "Our Planet",
+        "year": 2019,
+        "rating": "9.3",
+        "category": "Belgeseller",
+        "poster": "https://image.tmdb.org/t/p/w500/m2200lG2XpPjM000000000000.jpg",
+        "link": "https://www.youtube.com/embed/aETNYMYwN58",
+        "overview": "Dünyanın eşsiz doğasını ve canlılarını keşfedin."
+    },
+    {
+        "id": 9,
+        "title": "La Casa de Papel",
+        "year": 2021,
+        "rating": "8.8",
+        "category": "Gündemdekiler",
+        "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
+        "link": "https://www.youtube.com/embed/_InqQJRqGW4",
+        "overview": "Soygun planı ve profesyonel ekip maceraları."
+    },
+    {
+        "id": 10,
+        "title": "The Gray Man",
+        "year": 2022,
+        "rating": "8.0",
+        "category": "Netflix Orijinal Filmler",
+        "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
+        "link": "https://www.youtube.com/embed/BmllggGO4pM",
+        "overview": "CIA ajanının dünya genelindeki kovalamaca hikayesi."
+    }
+]
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -63,7 +155,7 @@ HTML_TEMPLATE = """
         .modal-footer-desc { background: #111; padding: 12px 20px; font-size: 12px; color: #aaa; border-top: 1px solid #222; text-align: center; }
 
         .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background-color: rgba(18,18,18,0.95); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 1000; }
-        .nav-link { color: #8c8c8c; text-decoration: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .nav-link { color: #8c8c8c; text-decoration: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; background: none; border: none; }
         .nav-link.active { color: #fff; }
         .nav-link i { font-size: 16px; }
     </style>
@@ -112,10 +204,10 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="netflix-bottom-nav">
-        <a href="/" class="nav-link active"><i class="fa-solid fa-house"><span>Ana Sayfa</span></i></a>
-        <a href="/" class="nav-link"><i class="fa-solid fa-fire"><span>Yeni ve Popüler</span></i></a>
-        <a href="/" class="nav-link"><i class="fa-solid fa-download"><span>İndirilenler</span></i></a>
-        <a href="/" class="nav-link"><i class="fa-solid fa-bars"><span>Daha Fazla</span></i></a>
+        <button class="nav-link active" onclick="navClick('Tümü', this)"><i class="fa-solid fa-house"></i><span>Ana Sayfa</span></button>
+        <button class="nav-link" onclick="navClick('Popüler Diziler', this)"><i class="fa-solid fa-fire"></i><span>Popüler</span></button>
+        <button class="nav-link" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Ara</span></button>
+        <button class="nav-link" onclick="navClick('Anime & Animasyon', this)"><i class="fa-solid fa-bars"></i><span>Anime</span></button>
     </div>
 
     <script>
@@ -148,9 +240,27 @@ HTML_TEMPLATE = """
         function setCategory(cat, btn) {
             currentCategory = cat;
             document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            if(btn) btn.classList.add('active');
             document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
             render();
+        }
+
+        function navClick(cat, btn) {
+            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Üstteki kategori çipini de senkronize et
+            document.querySelectorAll('.cat-chip').forEach(chip => {
+                if(chip.innerText === cat || (cat === 'Tümü' && chip.innerText === 'Tümü')) {
+                    chip.click();
+                } else {
+                    chip.classList.remove('active');
+                }
+            });
+            currentCategory = cat;
+            document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
+            render();
+            window.scrollTo({top: 300, behavior: 'smooth'});
         }
 
         function toggleSearch() {
@@ -184,9 +294,7 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def index():
-    catalog = load_catalog()
-    return render_template_string(HTML_TEMPLATE, catalog_json=json.dumps(catalog, ensure_ascii=False))
+    return render_template_string(HTML_TEMPLATE, catalog_json=json.dumps(CATALOG, ensure_ascii=False))
 
 if __name__ == '__main__':
     app.run(debug=True)
-    
