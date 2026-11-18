@@ -7,7 +7,7 @@ app = Flask(__name__)
 # TMDB API Anahtarı
 TMDB_API_KEY = "abdea525bebc9ce403ea266dc78f3555"
 
-# hdfilmcehennemi Tarzı Profesyonel Ana Sayfa Şablonu
+# Ana Sayfa Şablonu
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -34,7 +34,6 @@ HTML_TEMPLATE = """
         .movie-meta { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; }
         .rating { color: #f5c518; font-weight: bold; }
         
-        /* Alt Menü Çubuğu */
         nav.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #181818; border-top: 1px solid #282828; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
         nav.bottom-nav a { color: #aaa; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
         nav.bottom-nav a.active, nav.bottom-nav a:hover { color: #ff3d00; }
@@ -96,7 +95,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Çalışan Video Oynatıcılı Detay Sayfası Şablonu
+# Seçmeli Oynatıcılı Detay Sayfası Şablonu (Fragman veya Tam Film)
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -111,6 +110,13 @@ DETAIL_TEMPLATE = """
         .player-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
         .player-container iframe { width: 100%; height: 100%; border: none; }
         .no-video { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; color: #777; font-size: 16px; }
+        
+        /* Seçim Butonları Alanı */
+        .source-selector { display: flex; background: #161616; border-bottom: 1px solid #222; }
+        .source-btn { flex: 1; padding: 12px; text-align: center; background: none; border: none; color: #aaa; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .source-btn.active { background: #ff3d00; color: #fff; }
+        .source-btn:hover { background: #222; color: #fff; }
+
         .details-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         h1 { margin: 0; color: #ff3d00; font-size: 24px; }
         .meta-row { display: flex; gap: 15px; font-size: 14px; color: #aaa; }
@@ -120,13 +126,27 @@ DETAIL_TEMPLATE = """
 <body>
     <div class="container">
         <a href="/" class="back-btn">← Ana Sayfaya Dön</a>
+        
+        <!-- Fragman veya Film Seçim Butonları -->
+        <div class="source-selector">
+            <a href="/movie/{{ movie.id }}?player=movie" class="source-btn {% if player_type == 'movie' %}active{% endif %}">🎬 Filmi İzle</a>
+            <a href="/movie/{{ movie.id }}?player=trailer" class="source-btn {% if player_type == 'trailer' %}active{% endif %}">▶️ Fragman İzle</a>
+        </div>
+
         <div class="player-container">
-            {% if trailer_key %}
-            <iframe src="https://www.youtube.com/embed/{{ trailer_key }}?autoplay=0" allowfullscreen></iframe>
+            {% if player_type == 'movie' %}
+                <!-- Full Film / Alternatif Embed Oynatıcı -->
+                <iframe src="https://vidsrc.xyz/embed/movie?tmdb={{ movie.id }}" allowfullscreen></iframe>
             {% else %}
-            <div class="no-video">Bu film için oynatılabilir video bulunamadı.</div>
+                <!-- YouTube Fragman Oynatıcı -->
+                {% if trailer_key %}
+                <iframe src="https://www.youtube.com/embed/{{ trailer_key }}" allowfullscreen></iframe>
+                {% else %}
+                <div class="no-video">Bu film için fragman bulunamadı.</div>
+                {% endif %}
             {% endif %}
         </div>
+
         <div class="details-content">
             <h1>{{ movie.title }}</h1>
             <div class="meta-row">
@@ -158,6 +178,8 @@ def index():
 
 @app.route('/movie/<int:movie_id>')
 def movie_detail(movie_id):
+    player_type = request.args.get('player', 'movie') # Varsayılan olarak filmi açsın
+
     # Film Detayları
     movie_url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=tr-TR"
     movie_res = requests.get(movie_url)
@@ -165,13 +187,12 @@ def movie_detail(movie_id):
         return "Film detayları yüklenemedi."
     movie = movie_res.json()
 
-    # Film Videosu / Fragmanı
+    # Film Fragmanı için YouTube Key
     video_url = f"https://api.themoviedb.org/3/movie/{movie_id}/videos?api_key={TMDB_API_KEY}&language=tr-TR"
     video_res = requests.get(video_url)
     trailer_key = None
     if video_res.status_code == 200:
         videos = video_res.json().get('results', [])
-        # Önce Türkçe fragman ara, bulamazsa İngilizce veya herhangi birini al
         for v in videos:
             if v.get('site') == 'YouTube' and v.get('type') == 'Trailer':
                 trailer_key = v.get('key')
@@ -182,9 +203,9 @@ def movie_detail(movie_id):
                     trailer_key = v.get('key')
                     break
 
-    return render_template_string(DETAIL_TEMPLATE, movie=movie, trailer_key=trailer_key)
+    return render_template_string(DETAIL_TEMPLATE, movie=movie, trailer_key=trailer_key, player_type=player_type)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-                    
+    
