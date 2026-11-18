@@ -95,7 +95,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Film Detay Sayfası Şablonu
+# Film Detay Sayfası Şablonu (Yeni sekmede açılan net butonlar)
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -107,5 +107,136 @@ DETAIL_TEMPLATE = """
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.6); padding-bottom: 25px; }
         .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight: bold; font-size: 14px; }
-
         
+        .movie-header { display: flex; gap: 20px; padding: 0 20px 20px 20px; align-items: center; border-bottom: 1px solid #282828; flex-wrap: wrap; }
+        .poster { width: 120px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .header-info h1 { margin: 0 0 10px 0; color: #ff3d00; font-size: 22px; }
+        .header-info p { margin: 5px 0; color: #aaa; font-size: 13px; }
+        
+        .action-buttons { display: flex; gap: 15px; padding: 20px; flex-wrap: wrap; }
+        .action-btn { flex: 1; min-width: 140px; padding: 15px; text-align: center; border-radius: 8px; font-weight: bold; font-size: 15px; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-movie { background: #ff3d00; color: #fff; }
+        .btn-movie:hover { background: #e03500; }
+        .btn-trailer { background: #333; color: #fff; border: 1px solid #444; }
+        .btn-trailer:hover { background: #444; }
+        
+        .overview-box { padding: 0 20px; color: #ccc; font-size: 14px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Ana Sayfaya Dön</a>
+        
+        <div class="movie-header">
+            {% if movie.poster_path %}
+            <img class="poster" src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
+            {% endif %}
+            <div class="header-info">
+                <h1>{{ movie.title }}</h1>
+                <p>📅 Vizyon: {{ movie.release_date }}</p>
+                <p>⭐ Puan: {{ "%.1f"|format(movie.vote_average) }} / 10</p>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="https://vidsrc.cc/v2/embed/movie/{{ movie.id }}" target="_blank" class="action-btn btn-movie">🎬 Filmi İzle (Oynat)</a>
+            <a href="/trailer/{{ movie.id }}" class="action-btn btn-trailer">▶️ Fragman İzle</a>
+        </div>
+
+        <div class="overview-box">
+            <p><strong>Özet:</strong> {{ movie.overview if movie.overview else "Bu film için açıklama bulunmuyor." }}</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+# Fragman Oynatıcı Sayfası
+PLAYER_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Medusa Movies</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.6); padding-bottom: 20px; }
+        .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        .player-container iframe { width: 100%; height: 100%; border: none; }
+        .no-video { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; color: #777; font-size: 16px; }
+        .title-bar { padding: 15px 20px; font-size: 18px; font-weight: bold; color: #ff3d00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/movie/{{ movie_id }}" class="back-btn">← Film Detayına Dön</a>
+        <div class="title-bar">{{ title }}</div>
+        <div class="player-container">
+            {% if embed_url %}
+            <iframe src="{{ embed_url }}" allowfullscreen></iframe>
+            {% else %}
+            <div class="no-video">Bu film için fragman bulunamadı.</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+@app.route('/')
+def index():
+    query = request.args.get('q', '').strip()
+    if query:
+        url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&language=tr-TR&query={query}"
+    else:
+        url = f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&language=tr-TR&page=1"
+    
+    response = requests.get(url)
+    if response.status_code != 200:
+        return f"API Hatası: {response.status_code}"
+    
+    data = response.json()
+    movies = data.get('results', [])
+    return render_template_string(HTML_TEMPLATE, movies=movies, query=query)
+
+@app.route('/movie/<int:movie_id>')
+def movie_detail(movie_id):
+    movie_url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=tr-TR"
+    movie_res = requests.get(movie_url)
+    if movie_res.status_code != 200:
+        return "Film detayları yüklenemedi."
+    movie = movie_res.json()
+    return render_template_string(DETAIL_TEMPLATE, movie=movie)
+
+@app.route('/trailer/<int:movie_id>')
+def watch_trailer(movie_id):
+    movie_url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=tr-TR"
+    movie_res = requests.get(movie_url)
+    movie_title = "Film"
+    if movie_res.status_code == 200:
+        movie_title = movie_res.json().get('title', 'Film')
+
+    video_url = f"https://api.themoviedb.org/3/movie/{movie_id}/videos?api_key={TMDB_API_KEY}&language=tr-TR"
+    video_res = requests.get(video_url)
+    trailer_key = None
+    if video_res.status_code == 200:
+        videos = video_res.json().get('results', [])
+        for v in videos:
+            if v.get('site') == 'YouTube' and v.get('type') == 'Trailer':
+                trailer_key = v.get('key')
+                break
+        if not trailer_key and videos:
+            for v:
+                if v.get('site') == 'YouTube':
+                    trailer_key = v.get('key')
+                    break
+
+    embed_url = f"https://www.youtube.com/embed/{trailer_key}" if trailer_key else ""
+    return render_template_string(PLAYER_TEMPLATE, title=f"▶️ {movie_title} - Fragman", embed_url=embed_url, movie_id=movie_id)
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+    
