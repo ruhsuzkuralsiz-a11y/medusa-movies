@@ -95,7 +95,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Detay Sayfası Şablonu (2embed altyapısı ile güncellendi)
+# Detay Sayfası Şablonu (Çoklu Dil/Dublaj Destekli Oynatıcı)
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -120,6 +120,7 @@ DETAIL_TEMPLATE = """
         h1 { margin: 0; color: #ff3d00; font-size: 24px; }
         .meta-row { display: flex; gap: 15px; font-size: 14px; color: #aaa; }
         .overview { line-height: 1.6; color: #ccc; font-size: 15px; }
+        .dub-note { background: #221508; border-left: 4px solid #ff3d00; padding: 10px 15px; font-size: 13px; color: #f5c518; border-radius: 0 6px 6px 0; }
     </style>
 </head>
 <body>
@@ -133,7 +134,8 @@ DETAIL_TEMPLATE = """
 
         <div class="player-container">
             {% if player_type == 'movie' %}
-                <iframe src="https://www.2embed.cc/embed/{{ movie.id }}" allowfullscreen></iframe>
+                <!-- Otomatik Dublaj / Altyazı Destekli Oyuncu Altyapısı -->
+                <iframe src="https://autoembed.cc/embed/movie/tmdb/{{ movie.id }}" allowfullscreen></iframe>
             {% else %}
                 {% if trailer_key %}
                 <iframe src="https://www.youtube.com/embed/{{ trailer_key }}" allowfullscreen></iframe>
@@ -142,6 +144,12 @@ DETAIL_TEMPLATE = """
                 {% endif %}
             {% endif %}
         </div>
+
+        {% if player_type == 'movie' %}
+        <div class="dub-note">
+            💡 <strong>İpucu:</strong> Oynatıcı açıldıktan sonra oynatıcının içindeki ayarlar veya dil menüsünden (varsa) <strong>Türkçe Dublaj</strong> veya Türkçe altyazı seçeneğini aktif edebilirsin kanka!
+        </div>
+        {% endif %}
 
         <div class="details-content">
             <h1>{{ movie.title }}</h1>
@@ -189,17 +197,5 @@ def movie_detail(movie_id):
         videos = video_res.json().get('results', [])
         for v in videos:
             if v.get('site') == 'YouTube' and v.get('type') == 'Trailer':
-                trailer_key = v.get('key')
-                break
-        if not trailer_key and videos:
-            for v in videos:
-                if v.get('site') == 'YouTube':
-                    trailer_key = v.get('key')
-                    break
-
-    return render_template_string(DETAIL_TEMPLATE, movie=movie, trailer_key=trailer_key, player_type=player_type)
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
-    
+                trailer_key = v.
+                
