@@ -9,14 +9,16 @@ TMDB_API_KEY = os.environ.get("TMDB_API_KEY")
 @app.route("/")
 def home():
     if not TMDB_API_KEY:
-        return "Hata: TMDB API Key bulunamadı!"
+        return "Hata: TMDB API Key Vercel environment variables kısmında bulunamadı!"
     
     url = f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&language=tr-TR"
     response = requests.get(url)
     
-    movies = []
-    if response.status_code == 200:
-        movies = response.json().get("results", [])
+    # Hata ayıklama: İstek 200 dönmezse hatayı ekrana basalım ki sorunu hemen görelim
+    if response.status_code != 200:
+        return f"TMDB API Hatası! Status Code: {response.status_code}, Cevap: {response.text}"
+    
+    movies = response.json().get("results", [])
         
     html_code = """
     <!DOCTYPE html>
@@ -30,7 +32,7 @@ def home():
             header { background: #1f1f1f; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; color: #e50914; }
             .container { padding: 20px; max-width: 1200px; margin: auto; }
             .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
-            .movie-card { background: #1f1f1f; border-radius: 8px; overflow: hidden; text-align: center; padding-bottom: 10px; }
+            .movie-card { background: #1f1f1f; border-rust: 8px; border-radius: 8px; overflow: hidden; text-align: center; padding-bottom: 10px; }
             .movie-card img { width: 100%; height: 225px; object-fit: cover; }
             .movie-title { font-size: 14px; padding: 10px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         </style>
@@ -56,4 +58,4 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-  
+    
