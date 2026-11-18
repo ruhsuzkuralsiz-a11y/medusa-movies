@@ -68,8 +68,8 @@ def index():
                     <span class="movie-cat">{m['category']}</span>
                 </div>
                 <div class="btn-group">
-                    <a href="{m['link']}" class="btn watch-btn">🎬 Türkçe İzle</a>
-                    <a href="#trailer" onclick="openModal('{m['trailer']}')" class="btn trailer-btn">🎥 Fragman</a>
+                    <a href="{m['link']}" class="btn watch-btn">🎬 Türkçe Dublaj</a>
+                    <a href="#" onclick="openModal('{m['trailer']}'); return false;" class="btn trailer-btn">🎥 Fragman</a>
                 </div>
             </div>
         </div>
@@ -100,6 +100,7 @@ def index():
             .movie-cat {{ color: #e50914; font-weight: bold; }}
             .btn-group {{ display: flex; gap: 5px; margin-top: 5px; }}
             .btn {{ flex: 1; text-align: center; padding: 6px 0; border-radius: 4px; font-size: 11px; font-weight: bold; text-decoration: none; }}
+            .watch-api {{ background-color: #e50914; color: white; }}
             .watch-btn {{ background-color: #e50914; color: white; }}
             .trailer-btn {{ background-color: #333; color: #ddd; }}
             
@@ -128,7 +129,7 @@ def index():
             <a href="/" class="filter-btn">Yeni Çıkanlar</a>
         </div>
 
-        <div class="section-title">En Popüler & Türkçe Dublaj / Altyazılı</div>
+        <div class="section-title">Netflix, DC, Anime & Fragmanlar</div>
         
         <div class="movies-grid">
             {movies_html}
@@ -152,20 +153,3 @@ def index():
             <a href="/" class="nav-item"><span>☰</span> Menu</a>
         </div>
 
-        <script>
-            function openModal(url) {{
-                document.getElementById('trailerFrame').src = url;
-                document.getElementById('trailerModal').style.display = 'flex';
-            }}
-            function closeModal() {{
-                document.getElementById('trailerFrame').src = '';
-                document.getElementById('trailerModal').style.display = 'none';
-            }}
-        </script>
-    </body>
-    </html>
-    """
-
-if __name__ == '__main__':
-    app.run(debug=True)
-        
