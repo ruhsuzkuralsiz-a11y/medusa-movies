@@ -2,7 +2,7 @@ from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
-# Netflix'in En Popüler ve Kesintisiz Çalışan 1000+ İçeriklik Arşivi (Türkçe Dublaj Kilitli)
+# Netflix'in Gerçekçi Posterleri ve IMDb Kodlarıyla 1000+ İçerik Arşivi
 BASE_MOVIES = [
     {"id": 1, "title": "Stranger Things", "year": 2025, "rating": 8.7, "category": "Netflix Dizi", "quality": "4K", "lang": "Türkçe Dublaj", "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "link": "https://vidsrc.me/embed/tv?imdb=tt4574334&language=tr", "trailer": "https://www.youtube.com/embed/b9EkMc79ZSU", "overview": "Hawkins kasabasında gizli deneyler ve doğaüstü olaylar."},
     {"id": 2, "title": "Wednesday", "year": 2024, "rating": 8.1, "category": "Netflix Dizi", "quality": "1080p", "lang": "Türkçe Dublaj", "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg", "link": "https://vidsrc.me/embed/tv?imdb=tt13443470&language=tr", "trailer": "https://www.youtube.com/embed/Di310WS8nLk", "overview": "Nevermore Akademisi'nde gizemli olayları çözen Wednesday."},
@@ -19,10 +19,27 @@ BASE_MOVIES = [
     {"id": 13, "title": "Arcane", "year": 2021, "rating": 9.0, "category": "Animasyon & Çizgi Film", "quality": "4K", "lang": "Türkçe Dublaj", "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg", "link": "https://vidsrc.me/embed/tv?imdb=tt11126994&language=tr", "trailer": "https://www.youtube.com/embed/fXmAurh012s", "overview": "Piltover ve Zaun arasındaki efsanevi animasyon savaşı."}
 ]
 
-# 1000+ İçeriği Hatasız Üreten Arşiv Motoru
+# Farklı ve Çeşitli Afişleri Havuzdan Atayan Akıllı Arşiv Motoru
 def generate_1000_archive():
     items = list(BASE_MOVIES)
     categories = ["Netflix Dizi", "Netflix Film", "Animasyon & Çizgi Film", "Belgesel", "Anime"]
+    
+    # Farklı ve yüksek kaliteli poster havuzu
+    poster_pool = [
+        "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
+        "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
+        "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
+        "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
+        "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
+        "https://image.tmdb.org/t/p/w500/7gKI9hpJcZUQzwsCUO2k8k5k20j.jpg",
+        "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
+        "https://image.tmdb.org/t/p/w500/qayga6VIBFrhkg2u7nKkNZytAXu.jpg",
+        "https://image.tmdb.org/t/p/w500/vUUqzWa2LnHIVqtrkvlVGBI9jHW.jpg",
+        "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+        "https://image.tmdb.org/t/p/w500/zU0htwkhNvBQdVSIKB9s6hgVeFK.jpg",
+        "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg"
+    ]
+
     titles_pool = [
         "Sıfırıncı Gün", "Terzi", "Kulüp", "Mezarlık", "Yakamoz S-245", "UFO", "Aşk Taktikleri", 
         "Özel Ders", "Boacı", "Bana Karanlığını Anlat", "The Sea Beast", "Over the Moon", "Bubble", 
@@ -37,6 +54,7 @@ def generate_1000_archive():
     for i in range(25):
         for title in titles_pool:
             cat = categories[idx % len(categories)]
+            assigned_poster = poster_pool[idx % len(poster_pool)]
             item = {
                 "id": idx,
                 "title": f"{title} ({2026 - (idx % 5)})",
@@ -45,7 +63,7 @@ def generate_1000_archive():
                 "category": cat,
                 "quality": "1080p HD",
                 "lang": "Türkçe Dublaj",
-                "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+                "poster": assigned_poster,
                 "link": f"https://vidsrc.me/embed/tv?imdb=tt{1000000 + (idx * 37) % 900000}&language=tr",
                 "trailer": "https://www.youtube.com/embed/b9EkMc79ZSU",
                 "overview": f"Netflix orijinal yapımı {title}, kesintisiz Türkçe dublaj seslendirme seçeneğiyle yayında."
@@ -102,7 +120,7 @@ HTML_TEMPLATE = """
         .load-more-btn { background: #222; color: #fff; border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; }
         .load-more-btn:hover { background: var(--accent); }
 
-        /* Oynatıcı Modalı ve Geri Çıkma Tuşları */
+        /* Oynatıcı Modalı ve Geri Çıkma Paneli */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 2000; flex-direction: column; justify-content: space-between; }
         
         .modal-header { display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 15px; border-bottom: 1px solid var(--border); }
@@ -261,3 +279,4 @@ def index():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
