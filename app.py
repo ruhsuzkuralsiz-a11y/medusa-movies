@@ -1,25 +1,32 @@
-from flask import Flask, render_template_string
+from flask import Flask
 import requests
 
 app = Flask(__name__)
 
-# TMDB Açık Film API Anahtarı (Dünyadaki tüm filmleri ve dizileri otomatik çeker)
 TMDB_API_KEY = "c814436531362e9b1192e185f4702958"
 
 @app.route('/')
 def index():
+    results = []
     try:
-        # Popüler filmleri ve dizileri otomatik olarak API'den çekiyoruz
         url = f"https://api.themoviedb.org/3/trending/all/day?api_key={TMDB_API_KEY}&language=tr-TR"
-        response = requests.get(url)
-        data = response.json()
-        results = data.get('results', [])
-    except:
-        results = []
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            results = response.json().get('results', [])
+    except Exception as e:
+        print("Hata:", e)
+
+    # Eğer API'den veri gelmezse site boş kalmasın diye yedek popüler filmler
+    if not results:
+        results = [
+            {"title": "The Batman", "vote_average": 8.5, "poster_path": "/74xTEgt7R36Fpooo50r9T25onhq.jpg", "id": 414906, "media_type": "movie"},
+            {"title": "Stranger Things", "vote_average": 8.7, "poster_path": "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "id": 66732, "media_type": "tv"},
+            {"title": "Spider-Man: No Way Home", "vote_average": 8.0, "poster_path": "/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg", "id": 634649, "media_type": "movie"}
+        ]
 
     movies_html = ""
     for item in results:
-        title = item.get('title') or item.get('name') or 'Bilinmeyen'
+        title = item.get('title') or item.get('name') or 'Film'
         poster_path = item.get('poster_path')
         vote = round(item.get('vote_average', 0), 1)
         media_type = item.get('media_type', 'movie')
@@ -30,7 +37,6 @@ def index():
         else:
             image_url = "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=500"
 
-        # İzleme linki otomatik oluşturuluyor
         watch_link = f"https://multiembed.mov/?video_id={tmdb_id}&tmdb=1"
 
         movies_html += f"""
@@ -49,7 +55,7 @@ def index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Medusa Movies - Canlı Yayın Film Sitesi</title>
+        <title>Medusa Movies</title>
         <style>
             body {{ background-color: #121212; color: #ffffff; font-family: Arial, sans-serif; margin: 0; padding-bottom: 70px; }}
             .header {{ display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background-color: #161616; border-bottom: 2px solid #e50914; }}
