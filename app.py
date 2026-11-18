@@ -95,7 +95,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Film Detay ve Seçim Sayfası Şablonu
+# Film Detay Sayfası Şablonu
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -104,5 +104,8 @@ DETAIL_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ movie.title }} - Medusa Movies</title>
     <style>
-        body { font-family: -apple-system
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.6); padding-bottom: 25px; }
+        .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight: bold; font-size: 14px; }
+
         
