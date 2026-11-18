@@ -7,7 +7,7 @@ app = Flask(__name__)
 # TMDB API Anahtarı
 TMDB_API_KEY = "abdea525bebc9ce403ea266dc78f3555"
 
-# hdfilmcehennemi Tarzı Profesyonel Şablon
+# hdfilmcehennemi Tarzı Profesyonel Ana Sayfa Şablonu
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -34,7 +34,7 @@ HTML_TEMPLATE = """
         .movie-meta { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; }
         .rating { color: #f5c518; font-weight: bold; }
         
-        /* Alt Menü Çubuğu (hdfilmcehennemi mobil menü tarzı) */
+        /* Alt Menü Çubuğu */
         nav.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #181818; border-top: 1px solid #282828; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
         nav.bottom-nav a { color: #aaa; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
         nav.bottom-nav a.active, nav.bottom-nav a:hover { color: #ff3d00; }
@@ -96,7 +96,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Film Detay Sayfası Şablonu
+# Çalışan Video Oynatıcılı Detay Sayfası Şablonu
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -108,7 +108,9 @@ DETAIL_TEMPLATE = """
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
         .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight: bold; font-size: 14px; }
-        .player-placeholder { width: 100%; aspect-ratio: 16/9; background: #000; display: flex; justify-content: center; align-items: center; color: #666; font-size: 18px; border-bottom: 1px solid #222; }
+        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
+        .player-container iframe { width: 100%; height: 100%; border: none; }
+        .no-video { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; color: #777; font-size: 16px; }
         .details-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         h1 { margin: 0; color: #ff3d00; font-size: 24px; }
         .meta-row { display: flex; gap: 15px; font-size: 14px; color: #aaa; }
@@ -118,14 +120,18 @@ DETAIL_TEMPLATE = """
 <body>
     <div class="container">
         <a href="/" class="back-btn">← Ana Sayfaya Dön</a>
-        <div class="player-placeholder">
-            🎬 Oynatıcı Hazırlanıyor...
+        <div class="player-container">
+            {% if trailer_key %}
+            <iframe src="https://www.youtube.com/embed/{{ trailer_key }}?autoplay=0" allowfullscreen></iframe>
+            {% else %}
+            <div class="no-video">Bu film için oynatılabilir video bulunamadı.</div>
+            {% endif %}
         </div>
         <div class="details-content">
             <h1>{{ movie.title }}</h1>
             <div class="meta-row">
                 <span>📅 {{ movie.release_date }}</span>
-                <span>⭐ {{ movie.vote_average }} / 10</span>
+                <span>⭐ {{ "%.1f"|format(movie.vote_average) }} / 10</span>
             </div>
             <p class="overview"><strong>Özet:</strong> {{ movie.overview if movie.overview else "Bu film için açıklama bulunmuyor." }}</p>
         </div>
@@ -152,15 +158,33 @@ def index():
 
 @app.route('/movie/<int:movie_id>')
 def movie_detail(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=tr-TR"
-    response = requests.get(url)
-    if response.status_code != 200:
+    # Film Detayları
+    movie_url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=tr-TR"
+    movie_res = requests.get(movie_url)
+    if movie_res.status_code != 200:
         return "Film detayları yüklenemedi."
-    
-    movie = response.json()
-    return render_template_string(DETAIL_TEMPLATE, movie=movie)
+    movie = movie_res.json()
+
+    # Film Videosu / Fragmanı
+    video_url = f"https://api.themoviedb.org/3/movie/{movie_id}/videos?api_key={TMDB_API_KEY}&language=tr-TR"
+    video_res = requests.get(video_url)
+    trailer_key = None
+    if video_res.status_code == 200:
+        videos = video_res.json().get('results', [])
+        # Önce Türkçe fragman ara, bulamazsa İngilizce veya herhangi birini al
+        for v in videos:
+            if v.get('site') == 'YouTube' and v.get('type') == 'Trailer':
+                trailer_key = v.get('key')
+                break
+        if not trailer_key and videos:
+            for v in videos:
+                if v.get('site') == 'YouTube':
+                    trailer_key = v.get('key')
+                    break
+
+    return render_template_string(DETAIL_TEMPLATE, movie=movie, trailer_key=trailer_key)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-    
+                    
