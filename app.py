@@ -95,7 +95,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Detay Sayfası Şablonu (Çoklu Dil/Dublaj Destekli Oynatıcı)
+# Detay Sayfası Şablonu (Multiembed Dublaj / Altyazı Destekli)
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -106,96 +106,5 @@ DETAIL_TEMPLATE = """
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
-        .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight: bold; font-size: 14px; }
-        .player-container { width: 100%; aspect-ratio: 16/9; background: #000; position: relative; }
-        .player-container iframe { width: 100%; height: 100%; border: none; }
-        .no-video { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; color: #777; font-size: 16px; }
+        .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight
         
-        .source-selector { display: flex; background: #161616; border-bottom: 1px solid #222; }
-        .source-btn { flex: 1; padding: 12px; text-align: center; background: none; border: none; color: #aaa; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; text-decoration: none; }
-        .source-btn.active { background: #ff3d00; color: #fff; }
-        .source-btn:hover { background: #222; color: #fff; }
-
-        .details-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        h1 { margin: 0; color: #ff3d00; font-size: 24px; }
-        .meta-row { display: flex; gap: 15px; font-size: 14px; color: #aaa; }
-        .overview { line-height: 1.6; color: #ccc; font-size: 15px; }
-        .dub-note { background: #221508; border-left: 4px solid #ff3d00; padding: 10px 15px; font-size: 13px; color: #f5c518; border-radius: 0 6px 6px 0; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <a href="/" class="back-btn">← Ana Sayfaya Dön</a>
-        
-        <div class="source-selector">
-            <a href="/movie/{{ movie.id }}?player=movie" class="source-btn {% if player_type == 'movie' %}active{% endif %}">🎬 Filmi İzle</a>
-            <a href="/movie/{{ movie.id }}?player=trailer" class="source-btn {% if player_type == 'trailer' %}active{% endif %}">▶️ Fragman İzle</a>
-        </div>
-
-        <div class="player-container">
-            {% if player_type == 'movie' %}
-                <!-- Otomatik Dublaj / Altyazı Destekli Oyuncu Altyapısı -->
-                <iframe src="https://autoembed.cc/embed/movie/tmdb/{{ movie.id }}" allowfullscreen></iframe>
-            {% else %}
-                {% if trailer_key %}
-                <iframe src="https://www.youtube.com/embed/{{ trailer_key }}" allowfullscreen></iframe>
-                {% else %}
-                <div class="no-video">Bu film için fragman bulunamadı.</div>
-                {% endif %}
-            {% endif %}
-        </div>
-
-        {% if player_type == 'movie' %}
-        <div class="dub-note">
-            💡 <strong>İpucu:</strong> Oynatıcı açıldıktan sonra oynatıcının içindeki ayarlar veya dil menüsünden (varsa) <strong>Türkçe Dublaj</strong> veya Türkçe altyazı seçeneğini aktif edebilirsin kanka!
-        </div>
-        {% endif %}
-
-        <div class="details-content">
-            <h1>{{ movie.title }}</h1>
-            <div class="meta-row">
-                <span>📅 {{ movie.release_date }}</span>
-                <span>⭐ {{ "%.1f"|format(movie.vote_average) }} / 10</span>
-            </div>
-            <p class="overview"><strong>Özet:</strong> {{ movie.overview if movie.overview else "Bu film için açıklama bulunmuyor." }}</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
-
-@app.route('/')
-def index():
-    query = request.args.get('q', '').strip()
-    if query:
-        url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&language=tr-TR&query={query}"
-    else:
-        url = f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&language=tr-TR&page=1"
-    
-    response = requests.get(url)
-    if response.status_code != 200:
-        return f"API Hatası: {response.status_code}"
-    
-    data = response.json()
-    movies = data.get('results', [])
-    return render_template_string(HTML_TEMPLATE, movies=movies, query=query)
-
-@app.route('/movie/<int:movie_id>')
-def movie_detail(movie_id):
-    player_type = request.args.get('player', 'movie')
-
-    movie_url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=tr-TR"
-    movie_res = requests.get(movie_url)
-    if movie_res.status_code != 200:
-        return "Film detayları yüklenemedi."
-    movie = movie_res.json()
-
-    video_url = f"https://api.themoviedb.org/3/movie/{movie_id}/videos?api_key={TMDB_API_KEY}&language=tr-TR"
-    video_res = requests.get(video_url)
-    trailer_key = None
-    if video_res.status_code == 200:
-        videos = video_res.json().get('results', [])
-        for v in videos:
-            if v.get('site') == 'YouTube' and v.get('type') == 'Trailer':
-                trailer_key = v.
-                
