@@ -2,7 +2,7 @@ from flask import Flask
 
 app = Flask(__name__)
 
-# Hdfilmcehennemi Tarzı Dev Film ve Dizi Arşivi
+# Hdfilmcehennemi.nl Birebir Kopya Arşivi (Netflix, Disney+, DC/Marvel, Animasyon, Anime, Yeni Çıkanlar)
 movies = [
     # YENİ ÇIKANLAR & VİZYON
     {"title": "Dune: Çöl Gezegeni Bölüm 2", "rating": "8.6", "category": "vizyon", "cat_name": "YENİ ÇIKANLAR", "image": "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg", "link": "https://multiembed.mov/?video_id=tt15239678&tmdb=1", "trailer": "https://www.youtube.com/embed/Way9Dexny3w"},
@@ -61,7 +61,7 @@ def index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Medusa Movies - Hdfilmcehennemi Tarzı Film ve Dizi Arşivi</title>
+        <title>Medusa Movies - Hdfilmcehennemi Kopya</title>
         <style>
             body {{ background-color: #121212; color: #ffffff; font-family: Arial, sans-serif; margin: 0; padding-bottom: 70px; }}
             .header {{ display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background-color: #161616; border-bottom: 2px solid #e50914; }}
