@@ -11,7 +11,7 @@ CATALOG = [
         "rating": "9.1",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=66732",
+        "link": "https://vidsrc.me/embed/tv?tmdb=66732&ds_lang=tr",
         "overview": "Stranger Things Full Bölüm Türkçe Dublaj Kesintisiz İzleme."
     },
     {
@@ -21,7 +21,7 @@ CATALOG = [
         "rating": "8.9",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=119051",
+        "link": "https://vidsrc.me/embed/tv?tmdb=119051&ds_lang=tr",
         "overview": "Wednesday Addams Türkçe Dublaj tam bölüm izle."
     },
     {
@@ -31,7 +31,7 @@ CATALOG = [
         "rating": "8.7",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=93405",
+        "link": "https://vidsrc.me/embed/tv?tmdb=93405&ds_lang=tr",
         "overview": "Squid Game Türkçe Dublaj tam dizi keyfi."
     },
     {
@@ -41,7 +41,7 @@ CATALOG = [
         "rating": "8.6",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=71912",
+        "link": "https://vidsrc.me/embed/tv?tmdb=71912&ds_lang=tr",
         "overview": "The Witcher Türkçe Dublaj tam bölüm oynatıcı."
     },
     {
@@ -51,7 +51,7 @@ CATALOG = [
         "rating": "8.4",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/wkPPggLUDauAoukxuvXIPq70Ssx.jpg",
-        "link": "https://vidsrc.me/embed/movie?tmdb=697843",
+        "link": "https://vidsrc.me/embed/movie?tmdb=697843&ds_lang=tr",
         "overview": "Extraction 2 Türkçe Dublaj tam film izle."
     },
     {
@@ -61,7 +61,7 @@ CATALOG = [
         "rating": "9.2",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=70523",
+        "link": "https://vidsrc.me/embed/tv?tmdb=70523&ds_lang=tr",
         "overview": "Dark Türkçe Dublaj tam dizi izleme."
     },
     {
@@ -71,7 +71,7 @@ CATALOG = [
         "rating": "9.4",
         "category": "Anime & Animasyon",
         "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=94605",
+        "link": "https://vidsrc.me/embed/tv?tmdb=94605&ds_lang=tr",
         "overview": "Arcane Türkçe Dublaj tam bölüm animasyon serisi."
     },
     {
@@ -81,7 +81,7 @@ CATALOG = [
         "rating": "9.3",
         "category": "Belgeseller",
         "poster": "https://image.tmdb.org/t/p/w500/1XgmBoiiapwFMCKkG8tYqA5qN8S.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=87108",
+        "link": "https://vidsrc.me/embed/tv?tmdb=87108&ds_lang=tr",
         "overview": "Our Planet belgesel serisi tam bölüm."
     },
     {
@@ -91,7 +91,7 @@ CATALOG = [
         "rating": "8.8",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=71446",
+        "link": "https://vidsrc.me/embed/tv?tmdb=71446&ds_lang=tr",
         "overview": "La Casa de Papel Türkçe Dublaj tam dizi izle."
     },
     {
@@ -101,7 +101,7 @@ CATALOG = [
         "rating": "8.0",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
-        "link": "https://vidsrc.me/embed/movie?tmdb=545611",
+        "link": "https://vidsrc.me/embed/movie?tmdb=545611&ds_lang=tr",
         "overview": "The Gray Man Türkçe Dublaj tam film izle."
     }
 ]
@@ -111,7 +111,7 @@ HTML_TEMPLATE = """
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>medusafilm - Full Türkçe Dublaj İzle</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -145,14 +145,13 @@ HTML_TEMPLATE = """
         .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #222; }
         .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Modal ve Geri Dön Tuşu */
+        /* Tam Ekran Duyarlı Video Modal Tasarımı */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; flex-direction: column; justify-content: space-between; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 15px; border-bottom: 1px solid #222; }
-        .back-btn { background: var(--netflix-red); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-        .modal-player-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; }
-        .iframe-container { position: relative; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 10px 15px; border-bottom: 1px solid #222; height: 50px; }
+        .back-btn { background: var(--netflix-red); color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .modal-player-wrapper { flex: 1; width: 100%; height: calc(100% - 50px); background: #000; display: flex; align-items: center; justify-content: center; }
+        .iframe-container { width: 100%; height: 100%; background: #000; }
         .iframe-container iframe { width: 100%; height: 100%; border: none; }
-        .modal-footer-desc { background: #111; padding: 12px 20px; font-size: 12px; color: #aaa; border-top: 1px solid #222; text-align: center; }
 
         .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background-color: rgba(18,18,18,0.95); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 1000; }
         .nav-link { color: #8c8c8c; text-decoration: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; background: none; border: none; }
@@ -167,12 +166,12 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="search-bar-container" id="searchBar">
-        <input type="text" id="searchInput" placeholder="İstediğin filmi veya diziyi ara (Örn: Stranger Things)..." oninput="filterCatalog()">
+        <input type="text" id="searchInput" placeholder="Film veya dizi ara..." oninput="filterCatalog()">
     </div>
 
     <div class="hero-banner">
         <div class="hero-title">Stranger Things</div>
-        <button class="hero-btn" onclick="openPlayer('https://vidsrc.me/embed/tv?tmdb=66732', 'Stranger Things', 'Full Bölüm Türkçe Dublaj İzle')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
+        <button class="hero-btn" onclick="openPlayer('https://vidsrc.me/embed/tv?tmdb=66732&ds_lang=tr', 'Stranger Things')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
     </div>
 
     <div class="netflix-categories">
@@ -192,15 +191,14 @@ HTML_TEMPLATE = """
     <div id="mediaModal" class="modal">
         <div class="modal-header">
             <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri Dön</button>
-            <span style="font-size: 13px; color: #fff; font-weight: bold;" id="modalTitle">Medusa Oynatıcı</span>
-            <div style="width: 70px;"></div>
+            <span style="font-size: 12px; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;" id="modalTitle">Oynatıcı</span>
+            <div style="width: 50px;"></div>
         </div>
         <div class="modal-player-wrapper">
             <div class="iframe-container">
-                <iframe id="mediaFrame" src="" allowfullscreen allow="autoplay"></iframe>
+                <iframe id="mediaFrame" src="" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="autoplay; fullscreen; encrypted-media"></iframe>
             </div>
         </div>
-        <div class="modal-footer-desc" id="modalDesc">Full Türkçe Dublaj Oynatıcı Aktif.</div>
     </div>
 
     <div class="netflix-bottom-nav">
@@ -226,14 +224,14 @@ HTML_TEMPLATE = """
             });
 
             if(filtered.length === 0) {
-                grid.innerHTML = '<div style="grid-column: span 5; text-align: center; color: #888; padding: 30px; font-size: 13px;">Aradığın film/dizi bulunamadı kanka!</div>';
+                grid.innerHTML = '<div style="grid-column: span 5; text-align: center; color: #888; padding: 30px; font-size: 13px;">Aradığın içerik bulunamadı kanka!</div>';
                 return;
             }
 
             filtered.forEach(m => {
                 const card = document.createElement('div');
                 card.className = 'movie-card';
-                card.onclick = () => openPlayer(m.link, m.title, m.overview);
+                card.onclick = () => openPlayer(m.link, m.title);
                 card.innerHTML = `
                     <img src="${m.poster}" class="movie-poster" loading="lazy">
                     <div class="movie-info">${m.title}</div>
@@ -277,16 +275,28 @@ HTML_TEMPLATE = """
             render();
         }
 
-        function openPlayer(url, title, desc) {
+        function openPlayer(url, title) {
             document.getElementById('mediaFrame').src = url;
-            document.getElementById('modalTitle').innerText = title + " (Türkçe Dublaj İzle)";
-            document.getElementById('modalDesc').innerText = desc;
+            document.getElementById('modalTitle').innerText = title + " (Türkçe Dublaj)";
             document.getElementById('mediaModal').style.display = 'flex';
+            
+            // Mobilde tam ekran desteği tetikleme
+            let elem = document.getElementById('mediaModal');
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(() => {});
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
         }
 
         function closeModal() {
             document.getElementById('mediaFrame').src = '';
             document.getElementById('mediaModal').style.display = 'none';
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
         }
 
         render();
