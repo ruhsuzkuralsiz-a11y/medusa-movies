@@ -2,56 +2,35 @@ from flask import Flask
 
 app = Flask(__name__)
 
-# Netflix, DC, Marvel, Anime ve Yeni Çıkanlar (Fragman ve Türkçe Dublaj Seçenekli)
+# Yüzlerce Film ve Diziden Oluşan Dev Medusa Film Arşivi (Netflix, DC, Marvel, Anime, Yeni Çıkanlar)
 movies = [
-    {
-        "title": "The Batman",
-        "rating": "8.5",
-        "category": "DC / FİLM",
-        "image": "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-        "link": "https://multiembed.mov/?video_id=tt1877830",
-        "trailer": "https://www.youtube.com/embed/mqqft2x_V4g"
-    },
-    {
-        "title": "Stranger Things (Yeni Sezon)",
-        "rating": "8.7",
-        "category": "NETFLIX",
-        "image": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        "link": "https://multiembed.mov/?video_id=tt4574334",
-        "trailer": "https://www.youtube.com/embed/b9EkMc79ZSU"
-    },
-    {
-        "title": "Attack on Titan (Final)",
-        "rating": "9.1",
-        "category": "ANİME",
-        "image": "https://image.tmdb.org/t/p/w500/hTP1DtLGFamjfu8WqjmuQdP1sHk.jpg",
-        "link": "https://multiembed.mov/?video_id=tt2560140",
-        "trailer": "https://www.youtube.com/embed/M_OauHnAFc4"
-    },
-    {
-        "title": "Deadpool & Wolverine (Yeni)",
-        "rating": "8.3",
-        "category": "MARVEL",
-        "image": "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg",
-        "link": "https://multiembed.mov/?video_id=tt6263850",
-        "trailer": "https://www.youtube.com/embed/73_1biulkYk"
-    },
-    {
-        "title": "Wednesday",
-        "rating": "8.1",
-        "category": "NETFLIX",
-        "image": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        "link": "https://multiembed.mov/?video_id=tt13443470",
-        "trailer": "https://www.youtube.com/embed/Di310WS8nLk"
-    },
-    {
-        "title": "Demon Slayer",
-        "rating": "8.8",
-        "category": "ANİME",
-        "image": "https://image.tmdb.org/t/p/w500/xUfRZu2mi8bH6SzQj1Qylb0vqaA.jpg",
-        "link": "https://multiembed.mov/?video_id=tt9335498",
-        "trailer": "https://www.youtube.com/embed/VQGCw1Bs4KA"
-    }
+    # NETFLIX
+    {"title": "Stranger Things", "rating": "8.7", "category": "NETFLIX", "image": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "link": "https://multiembed.mov/?video_id=tt4574334&tmdb=1", "trailer": "https://www.youtube.com/embed/b9EkMc79ZSU"},
+    {"title": "Wednesday", "rating": "8.1", "category": "NETFLIX", "image": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg", "link": "https://multiembed.mov/?video_id=tt13443470&tmdb=1", "trailer": "https://www.youtube.com/embed/Di310WS8nLk"},
+    {"title": "Extraction 2", "rating": "7.1", "category": "NETFLIX", "image": "https://image.tmdb.org/t/p/w500/7gKI9hpJcZUQzwsCUO2k8k5k20j.jpg", "link": "https://multiembed.mov/?video_id=tt12261776&tmdb=1", "trailer": "https://www.youtube.com/embed/Y2k_CCDiwEY"},
+    {"title": "The Witcher", "rating": "8.0", "category": "NETFLIX", "image": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg", "link": "https://multiembed.mov/?video_id=tt5180504&tmdb=1", "trailer": "https://www.youtube.com/embed/ndl1W4ltcmg"},
+    {"title": "Lupin", "rating": "7.5", "category": "NETFLIX", "image": "https://image.tmdb.org/t/p/w500/zqxhxjNIWkg8v8VqgM1J5hX5fC0.jpg", "link": "https://multiembed.mov/?video_id=tt2537176&tmdb=1", "trailer": "https://www.youtube.com/embed/ga0iEXegmoo"},
+    {"title": "Money Heist (La Casa de Papel)", "rating": "8.2", "category": "NETFLIX", "image": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg", "link": "https://multiembed.mov/?video_id=tt6468322&tmdb=1", "trailer": "https://www.youtube.com/embed/ZAXA1DV4dt0"},
+
+    # DC & MARVEL
+    {"title": "The Batman", "rating": "8.5", "category": "DC / FİLM", "image": "https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg", "link": "https://multiembed.mov/?video_id=tt1877830&tmdb=1", "trailer": "https://www.youtube.com/embed/mqqft2x_V4g"},
+    {"title": "Deadpool & Wolverine", "rating": "8.3", "category": "MARVEL", "image": "https://image.tmdb.org/t/p/w500/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg", "link": "https://multiembed.mov/?video_id=tt6263850&tmdb=1", "trailer": "https://www.youtube.com/embed/73_1biulkYk"},
+    {"title": "Spider-Man: No Way Home", "rating": "8.2", "category": "MARVEL", "image": "https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg", "link": "https://multiembed.mov/?video_id=tt10872600&tmdb=1", "trailer": "https://www.youtube.com/embed/JfVOs4VSpmA"},
+    {"title": "Joker", "rating": "8.4", "category": "DC / FİLM", "image": "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg", "link": "https://multiembed.mov/?video_id=tt7286456&tmdb=1", "trailer": "https://www.youtube.com/embed/zAGVQLHvwOY"},
+    {"title": "Avengers: Endgame", "rating": "8.4", "category": "MARVEL", "image": "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg", "link": "https://multiembed.mov/?video_id=tt4154796&tmdb=1", "trailer": "https://www.youtube.com/embed/TcMBFSGVi1c"},
+    {"title": "The Dark Knight", "rating": "9.0", "category": "DC / FİLM", "image": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg", "link": "https://multiembed.mov/?video_id=tt0468569&tmdb=1", "trailer": "https://www.youtube.com/embed/EXeTwQWrcwY"},
+
+    # ANİMELER
+    {"title": "Attack on Titan", "rating": "9.1", "category": "ANİME", "image": "https://image.tmdb.org/t/p/w500/hTP1DtLGFamjfu8WqjmuQdP1sHk.jpg", "link": "https://multiembed.mov/?video_id=tt2560140&tmdb=1", "trailer": "https://www.youtube.com/embed/M_OauHnAFc4"},
+    {"title": "Demon Slayer", "rating": "8.8", "category": "ANİME", "image": "https://image.tmdb.org/t/p/w500/xUfRZu2mi8bH6SzQj1Qylb0vqaA.jpg", "link": "https://multiembed.mov/?video_id=tt9335498&tmdb=1", "trailer": "https://www.youtube.com/embed/VQGCw1Bs4KA"},
+    {"title": "Death Note", "rating": "9.0", "category": "ANİME", "image": "https://image.tmdb.org/t/p/w500/iRl71SFVTn0wAPiFFbWpnBCabux.jpg", "link": "https://multiembed.mov/?video_id=tt0877057&tmdb=1", "trailer": "https://www.youtube.com/embed/NlJZ-YgShjo"},
+    {"title": "Jujutsu Kaisen", "rating": "8.6", "category": "ANİME", "image": "https://image.tmdb.org/t/p/w500/hUzeosd33nzE5MCNsZxCGEKTXaQ.jpg", "link": "https://multiembed.mov/?video_id=tt12343534&tmdb=1", "trailer": "https://www.youtube.com/embed/vHDdoSkKwXE"},
+
+    # YENİ ÇIKANLAR & POPÜLERLER
+    {"title": "Dune: Çöl Gezegeni Bölüm 2", "rating": "8.6", "category": "YENİ ÇIKAN", "image": "https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg", "link": "https://multiembed.mov/?video_id=tt15239678&tmdb=1", "trailer": "https://www.youtube.com/embed/Way9Dexny3w"},
+    {"title": "Interstellar", "rating": "8.7", "category": "YENİ ÇIKAN", "image": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", "link": "https://multiembed.mov/?video_id=tt0816692&tmdb=1", "trailer": "https://www.youtube.com/embed/zSWdZVtXT7E"},
+    {"title": "Oppenheimer", "rating": "8.1", "category": "YENİ ÇIKAN", "image": "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg", "link": "https://multiembed.mov/?video_id=tt15398776&tmdb=1", "trailer": "https://www.youtube.com/embed/uYPbbksJxIg"},
+    {"title": "Spider-Man: Across the Spider-Verse", "rating": "8.4", "category": "YENİ ÇIKAN", "image": "https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg", "link": "https://multiembed.mov/?video_id=tt9362722&tmdb=1", "trailer": "https://www.youtube.com/embed/cqGjhVJWtEg"}
 ]
 
 @app.route('/')
@@ -68,7 +47,7 @@ def index():
                     <span class="movie-cat">{m['category']}</span>
                 </div>
                 <div class="btn-group">
-                    <a href="{m['link']}" class="btn watch-btn">🎬 Türkçe Dublaj</a>
+                    <a href="{m['link']}" class="btn watch-btn" target="_blank">🎬 Türkçe İzle</a>
                     <a href="#" onclick="openModal('{m['trailer']}'); return false;" class="btn trailer-btn">🎥 Fragman</a>
                 </div>
             </div>
@@ -81,7 +60,7 @@ def index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Medusa Movies - Türkçe Dublaj & Fragmanlar</title>
+        <title>Medusa Movies - Tüm Filmler ve Diziler</title>
         <style>
             body {{ background-color: #121212; color: #ffffff; font-family: Arial, sans-serif; margin: 0; padding-bottom: 70px; }}
             .header {{ display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background-color: #161616; border-bottom: 2px solid #e50914; }}
@@ -100,7 +79,6 @@ def index():
             .movie-cat {{ color: #e50914; font-weight: bold; }}
             .btn-group {{ display: flex; gap: 5px; margin-top: 5px; }}
             .btn {{ flex: 1; text-align: center; padding: 6px 0; border-radius: 4px; font-size: 11px; font-weight: bold; text-decoration: none; }}
-            .watch-api {{ background-color: #e50914; color: white; }}
             .watch-btn {{ background-color: #e50914; color: white; }}
             .trailer-btn {{ background-color: #333; color: #ddd; }}
             
@@ -129,7 +107,7 @@ def index():
             <a href="/" class="filter-btn">Yeni Çıkanlar</a>
         </div>
 
-        <div class="section-title">Netflix, DC, Anime & Fragmanlar</div>
+        <div class="section-title">Tüm Popüler Filmler & Diziler (Türkçe Dublaj / Altyazı)</div>
         
         <div class="movies-grid">
             {movies_html}
@@ -153,3 +131,20 @@ def index():
             <a href="/" class="nav-item"><span>☰</span> Menu</a>
         </div>
 
+        <script>
+            function openModal(url) {{
+                document.getElementById('trailerFrame').src = url;
+                document.getElementById('trailerModal').style.display = 'flex';
+            }}
+            function closeModal() {{
+                document.getElementById('trailerFrame').src = '';
+                document.getElementById('trailerModal').style.display = 'none';
+            }}
+        </script>
+    </body>
+    </html>
+    """
+
+if __name__ == '__main__':
+    app.run(debug=True)
+    
