@@ -1,12 +1,10 @@
 import random
-import requests
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
-# Netflix'in Tüm Kütüphanesini ve Binlerce İçeriği Otomatik Çeken Gelişmiş Motor
-BASE_CATALOG = [
-    # Netflix Popüler Diziler & Filmler (Türkçe Dublaj / Altyazı Kilitli)
+# Netflix Arşivi (Hatasız Python Listesi)
+MOVIES_DB = [
     {"id": 1, "title": "Stranger Things", "year": 2025, "rating": 8.7, "category": "Netflix Dizi", "quality": "4K", "lang": "Türkçe Dublaj", "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "link": "https://multiembed.mov/?video_id=tt4574334&tmdb=1", "trailer": "https://www.youtube.com/embed/b9EkMc79ZSU", "overview": "Hawkins kasabasında gizli deneyler ve doğaüstü olaylar."},
     {"id": 2, "title": "Wednesday", "year": 2024, "rating": 8.1, "category": "Netflix Dizi", "quality": "1080p", "lang": "Türkçe Dublaj", "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg", "link": "https://multiembed.mov/?video_id=tt13443470&tmdb=1", "trailer": "https://www.youtube.com/embed/Di310WS8nLk", "overview": "Nevermore Akademisi'nde gizemli olayları çözen Wednesday."},
     {"id": 3, "title": "Squid Game", "year": 2024, "rating": 8.0, "category": "Netflix Dizi", "quality": "4K", "lang": "Türkçe Dublaj", "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg", "link": "https://multiembed.mov/?video_id=tt10919420&tmdb=1", "trailer": "https://www.youtube.com/embed/oqxAJKy0ii4", "overview": "Ödül için ölümcül çocuk oyunları oynayan borç içindeki insanlar."},
@@ -19,15 +17,17 @@ BASE_CATALOG = [
     {"id": 10, "title": "The Mitchells vs. the Machines", "year": 2021, "rating": 7.6, "category": "Animasyon & Çizgi Film", "quality": "1080p", "lang": "Türkçe Dublaj", "poster": "https://image.tmdb.org/t/p/w500/mX3YJ8b5xM14v3Q8Lp7dM091F8p.jpg", "link": "https://multiembed.mov/?video_id=tt7979580&tmdb=1", "trailer": "https://www.youtube.com/embed/_1kVrSZw7ls", "overview": "Robot kıyametinde dünyayı kurtarmaya çalışan garip bir aile."}
 ]
 
-# Binlerce içeriği simüle eden ve tüm kategorileri oluşturan genişletici
-def generate_full_netflix_archive():
-    items = list(BASE_CATALOG)
+# Otomatik Genişletici (Yüzlerce İçerik Üretici)
+def generate_full_archive():
+    items = list(MOVIES_DB)
     categories = ["Netflix Dizi", "Netflix Film", "Animasyon & Çizgi Film", "Belgesel", "Anime"]
     extra_titles = [
         "Sıfırıncı Gün", "Terzi", "Kulüp", "Mezarlık", "Yakamoz S-245", 
         "UFO", "Aşk Taktikleri", "Özel Ders", "Boacı", "Bana Karanlığını Anlat",
         "The Sea Beast", "Over the Moon", "Bubble", "Cyberpunk: Edgerunners", "Dota",
-        "The Dragon Prince", "He-Man", "Jurassic World", "Boss Baby", "Kancalar"
+        "The Dragon Prince", "He-Man", "Jurassic World", "Boss Baby", "Kancalar",
+        "The Crown", "Lupin", "Elite", "You", "The Queen's Gambit", "Narcos",
+        "Black Mirror", "The Sandman", "Sex Education", "The Umbrella Academy"
     ]
     
     idx = 100
@@ -35,12 +35,12 @@ def generate_full_netflix_archive():
         for cat in categories:
             item = {
                 "id": idx,
-                "title": f"{title} - Bölüm/Seri {idx}",
+                "title": f"{title} ({idx})",
                 "year": random.choice([2021, 2022, 2023, 2024, 2025]),
-                "rating": round(random.uniform(6.5, 9.1), 1),
+                "rating": round(random.uniform(6.5, 9.2), 1),
                 "category": cat,
                 "quality": "1080p HD",
-                "lang": "🇹🇷 Türkçe Dublaj",
+                "lang": "Türkçe Dublaj",
                 "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
                 "link": f"https://multiembed.mov/?video_id=tt{4000000 + idx}&tmdb=1",
                 "trailer": "https://www.youtube.com/embed/b9EkMc79ZSU",
@@ -50,7 +50,7 @@ def generate_full_netflix_archive():
             idx += 1
     return items
 
-MOVIES_DB = generate_full_netflix_archive()
+FULL_DB = generate_full_archive()
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -58,7 +58,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medusa Movies - Netflix Türkçe Dublaj Arşivi</title>
+    <title>Medusa Movies - Netflix Tam Arşiv</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --bg: #121212; --card: #1a1a1a; --accent: #e50914; --text: #ffffff; --muted: #aaa; --border: #2a2a2a; }
@@ -114,7 +114,7 @@ HTML_TEMPLATE = """
             <a href="/" class="logo">🔥 medusafilm (Netflix Tam Arşiv)</a>
         </div>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Binlerce içerik arasında ara (Film, Dizi, Çizgi Film)..." oninput="filterMovies()">
+            <input type="text" id="searchInput" placeholder="Binlerce içerik arasında ara..." oninput="filterMovies()">
         </div>
     </div>
 
@@ -157,7 +157,7 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
-        const allMovies = """ + str(MOVIES_DB).replace("'", '"') + """;
+        const allMovies = {{ full_json | safe }};
         let currentCategory = 'Tümü';
         let searchQuery = '';
         let displayLimit = 24;
@@ -172,7 +172,7 @@ HTML_TEMPLATE = """
                 return matchCat && matchSearch;
             });
 
-            document.getElementById('countText.innerText = `${filtered.length} içerik`;
+            document.getElementById('countText').innerText = filtered.length + ' içerik';
             
             let sliced = filtered.slice(0, displayLimit);
             
@@ -238,8 +238,9 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def index():
-    return render_template_string(HTML_TEMPLATE)
+    import json
+    return render_template_string(HTML_TEMPLATE, full_json=json.dumps(FULL_DB))
 
 if __name__ == '__main__':
     app.run(debug=True)
-                
+    
