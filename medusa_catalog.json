@@ -1,1 +1,82 @@
-
+[
+  {
+    "id": 1,
+    "title": "Stranger Things",
+    "year": 2024,
+    "rating": "9.1",
+    "category": "Popüler Diziler",
+    "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+    "link": "https://www.youtube.com/embed/b9EkMc79ZSU",
+    "overview": "Stranger Things, netflix orijinal popüler dizi arşivi."
+  },
+  {
+    "id": 2,
+    "title": "Wednesday",
+    "year": 2024,
+    "rating": "8.9",
+    "category": "Popüler Diziler",
+    "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
+    "link": "https://www.youtube.com/embed/Di310WS8nLk",
+    "overview": "Wednesday Addams maceraları medusafilm'de."
+  },
+  {
+    "id": 3,
+    "title": "Squid Game",
+    "year": 2024,
+    "rating": "8.7",
+    "category": "Gündemdekiler",
+    "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
+    "link": "https://www.youtube.com/embed/oqxAJKy0ii4",
+    "overview": "Hayatta kalma mücadelesi ve oyunlar."
+  },
+  {
+    "id": 4,
+    "title": "The Witcher",
+    "year": 2024,
+    "rating": "8.6",
+    "category": "Popüler Diziler",
+    "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
+    "link": "https://www.youtube.com/embed/ndl1W4ltcmg",
+    "overview": "Rivyalı Geralt'ın efsanevi maceraları."
+  },
+  {
+    "id": 5,
+    "title": "Extraction 2",
+    "year": 2023,
+    "rating": "8.4",
+    "category": "Netflix Orijinal Filmler",
+    "poster": "https://image.tmdb.org/t/p/w500/7gKI9hpJcZUQzwsCUO2k8k5k20j.jpg",
+    "link": "https://www.youtube.com/embed/Y274jZs5s7s",
+    "overview": "Aksiyon dolu nefes kesen film."
+  },
+  {
+    "id": 6,
+    "title": "Dark",
+    "year": 2020,
+    "rating": "9.2",
+    "category": "Popüler Diziler",
+    "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
+    "link": "https://www.youtube.com/embed/rrwycJ08PSA",
+    "overview": "Zaman yolculuğu ve gizem dolu kasaba sırları."
+  },
+  {
+    "id": 7,
+    "title": "Arcane",
+    "year": 2021,
+    "rating": "9.4",
+    "category": "Anime & Animasyon",
+    "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
+    "link": "https://www.youtube.com/embed/fXmAurh012s",
+    "overview": "Piltover ve Zaun arasındaki nefis animasyon serisi."
+  },
+  {
+    "id": 8,
+    "title": "Our Planet",
+    "year": 2019,
+    "rating": "9.3",
+    "category": "Belgeseller",
+    "poster": "https://image.tmdb.org/t/p/w500/m2200lG2XpPjM000000000000.jpg",
+    "link": "https://www.youtube.com/embed/aETNYMYwN58",
+    "overview": "Dünyanın eşsiz doğasını ve canlılarını keşfedin."
+  }
+]
