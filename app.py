@@ -7,7 +7,7 @@ app = Flask(__name__)
 # TMDB API Anahtarı
 TMDB_API_KEY = "abdea525bebc9ce403ea266dc78f3555"
 
-# Ana Sayfa ve Arama Şablonu
+# hdfilmcehennemi Tarzı Profesyonel Şablon
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -16,40 +16,82 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medusa Movies</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #141414; color: #fff; margin: 0; padding: 20px; }
-        h1 { text-align: center; color: #e50914; margin-bottom: 10px; }
-        .search-box { text-align: center; margin-bottom: 30px; }
-        .search-box input { padding: 10px; width: 60%; max-width: 400px; border-radius: 4px; border: none; font-size: 16px; }
-        .search-box button { padding: 10px 20px; background-color: #e50914; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; margin-left: 5px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .movie-card { background: #1f1f1f; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.3); text-align: center; padding-bottom: 10px; text-decoration: none; color: inherit; display: block; transition: transform 0.2s; }
-        .movie-card:hover { transform: scale(1.03); }
-        .movie-card img { width: 100%; height: auto; }
-        .movie-card h3 { font-size: 14px; padding: 0 10px; margin: 10px 0 5px 0; }
-        .movie-card p { font-size: 12px; color: #aaa; margin: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #fff; margin: 0; padding-bottom: 70px; }
+        header { background: #1a1a1a; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 1000; }
+        .logo { color: #ff3d00; font-size: 20px; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 5px; }
+        .logo span { color: #fff; }
+        .search-container { padding: 15px 20px; background: #161616; text-align: center; }
+        .search-container input { width: 100%; max-width: 600px; padding: 12px 15px; border-radius: 25px; border: none; background: #222; color: #fff; font-size: 15px; outline: none; }
+        .section-title { padding: 15px 20px 5px 20px; font-size: 18px; font-weight: bold; color: #ddd; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 10px 15px; max-width: 1200px; margin: 0 auto; }
+        @media(min-width: 768px) { .grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 20px; } }
+        .movie-card { background: #1a1a1a; border-radius: 10px; overflow: hidden; text-decoration: none; color: inherit; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: transform 0.2s; }
+        .movie-card:hover { transform: translateY(-3px); }
+        .poster-wrapper { position: relative; width: 100%; padding-top: 150%; background: #222; }
+        .poster-wrapper img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .movie-info { padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .movie-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+        .movie-meta { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; }
+        .rating { color: #f5c518; font-weight: bold; }
+        
+        /* Alt Menü Çubuğu (hdfilmcehennemi mobil menü tarzı) */
+        nav.bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #181818; border-top: 1px solid #282828; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
+        nav.bottom-nav a { color: #aaa; text-decoration: none; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        nav.bottom-nav a.active, nav.bottom-nav a:hover { color: #ff3d00; }
+        nav.bottom-nav svg { width: 20px; height: 20px; fill: currentColor; }
     </style>
 </head>
 <body>
-    <h1>Medusa Movies</h1>
-    <div class="search-box">
+    <header>
+        <a href="/" class="logo">🔥 Medusa<span>Movies</span></a>
+    </header>
+
+    <div class="search-container">
         <form action="/" method="GET">
-            <input type="text" name="q" placeholder="Film ara..." value="{{ query }}">
-            <button type="submit">Ara</button>
+            <input type="text" name="q" placeholder="Film ara (Örn: Avengers, Matrix...)" value="{{ query }}">
         </form>
     </div>
+
+    <div class="section-title">Popüler Filmler</div>
     <div class="grid">
         {% for movie in movies %}
         <a href="/movie/{{ movie.id }}" class="movie-card">
-            {% if movie.poster_path %}
-            <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
-            {% else %}
-            <img src="https://via.placeholder.com/500x750?text=Resim+Yok" alt="Resim Yok">
-            {% endif %}
-            <h3>{{ movie.title }}</h3>
-            <p>⭐ {{ movie.vote_average }}</p>
+            <div class="poster-wrapper">
+                {% if movie.poster_path %}
+                <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}">
+                {% else %}
+                <img src="https://via.placeholder.com/500x750?text=Resim+Yok" alt="Resim Yok">
+                {% endif %}
+            </div>
+            <div class="movie-info">
+                <div class="movie-title">{{ movie.title }}</div>
+                <div class="movie-meta">
+                    <span>{{ movie.release_date[:4] if movie.release_date else '' }}</span>
+                    <span class="rating">⭐ {{ "%.1f"|format(movie.vote_average) }}</span>
+                </div>
+            </div>
         </a>
         {% endfor %}
     </div>
+
+    <nav class="bottom-nav">
+        <a href="/" class="active">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Anasayfa
+        </a>
+        <a href="/">
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0-2-.9-2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+            Filmler
+        </a>
+        <a href="/">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            Keşfet
+        </a>
+        <a href="/">
+            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            Menü
+        </a>
+    </nav>
 </body>
 </html>
 """
@@ -60,5 +102,65 @@ DETAIL_TEMPLATE = """
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie.title }} - Medusa Movies</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #1a1a1a; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+        .back-btn { display: inline-block; margin: 15px; color: #ff3d00; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .player-placeholder { width: 100%; aspect-ratio: 16/9; background: #000; display: flex; justify-content: center; align-items: center; color: #666; font-size: 18px; border-bottom: 1px solid #222; }
+        .details-content { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        h1 { margin: 0; color: #ff3d00; font-size: 24px; }
+        .meta-row { display: flex; gap: 15px; font-size: 14px; color: #aaa; }
+        .overview { line-height: 1.6; color: #ccc; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Ana Sayfaya Dön</a>
+        <div class="player-placeholder">
+            🎬 Oynatıcı Hazırlanıyor...
+        </div>
+        <div class="details-content">
+            <h1>{{ movie.title }}</h1>
+            <div class="meta-row">
+                <span>📅 {{ movie.release_date }}</span>
+                <span>⭐ {{ movie.vote_average }} / 10</span>
+            </div>
+            <p class="overview"><strong>Özet:</strong> {{ movie.overview if movie.overview else "Bu film için açıklama bulunmuyor." }}</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+@app.route('/')
+def index():
+    query = request.args.get('q', '').strip()
+    if query:
+        url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&language=tr-TR&query={query}"
+    else:
+        url = f"https://api.themoviedb.org/3/movie/popular?api_key={TMDB_API_KEY}&language=tr-TR&page=1"
+    
+    response = requests.get(url)
+    if response.status_code != 200:
+        return f"API Hatası: {response.status_code}"
+    
+    data = response.json()
+    movies = data.get('results', [])
+    return render_template_string(HTML_TEMPLATE, movies=movies, query=query)
+
+@app.route('/movie/<int:movie_id>')
+def movie_detail(movie_id):
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=tr-TR"
+    response = requests.get(url)
+    if response.status_code != 200:
+        return "Film detayları yüklenemedi."
+    
+    movie = response.json()
+    return render_template_string(DETAIL_TEMPLATE, movie=movie)
+
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
     
