@@ -95,7 +95,7 @@ HTML_TEMPLATE = """
 </html>
 """
 
-# Detay Sayfası Şablonu
+# Detay Sayfası Şablonu (2embed altyapısı ile güncellendi)
 DETAIL_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="tr">
@@ -133,7 +133,7 @@ DETAIL_TEMPLATE = """
 
         <div class="player-container">
             {% if player_type == 'movie' %}
-                <iframe src="https://vidsrc.me/embed/movie?tmdb={{ movie.id }}" allowfullscreen></iframe>
+                <iframe src="https://www.2embed.cc/embed/{{ movie.id }}" allowfullscreen></iframe>
             {% else %}
                 {% if trailer_key %}
                 <iframe src="https://www.youtube.com/embed/{{ trailer_key }}" allowfullscreen></iframe>
