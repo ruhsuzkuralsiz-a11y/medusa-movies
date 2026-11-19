@@ -204,11 +204,11 @@ HTML_TEMPLATE = """
             width: 100%; height: 150px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 10px; text-align: center;
-            background: linear-gradient(145deg, #1b1b22, #0d0d11);
+            background: linear-gradient(155deg, #1e1e28, #0b0b0e);
             border-bottom: 2px solid var(--card-glow, #E50914);
         }
-        .poster-fallback i { font-size: 24px; color: var(--card-glow, #E50914); margin-bottom: 6px; }
-        .poster-fallback span { font-size: 11px; font-weight: bold; color: #e5e7eb; line-height: 1.25; }
+        .poster-fallback svg { width: 28px; height: 28px; margin-bottom: 6px; color: var(--card-glow, #E50914); }
+        .poster-fallback span { font-size: 11px; font-weight: bold; color: #f3f4f6; line-height: 1.25; }
         .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .modal {
@@ -280,7 +280,7 @@ HTML_TEMPLATE = """
     <div class="ambient-bg" id="ambientBg"></div>
 
     <div class="netflix-header">
-        <a href="/" class="netflix-logo">MEDUSAFILM</a>
+        <a href="/v2" class="netflix-logo">MEDUSAFILM</a>
         <button class="search-icon-btn" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
     </div>
 
@@ -335,6 +335,7 @@ HTML_TEMPLATE = """
     <script>
         const localMovies = {{ catalog_json | safe }};
         const dynamicPalette = ['#ff1e2d', '#a855f7', '#00e5ff', '#00ff88', '#fbbf24', '#ff2a85', '#2979ff'];
+        const SVG_FILM_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="3" y1="12" x2="21" y2="12"/></svg>`;
 
         let currentCategory = 'Tümü';
         let searchQuery = '';
@@ -385,6 +386,21 @@ HTML_TEMPLATE = """
             setAmbilightColor(color);
         }
 
+        function createFallbackBox(titleText) {
+            const fallbackDiv = document.createElement('div');
+            fallbackDiv.className = 'poster-fallback';
+            fallbackDiv.innerHTML = `${SVG_FILM_ICON}<span>${titleText}</span>`;
+            return fallbackDiv;
+        }
+
+        function showCardFallback(imgEl) {
+            if (!imgEl || !imgEl.parentElement) return;
+            const card = imgEl.parentElement;
+            const titleEl = card.querySelector('.movie-info');
+            const titleText = titleEl ? titleEl.textContent : 'İçerik';
+            imgEl.replaceWith(createFallbackBox(titleText));
+        }
+
         function renderCards(items, emptyMessage) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = '';
@@ -399,24 +415,4 @@ HTML_TEMPLATE = """
                 const safeTitle = String(m.title || 'İçerik').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const card = document.createElement('div');
                 card.className = 'movie-card';
-                card.style.setProperty('--card-glow', cardColor);
-
-                card.onmouseenter = () => highlightCard(card, cardColor);
-                card.ontouchstart = () => highlightCard(card, cardColor);
-                card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title, cardColor);
-
-                const imgHtml = m.poster
-                    ? `<img src="${m.poster}" class="movie-poster" loading="lazy" onerror="showCardFallback(this);">`
-                    : `<div class="poster-fallback"><i class="fa-solid fa-film"></i><span>${safeTitle}</span></div>`;
-
-                card.innerHTML = `
-                    ${imgHtml}
-                    <div class="movie-info">${safeTitle}</div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function showCardFallback(imgEl) {
-            if (!imgEl || !imgEl.parentElement) return;
-            const card = imgEl.paren
+           
