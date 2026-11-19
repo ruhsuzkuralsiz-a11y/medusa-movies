@@ -13,8 +13,7 @@ CATALOG = [
         "title": "Stranger Things",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        "glow": "#ff1e2d",
-        "overview": "Stranger Things oynatıcı ekranı."
+        "glow": "#ff1e2d"
     },
     {
         "id": 119051,
@@ -22,8 +21,7 @@ CATALOG = [
         "title": "Wednesday",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        "glow": "#a855f7",
-        "overview": "Wednesday oynatıcı ekranı."
+        "glow": "#a855f7"
     },
     {
         "id": 93405,
@@ -31,8 +29,7 @@ CATALOG = [
         "title": "Squid Game",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
-        "glow": "#ff2a85",
-        "overview": "Squid Game oynatıcı ekranı."
+        "glow": "#ff2a85"
     },
     {
         "id": 71912,
@@ -40,8 +37,7 @@ CATALOG = [
         "title": "The Witcher",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
-        "glow": "#fbbf24",
-        "overview": "The Witcher oynatıcı ekranı."
+        "glow": "#fbbf24"
     },
     {
         "id": 697843,
@@ -49,8 +45,7 @@ CATALOG = [
         "title": "Extraction 2",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/7gKI9hpEMcZuQPNgKrkDzJpbnNS.jpg",
-        "glow": "#ff6a00",
-        "overview": "Extraction 2 oynatıcı ekranı."
+        "glow": "#ff6a00"
     },
     {
         "id": 70523,
@@ -58,8 +53,7 @@ CATALOG = [
         "title": "Dark",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
-        "glow": "#facc15",
-        "overview": "Dark oynatıcı ekranı."
+        "glow": "#facc15"
     },
     {
         "id": 94605,
@@ -67,8 +61,7 @@ CATALOG = [
         "title": "Arcane",
         "category": "Anime & Animasyon",
         "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
-        "glow": "#00e5ff",
-        "overview": "Arcane oynatıcı ekranı."
+        "glow": "#00e5ff"
     },
     {
         "id": 87108,
@@ -76,8 +69,7 @@ CATALOG = [
         "title": "Our Planet",
         "category": "Belgeseller",
         "poster": "https://image.tmdb.org/t/p/w500/1XgmBoiiapwFMCKkG8tYqA5qN8S.jpg",
-        "glow": "#00ff88",
-        "overview": "Our Planet oynatıcı ekranı."
+        "glow": "#00ff88"
     },
     {
         "id": 71446,
@@ -85,8 +77,7 @@ CATALOG = [
         "title": "La Casa de Papel",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
-        "glow": "#ff1744",
-        "overview": "La Casa de Papel oynatıcı ekranı."
+        "glow": "#ff1744"
     },
     {
         "id": 545611,
@@ -94,8 +85,7 @@ CATALOG = [
         "title": "The Gray Man",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
-        "glow": "#2979ff",
-        "overview": "The Gray Man oynatıcı ekranı."
+        "glow": "#2979ff"
     }
 ]
 
@@ -122,7 +112,6 @@ HTML_TEMPLATE = """
             overflow-x: hidden;
         }
 
-        /* Güçlü Arka Plan Ambilight Işık Havuzu */
         .ambient-bg {
             position: fixed;
             inset: -20%;
@@ -151,7 +140,6 @@ HTML_TEMPLATE = """
             color: var(--netflix-red); font-size: 22px; font-weight: bold;
             text-decoration: none; font-family: Impact, sans-serif;
             text-shadow: 0 0 20px var(--ambilight-color);
-            transition: text-shadow 0.4s ease;
         }
         .search-icon-btn { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
 
@@ -164,7 +152,6 @@ HTML_TEMPLATE = """
             display: flex; flex-direction: column; justify-content: flex-end;
             padding: 20px; text-align: center; margin-top: 60px; z-index: 1;
             box-shadow: 0 0 65px -5px var(--ambilight-color);
-            transition: box-shadow 0.4s ease;
         }
         .hero-banner::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 140px; background: linear-gradient(to top, var(--netflix-black), transparent); }
         .hero-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; z-index: 2; text-shadow: 0 2px 14px rgba(0,0,0,0.9); }
@@ -173,12 +160,11 @@ HTML_TEMPLATE = """
             font-size: 14px; font-weight: bold; cursor: pointer; z-index: 2; margin: 0 auto;
             display: flex; align-items: center; gap: 8px;
             box-shadow: 0 0 28px var(--ambilight-color);
-            transition: box-shadow 0.4s ease;
         }
 
         .netflix-categories { position: relative; z-index: 1; display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
         .netflix-categories::-webkit-scrollbar { display: none; }
-        .cat-chip { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+        .cat-chip { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; }
         .cat-chip.active { background: #fff; color: #000; font-weight: bold; box-shadow: 0 0 18px var(--ambilight-color); }
 
         .section-box { position: relative; z-index: 1; padding: 10px 20px; }
@@ -197,32 +183,30 @@ HTML_TEMPLATE = """
             border-color: var(--card-glow, var(--ambilight-color));
             box-shadow: 0 0 28px var(--card-glow, var(--ambilight-color));
         }
-        .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #222; }
+        .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #1e1e24; }
         .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Tam Ekran / Güçlü Ambilight Oynatıcı Katmanı */
         .modal {
             display: none; position: fixed; inset: 0; width: 100vw; height: 100dvh;
             background: #050507; z-index: 2000; flex-direction: column;
         }
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(10, 10, 12, 0.95); padding: 8px 10px;
+            background: rgba(10, 10, 12, 0.95); padding: 8px 12px;
             border-bottom: 2px solid var(--ambilight-color);
             box-shadow: 0 2px 20px var(--ambilight-color);
-            height: 48px; flex-shrink: 0; gap: 5px; overflow-x: auto; z-index: 3;
+            height: 48px; flex-shrink: 0; gap: 8px; z-index: 3;
         }
-        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
-        .srv-btn { background: #1a1a1f; color: #ccc; border: 1px solid #333; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap; }
-        .srv-btn.active { background: #fff; color: #000; font-weight: bold; border-color: #fff; }
+        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .modal-title { font-size: 12px; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: center; }
         .amb-btn {
             background: #1a1a1f; color: #fff;
             border: 1px solid var(--ambilight-color);
             box-shadow: 0 0 15px var(--ambilight-color);
-            padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap;
+            padding: 5px 9px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap;
         }
         .amb-btn.off { border-color: #333; box-shadow: none; color: #777; }
-        .fs-btn { background: #1a1a1f; color: #fff; border: 1px solid #3a3a3a; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .fs-btn { background: #1a1a1f; color: #fff; border: 1px solid #3a3a3a; padding: 6px 9px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 
         .modal-player-wrapper {
             position: relative; flex: 1; width: 100%; height: calc(100dvh - 48px);
@@ -269,7 +253,7 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="search-bar-container" id="searchBar">
-        <input type="text" id="searchInput" placeholder="Tüm film ve dizilerde ara..." oninput="handleSearchInput()">
+        <input type="text" id="searchInput" placeholder="Film veya dizi adı yaz..." oninput="handleSearchInput()">
     </div>
 
     <div class="hero-banner" id="heroBanner">
@@ -294,9 +278,7 @@ HTML_TEMPLATE = """
     <div id="mediaModal" class="modal">
         <div class="modal-header">
             <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri</button>
-            <button class="srv-btn active" id="srv1Btn" onclick="switchServer(1, this)">S1</button>
-            <button class="srv-btn" id="srv2Btn" onclick="switchServer(2, this)">S2</button>
-            <button class="srv-btn" id="srv3Btn" onclick="switchServer(3, this)">S3</button>
+            <span class="modal-title" id="modalTitle">Oynatıcı</span>
             <button class="amb-btn" id="ambToggleBtn" onclick="toggleAmbilight()"><i class="fa-solid fa-lightbulb"></i> LED</button>
             <button class="fs-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
         </div>
@@ -318,13 +300,11 @@ HTML_TEMPLATE = """
     <script>
         const localMovies = {{ catalog_json | safe }};
         const dynamicPalette = ['#ff1e2d', '#a855f7', '#00e5ff', '#00ff88', '#fbbf24', '#ff2a85', '#2979ff'];
+        const FALLBACK_POSTER = "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg";
+
         let currentCategory = 'Tümü';
         let searchQuery = '';
-        let remoteResults = [];
         let searchTimer = null;
-
-        let activeMediaId = null;
-        let activeMediaType = 'movie';
         let ambilightOn = true;
 
         function setAmbilightColor(hexColor) {
@@ -338,15 +318,9 @@ HTML_TEMPLATE = """
             return dynamicPalette[idx];
         }
 
-        function buildServerUrl(srvNum, tmdbId, mediaType) {
+        function buildPlayerUrl(tmdbId, mediaType) {
             const typePath = mediaType === 'tv' ? 'tv' : 'movie';
-            if (srvNum === 1) {
-                return `https://vidsrc.me/embed/${typePath}?tmdb=${tmdbId}&ds_lang=tr`;
-            } else if (srvNum === 2) {
-                return `https://vidsrc.xyz/embed/${typePath}/${tmdbId}?ds_lang=tr`;
-            } else {
-                return `https://embed.su/embed/${typePath}/${tmdbId}`;
-            }
+            return `https://vidsrc.me/embed/${typePath}?tmdb=${tmdbId}&ds_lang=tr`;
         }
 
         function highlightCard(cardEl, color) {
@@ -355,17 +329,18 @@ HTML_TEMPLATE = """
             setAmbilightColor(color);
         }
 
-        function renderCards(items) {
+        function renderCards(items, emptyMessage) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = '';
 
             if (!items || items.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; padding: 30px; font-size: 13px;">Sonuç bulunamadı.</div>';
+                grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 30px; font-size: 13px;">${emptyMessage || 'İçerik bulunamadı.'}</div>`;
                 return;
             }
 
             items.forEach(m => {
                 const cardColor = getColorForId(m.id, m.glow);
+                const posterUrl = m.poster || FALLBACK_POSTER;
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 card.style.setProperty('--card-glow', cardColor);
@@ -375,7 +350,7 @@ HTML_TEMPLATE = """
                 card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title, cardColor);
 
                 card.innerHTML = `
-                    <img src="${m.poster}" class="movie-poster" loading="lazy" onerror="this.src='https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg'">
+                    <img src="${posterUrl}" class="movie-poster" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_POSTER}';">
                     <div class="movie-info">${m.title}</div>
                 `;
                 grid.appendChild(card);
@@ -385,10 +360,10 @@ HTML_TEMPLATE = """
         function renderLocal() {
             let filtered = localMovies.filter(m => {
                 let matchCat = (currentCategory === 'Tümü' || m.category === currentCategory);
-                let matchSearch = m.title.toLowerCase().includes(searchQuery.toLowerCase());
+                let matchSearch = !searchQuery || m.title.toLowerCase().includes(searchQuery.toLowerCase());
                 return matchCat && matchSearch;
             });
-            renderCards(filtered);
+            renderCards(filtered, 'Katalogda eşleşen içerik bulunamadı.');
         }
 
         function handleSearchInput() {
@@ -396,24 +371,48 @@ HTML_TEMPLATE = """
             clearTimeout(searchTimer);
 
             if (!searchQuery) {
-                remoteResults = [];
                 document.getElementById('sectionTitle').innerText = currentCategory === 'Tümü' ? 'Arşivdeki İçerikler' : currentCategory;
                 renderLocal();
                 return;
             }
 
-            document.getElementById('sectionTitle').innerText = `"${searchQuery}" için aranıyor...`;
+            const localMatches = localMovies.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
+            if (localMatches.length > 0) {
+                document.getElementById('sectionTitle').innerText = `"${searchQuery}" Sonuçları`;
+                renderCards(localMatches);
+            } else {
+                document.getElementById('sectionTitle').innerText = `"${searchQuery}" aranıyor...`;
+            }
+
             searchTimer = setTimeout(async () => {
                 try {
                     const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
                     const data = await res.json();
-                    remoteResults = data.results || [];
-                    document.getElementById('sectionTitle').innerText = `"${searchQuery}" Arama Sonuçları`;
-                    renderCards(remoteResults);
+                    const remote = data.results || [];
+                    const combined = [...localMatches];
+                    const seenIds = new Set(localMatches.map(x => String(x.id)));
+
+                    remote.forEach(item => {
+                        if (!seenIds.has(String(item.id))) {
+                            seenIds.add(String(item.id));
+                            combined.push(item);
+                        }
+                    });
+
+                    document.getElementById('sectionTitle').innerText = `"${searchQuery}" Sonuçları (${combined.length})`;
+                    renderCards(combined, `"${searchQuery}" için sonuç bulunamadı. Yazımı kontrol edip tekrar deneyebilirsin.`);
                 } catch (e) {
-                    renderLocal();
+                    if (localMatches.length === 0) {
+                        renderCards([], 'Arama servisine şu an ulaşılamıyor, tekrar dene.');
+                    }
                 }
-            }, 350);
+            }, 300);
         }
 
-        function setCategory(cat, 
+        function setCategory(cat, btn) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            if (!searchQuery) {
+                document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
+           
