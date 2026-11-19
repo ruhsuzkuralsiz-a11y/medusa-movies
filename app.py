@@ -1,107 +1,90 @@
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, request, jsonify
+import requests
 import json
 
 app = Flask(__name__)
 
+TMDB_API_KEY = "Abdea525bebc9ce403ea266dc78f3555"
+
 CATALOG = [
     {
-        "id": 1,
+        "id": 66732,
+        "media_type": "tv",
         "title": "Stranger Things",
-        "year": 2024,
-        "rating": "9.1",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=66732&ds_lang=tr",
         "overview": "Stranger Things oynatıcı ekranı."
     },
     {
-        "id": 2,
+        "id": 119051,
+        "media_type": "tv",
         "title": "Wednesday",
-        "year": 2024,
-        "rating": "8.9",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=119051&ds_lang=tr",
         "overview": "Wednesday oynatıcı ekranı."
     },
     {
-        "id": 3,
+        "id": 93405,
+        "media_type": "tv",
         "title": "Squid Game",
-        "year": 2024,
-        "rating": "8.7",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=93405&ds_lang=tr",
         "overview": "Squid Game oynatıcı ekranı."
     },
     {
-        "id": 4,
+        "id": 71912,
+        "media_type": "tv",
         "title": "The Witcher",
-        "year": 2024,
-        "rating": "8.6",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=71912&ds_lang=tr",
         "overview": "The Witcher oynatıcı ekranı."
     },
     {
-        "id": 5,
+        "id": 697843,
+        "media_type": "movie",
         "title": "Extraction 2",
-        "year": 2023,
-        "rating": "8.4",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/wkPPggLUDauAoukxuvXIPq70Ssx.jpg",
-        "link": "https://vidsrc.me/embed/movie?tmdb=697843&ds_lang=tr",
         "overview": "Extraction 2 oynatıcı ekranı."
     },
     {
-        "id": 6,
+        "id": 70523,
+        "media_type": "tv",
         "title": "Dark",
-        "year": 2020,
-        "rating": "9.2",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=70523&ds_lang=tr",
         "overview": "Dark oynatıcı ekranı."
     },
     {
-        "id": 7,
+        "id": 94605,
+        "media_type": "tv",
         "title": "Arcane",
-        "year": 2021,
-        "rating": "9.4",
         "category": "Anime & Animasyon",
         "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=94605&ds_lang=tr",
         "overview": "Arcane oynatıcı ekranı."
     },
     {
-        "id": 8,
+        "id": 87108,
+        "media_type": "tv",
         "title": "Our Planet",
-        "year": 2019,
-        "rating": "9.3",
         "category": "Belgeseller",
         "poster": "https://image.tmdb.org/t/p/w500/1XgmBoiiapwFMCKkG8tYqA5qN8S.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=87108&ds_lang=tr",
         "overview": "Our Planet oynatıcı ekranı."
     },
     {
-        "id": 9,
+        "id": 71446,
+        "media_type": "tv",
         "title": "La Casa de Papel",
-        "year": 2021,
-        "rating": "8.8",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
-        "link": "https://vidsrc.me/embed/tv?tmdb=71446&ds_lang=tr",
         "overview": "La Casa de Papel oynatıcı ekranı."
     },
     {
-        "id": 10,
+        "id": 545611,
+        "media_type": "movie",
         "title": "The Gray Man",
-        "year": 2022,
-        "rating": "8.0",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
-        "link": "https://vidsrc.me/embed/movie?tmdb=545611&ds_lang=tr",
         "overview": "The Gray Man oynatıcı ekranı."
     }
 ]
@@ -147,10 +130,12 @@ HTML_TEMPLATE = """
 
         /* Tam Ekran / Geniş Oynatıcı Katmanı */
         .modal { display: none; position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 2000; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #0b0b0b; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; height: 46px; flex-shrink: 0; gap: 8px; }
-        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-        .fs-btn { background: #222; color: #fff; border: 1px solid #3a3a3a; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .modal-player-wrapper { flex: 1; width: 100%; height: calc(100dvh - 46px); background: #000; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #0b0b0b; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; height: 48px; flex-shrink: 0; gap: 6px; overflow-x: auto; }
+        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .srv-btn { background: #1e1e1e; color: #ccc; border: 1px solid #333; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+        .srv-btn.active { background: #fff; color: #000; font-weight: bold; border-color: #fff; }
+        .fs-btn { background: #222; color: #fff; border: 1px solid #3a3a3a; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .modal-player-wrapper { flex: 1; width: 100%; height: calc(100dvh - 48px); background: #000; }
         .iframe-container { width: 100%; height: 100%; background: #000; }
         .iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
@@ -167,12 +152,12 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="search-bar-container" id="searchBar">
-        <input type="text" id="searchInput" placeholder="Film veya dizi ara..." oninput="filterCatalog()">
+        <input type="text" id="searchInput" placeholder="Tüm film ve dizilerde ara..." oninput="handleSearchInput()">
     </div>
 
     <div class="hero-banner">
         <div class="hero-title">Stranger Things</div>
-        <button class="hero-btn" onclick="openPlayer('https://vidsrc.me/embed/tv?tmdb=66732&ds_lang=tr', 'Stranger Things')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
+        <button class="hero-btn" onclick="openPlayer(66732, 'tv', 'Stranger Things')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
     </div>
 
     <div class="netflix-categories">
@@ -192,8 +177,10 @@ HTML_TEMPLATE = """
     <div id="mediaModal" class="modal">
         <div class="modal-header">
             <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri</button>
-            <span style="font-size: 12px; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: center;" id="modalTitle">Oynatıcı</span>
-            <button class="fs-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i> Tam Ekran</button>
+            <button class="srv-btn active" id="srv1Btn" onclick="switchServer(1, this)">Sunucu 1</button>
+            <button class="srv-btn" id="srv2Btn" onclick="switchServer(2, this)">Sunucu 2</button>
+            <button class="srv-btn" id="srv3Btn" onclick="switchServer(3, this)">Sunucu 3</button>
+            <button class="fs-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
         </div>
         <div class="modal-player-wrapper">
             <div class="iframe-container">
@@ -210,29 +197,39 @@ HTML_TEMPLATE = """
     </div>
 
     <script>
-        const allMovies = {{ catalog_json | safe }};
+        const localMovies = {{ catalog_json | safe }};
         let currentCategory = 'Tümü';
         let searchQuery = '';
+        let remoteResults = [];
+        let searchTimer = null;
 
-        function render() {
+        let activeMediaId = null;
+        let activeMediaType = 'movie';
+
+        function buildServerUrl(srvNum, tmdbId, mediaType) {
+            const typePath = mediaType === 'tv' ? 'tv' : 'movie';
+            if (srvNum === 1) {
+                return `https://vidsrc.me/embed/${typePath}?tmdb=${tmdbId}&ds_lang=tr`;
+            } else if (srvNum === 2) {
+                return `https://vidsrc.xyz/embed/${typePath}/${tmdbId}?ds_lang=tr`;
+            } else {
+                return `https://embed.su/embed/${typePath}/${tmdbId}`;
+            }
+        }
+
+        function renderCards(items) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = '';
 
-            let filtered = allMovies.filter(m => {
-                let matchCat = (currentCategory === 'Tümü' || m.category === currentCategory);
-                let matchSearch = m.title.toLowerCase().includes(searchQuery.toLowerCase());
-                return matchCat && matchSearch;
-            });
-
-            if(filtered.length === 0) {
-                grid.innerHTML = '<div style="grid-column: span 5; text-align: center; color: #888; padding: 30px; font-size: 13px;">Aradığın içerik bulunamadı.</div>';
+            if (!items || items.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: #888; padding: 30px; font-size: 13px;">Sonuç bulunamadı.</div>';
                 return;
             }
 
-            filtered.forEach(m => {
+            items.forEach(m => {
                 const card = document.createElement('div');
                 card.className = 'movie-card';
-                card.onclick = () => openPlayer(m.link, m.title);
+                card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title);
                 card.innerHTML = `
                     <img src="${m.poster}" class="movie-poster" loading="lazy">
                     <div class="movie-info">${m.title}</div>
@@ -241,12 +238,48 @@ HTML_TEMPLATE = """
             });
         }
 
+        function renderLocal() {
+            let filtered = localMovies.filter(m => {
+                let matchCat = (currentCategory === 'Tümü' || m.category === currentCategory);
+                let matchSearch = m.title.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchCat && matchSearch;
+            });
+            renderCards(filtered);
+        }
+
+        function handleSearchInput() {
+            searchQuery = document.getElementById('searchInput').value.trim();
+            clearTimeout(searchTimer);
+
+            if (!searchQuery) {
+                remoteResults = [];
+                document.getElementById('sectionTitle').innerText = currentCategory === 'Tümü' ? 'Arşivdeki İçerikler' : currentCategory;
+                renderLocal();
+                return;
+            }
+
+            document.getElementById('sectionTitle').innerText = `"${searchQuery}" için aranıyor...`;
+            searchTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+                    const data = await res.json();
+                    remoteResults = data.results || [];
+                    document.getElementById('sectionTitle').innerText = `"${searchQuery}" Arama Sonuçları`;
+                    renderCards(remoteResults);
+                } catch (e) {
+                    renderLocal();
+                }
+            }, 350);
+        }
+
         function setCategory(cat, btn) {
             currentCategory = cat;
             document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
             if(btn) btn.classList.add('active');
-            document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
-            render();
+            if (!searchQuery) {
+                document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
+                renderLocal();
+            }
         }
 
         function navClick(cat, btn) {
@@ -261,7 +294,7 @@ HTML_TEMPLATE = """
                 }
             });
             currentCategory = cat;
-            render();
+            if (!searchQuery) renderLocal();
             window.scrollTo({top: 300, behavior: 'smooth'});
         }
 
@@ -271,15 +304,20 @@ HTML_TEMPLATE = """
             if(bar.style.display === 'block') document.getElementById('searchInput').focus();
         }
 
-        function filterCatalog() {
-            searchQuery = document.getElementById('searchInput').value;
-            render();
+        function openPlayer(tmdbId, mediaType, title) {
+            activeMediaId = tmdbId;
+            activeMediaType = mediaType || 'movie';
+            document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('srv1Btn').classList.add('active');
+            document.getElementById('mediaFrame').src = buildServerUrl(1, activeMediaId, activeMediaType);
+            document.getElementById('mediaModal').style.display = 'flex';
         }
 
-        function openPlayer(url, title) {
-            document.getElementById('mediaFrame').src = url;
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('mediaModal').style.display = 'flex';
+        function switchServer(srvNum, btn) {
+            if (!activeMediaId) return;
+            document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            document.getElementById('mediaFrame').src = buildServerUrl(srvNum, activeMediaId, activeMediaType);
         }
 
         function toggleFullscreen() {
@@ -313,7 +351,7 @@ HTML_TEMPLATE = """
             }
         }
 
-        render();
+        renderLocal();
     </script>
 </body>
 </html>
@@ -322,6 +360,42 @@ HTML_TEMPLATE = """
 @app.route('/')
 def index():
     return render_template_string(HTML_TEMPLATE, catalog_json=json.dumps(CATALOG, ensure_ascii=False))
+
+@app.route('/api/search')
+def api_search():
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify({"results": []})
+
+    url = "https://api.themoviedb.org/3/search/multi"
+    params = {
+        "api_key": TMDB_API_KEY,
+        "query": q,
+        "language": "tr-TR",
+        "include_adult": "false"
+    }
+
+    try:
+        r = requests.get(url, params=params, timeout=8)
+        data = r.json()
+        out = []
+        for item in data.get("results", []):
+            m_type = item.get("media_type")
+            if m_type not in ("movie", "tv"):
+                continue
+            poster_path = item.get("poster_path")
+            if not poster_path:
+                continue
+            title = item.get("title") or item.get("name") or "İsimsiz"
+            out.append({
+                "id": item.get("id"),
+                "media_type": m_type,
+                "title": title,
+                "poster": f"https://image.tmdb.org/t/p/w500{poster_path}"
+            })
+        return jsonify({"results": out})
+    except Exception:
+        return jsonify({"results": []})
 
 if __name__ == '__main__':
     app.run(debug=True)
