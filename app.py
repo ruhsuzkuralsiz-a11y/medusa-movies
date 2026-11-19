@@ -1,10 +1,11 @@
+import os
+import json
 from flask import Flask, render_template_string, request, jsonify
 import requests
-import json
 
 app = Flask(__name__)
 
-TMDB_API_KEY = "Abdea525bebc9ce403ea266dc78f3555"
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "")
 
 CATALOG = [
     {
@@ -102,70 +103,6 @@ CATALOG = [
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
         "glow": "#3b82f6"
-    },
-    {
-        "id": 155,
-        "media_type": "movie",
-        "title": "The Dark Knight",
-        "category": "Netflix Orijinal Filmler",
-        "poster": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-        "glow": "#a855f7"
-    },
-    {
-        "id": 603,
-        "media_type": "movie",
-        "title": "The Matrix",
-        "category": "Netflix Orijinal Filmler",
-        "poster": "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-        "glow": "#00ff88"
-    },
-    {
-        "id": 496243,
-        "media_type": "movie",
-        "title": "Parasite",
-        "category": "Gündemdekiler",
-        "poster": "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-        "glow": "#10b981"
-    },
-    {
-        "id": 238,
-        "media_type": "movie",
-        "title": "The Godfather",
-        "category": "Netflix Orijinal Filmler",
-        "poster": "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-        "glow": "#f59e0b"
-    },
-    {
-        "id": 1399,
-        "media_type": "tv",
-        "title": "Game of Thrones",
-        "category": "Popüler Diziler",
-        "poster": "https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
-        "glow": "#ff1e2d"
-    },
-    {
-        "id": 1396,
-        "media_type": "tv",
-        "title": "Breaking Bad",
-        "category": "Popüler Diziler",
-        "poster": "https://image.tmdb.org/t/p/w500/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
-        "glow": "#10b981"
-    },
-    {
-        "id": 1429,
-        "media_type": "tv",
-        "title": "Attack on Titan",
-        "category": "Anime & Animasyon",
-        "poster": "https://image.tmdb.org/t/p/w500/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
-        "glow": "#ff6a00"
-    },
-    {
-        "id": 37854,
-        "media_type": "tv",
-        "title": "One Piece",
-        "category": "Anime & Animasyon",
-        "poster": "https://image.tmdb.org/t/p/w500/cMD9Ygz11zjJzAovURpO75Qg7rT.jpg",
-        "glow": "#00e5ff"
     }
 ]
 
@@ -280,21 +217,22 @@ HTML_TEMPLATE = """
         }
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(10, 10, 12, 0.95); padding: 8px 12px;
+            background: rgba(10, 10, 12, 0.95); padding: 8px 10px;
             border-bottom: 2px solid var(--ambilight-color);
             box-shadow: 0 2px 20px var(--ambilight-color);
-            height: 48px; flex-shrink: 0; gap: 8px; z-index: 3;
+            height: 48px; flex-shrink: 0; gap: 5px; overflow-x: auto; z-index: 3;
         }
-        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-        .modal-title { font-size: 12px; font-weight: bold; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: center; }
+        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .srv-btn { background: #1a1a1f; color: #ccc; border: 1px solid #333; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+        .srv-btn.active { background: #fff; color: #000; font-weight: bold; border-color: #fff; }
         .amb-btn {
             background: #1a1a1f; color: #fff;
             border: 1px solid var(--ambilight-color);
             box-shadow: 0 0 15px var(--ambilight-color);
-            padding: 5px 9px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap;
+            padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap;
         }
         .amb-btn.off { border-color: #333; box-shadow: none; color: #777; }
-        .fs-btn { background: #1a1a1f; color: #fff; border: 1px solid #3a3a3a; padding: 6px 9px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .fs-btn { background: #1a1a1f; color: #fff; border: 1px solid #3a3a3a; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 
         .modal-player-wrapper {
             position: relative; flex: 1; width: 100%; height: calc(100dvh - 48px);
@@ -325,6 +263,12 @@ HTML_TEMPLATE = """
         }
         .iframe-container.no-glow { box-shadow: none; border: none; border-radius: 0; }
         .iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
+        .server-hint {
+            position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+            z-index: 4; background: rgba(12, 12, 16, 0.88); color: #e5e7eb;
+            border: 1px solid rgba(255,255,255,0.16); padding: 6px 12px; border-radius: 6px;
+            font-size: 11px; white-space: nowrap; pointer-events: none;
+        }
 
         .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background-color: rgba(12,12,15,0.94); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--ambilight-color); box-shadow: 0 -2px 20px -4px var(--ambilight-color); z-index: 1000; }
         .nav-link { color: #8c8c8c; text-decoration: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; background: none; border: none; }
@@ -366,7 +310,9 @@ HTML_TEMPLATE = """
     <div id="mediaModal" class="modal">
         <div class="modal-header">
             <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri</button>
-            <span class="modal-title" id="modalTitle">Oynatıcı</span>
+            <button class="srv-btn active" id="srv1Btn" onclick="switchServer(1, this)">S1</button>
+            <button class="srv-btn" id="srv2Btn" onclick="switchServer(2, this)">S2</button>
+            <button class="srv-btn" id="srv3Btn" onclick="switchServer(3, this)">S3</button>
             <button class="amb-btn" id="ambToggleBtn" onclick="toggleAmbilight()"><i class="fa-solid fa-lightbulb"></i> LED</button>
             <button class="fs-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
         </div>
@@ -375,6 +321,7 @@ HTML_TEMPLATE = """
             <div class="iframe-container" id="iframeBox">
                 <iframe id="mediaFrame" src="" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="autoplay; fullscreen; encrypted-media"></iframe>
             </div>
+            <div class="server-hint" id="serverHint">Sunucu 1 yükleniyor...</div>
         </div>
     </div>
 
@@ -393,6 +340,9 @@ HTML_TEMPLATE = """
         let searchQuery = '';
         let searchTimer = null;
         let ambilightOn = true;
+        let activeMediaId = null;
+        let activeMediaType = 'movie';
+        let activeMediaTitle = '';
 
         function normalizeText(str) {
             return String(str || '')
@@ -418,9 +368,15 @@ HTML_TEMPLATE = """
             return dynamicPalette[idx];
         }
 
-        function buildPlayerUrl(tmdbId, mediaType) {
+        function buildServerUrl(srvNum, tmdbId, mediaType) {
             const typePath = mediaType === 'tv' ? 'tv' : 'movie';
-            return `https://vidsrc.me/embed/${typePath}?tmdb=${tmdbId}&ds_lang=tr`;
+            if (srvNum === 1) {
+                return `https://vidsrc.me/embed/${typePath}?tmdb=${tmdbId}&ds_lang=tr`;
+            } else if (srvNum === 2) {
+                return `https://vidsrc.xyz/embed/${typePath}/${tmdbId}?ds_lang=tr`;
+            } else {
+                return `https://embed.su/embed/${typePath}/${tmdbId}`;
+            }
         }
 
         function highlightCard(cardEl, color) {
@@ -445,4 +401,22 @@ HTML_TEMPLATE = """
                 card.className = 'movie-card';
                 card.style.setProperty('--card-glow', cardColor);
 
-                card.onmouseenter = () => highlightCa
+                card.onmouseenter = () => highlightCard(card, cardColor);
+                card.ontouchstart = () => highlightCard(card, cardColor);
+                card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title, cardColor);
+
+                const imgHtml = m.poster
+                    ? `<img src="${m.poster}" class="movie-poster" loading="lazy" onerror="showCardFallback(this);">`
+                    : `<div class="poster-fallback"><i class="fa-solid fa-film"></i><span>${safeTitle}</span></div>`;
+
+                card.innerHTML = `
+                    ${imgHtml}
+                    <div class="movie-info">${safeTitle}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showCardFallback(imgEl) {
+            if (!imgEl || !imgEl.parentElement) return;
+            const card = imgEl.paren
