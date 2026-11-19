@@ -13,7 +13,7 @@ CATALOG = [
         "title": "Stranger Things",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        "glow": "#e50914",
+        "glow": "#ff1e2d",
         "overview": "Stranger Things oynatıcı ekranı."
     },
     {
@@ -22,7 +22,7 @@ CATALOG = [
         "title": "Wednesday",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        "glow": "#8b5cf6",
+        "glow": "#a855f7",
         "overview": "Wednesday oynatıcı ekranı."
     },
     {
@@ -31,7 +31,7 @@ CATALOG = [
         "title": "Squid Game",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
-        "glow": "#ec4899",
+        "glow": "#ff2a85",
         "overview": "Squid Game oynatıcı ekranı."
     },
     {
@@ -40,7 +40,7 @@ CATALOG = [
         "title": "The Witcher",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
-        "glow": "#f59e0b",
+        "glow": "#fbbf24",
         "overview": "The Witcher oynatıcı ekranı."
     },
     {
@@ -48,8 +48,8 @@ CATALOG = [
         "media_type": "movie",
         "title": "Extraction 2",
         "category": "Netflix Orijinal Filmler",
-        "poster": "https://image.tmdb.org/t/p/w500/wkPPggLUDauAoukxuvXIPq70Ssx.jpg",
-        "glow": "#f97316",
+        "poster": "https://image.tmdb.org/t/p/w500/7gKI9hpEMcZuQPNgKrkDzJpbnNS.jpg",
+        "glow": "#ff6a00",
         "overview": "Extraction 2 oynatıcı ekranı."
     },
     {
@@ -58,7 +58,7 @@ CATALOG = [
         "title": "Dark",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
-        "glow": "#eab308",
+        "glow": "#facc15",
         "overview": "Dark oynatıcı ekranı."
     },
     {
@@ -67,7 +67,7 @@ CATALOG = [
         "title": "Arcane",
         "category": "Anime & Animasyon",
         "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
-        "glow": "#06b6d4",
+        "glow": "#00e5ff",
         "overview": "Arcane oynatıcı ekranı."
     },
     {
@@ -76,7 +76,7 @@ CATALOG = [
         "title": "Our Planet",
         "category": "Belgeseller",
         "poster": "https://image.tmdb.org/t/p/w500/1XgmBoiiapwFMCKkG8tYqA5qN8S.jpg",
-        "glow": "#10b981",
+        "glow": "#00ff88",
         "overview": "Our Planet oynatıcı ekranı."
     },
     {
@@ -85,7 +85,7 @@ CATALOG = [
         "title": "La Casa de Papel",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
-        "glow": "#dc2626",
+        "glow": "#ff1744",
         "overview": "La Casa de Papel oynatıcı ekranı."
     },
     {
@@ -94,7 +94,7 @@ CATALOG = [
         "title": "The Gray Man",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
-        "glow": "#3b82f6",
+        "glow": "#2979ff",
         "overview": "The Gray Man oynatıcı ekranı."
     }
 ]
@@ -110,8 +110,8 @@ HTML_TEMPLATE = """
     <style>
         :root {
             --netflix-red: #E50914;
-            --netflix-black: #0c0c0e;
-            --ambilight-color: #e50914;
+            --netflix-black: #09090b;
+            --ambilight-color: #ff1e2d;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -119,89 +119,97 @@ HTML_TEMPLATE = """
             color: #fff;
             font-family: Arial, sans-serif;
             padding-bottom: 75px;
-            transition: background 0.8s ease;
             overflow-x: hidden;
         }
 
-        /* Arka Plan Dinamik Ambilight Işık Katmanı */
+        /* Güçlü Arka Plan Ambilight Işık Havuzu */
         .ambient-bg {
             position: fixed;
-            inset: 0;
+            inset: -20%;
             pointer-events: none;
             z-index: 0;
-            background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--ambilight-color) 28%, transparent), transparent 68%);
-            transition: background 0.9s ease, opacity 0.6s ease;
+            background:
+                radial-gradient(circle at 50% 25%, var(--ambilight-color) 0%, transparent 45%),
+                radial-gradient(circle at 20% 70%, var(--ambilight-color) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, var(--ambilight-color) 0%, transparent 40%);
+            opacity: 0.34;
+            filter: blur(55px);
+            transition: background 0.5s ease, opacity 0.4s ease;
         }
 
         .netflix-header {
             position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-            background: rgba(10, 10, 12, 0.85);
+            background: rgba(9, 9, 11, 0.85);
             backdrop-filter: blur(12px);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 20px; z-index: 1000;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-bottom: 1px solid var(--ambilight-color);
+            box-shadow: 0 2px 24px -4px var(--ambilight-color);
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
         }
         .netflix-logo {
             color: var(--netflix-red); font-size: 22px; font-weight: bold;
             text-decoration: none; font-family: Impact, sans-serif;
-            text-shadow: 0 0 18px color-mix(in srgb, var(--ambilight-color) 65%, transparent);
-            transition: text-shadow 0.6s ease;
+            text-shadow: 0 0 20px var(--ambilight-color);
+            transition: text-shadow 0.4s ease;
         }
         .search-icon-btn { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
 
-        .search-bar-container { display: none; padding: 15px; background: rgba(10,10,12,0.95); backdrop-filter: blur(10px); position: fixed; top: 60px; left: 0; width: 100%; z-index: 999; border-bottom: 1px solid #222; }
+        .search-bar-container { display: none; padding: 15px; background: rgba(9,9,11,0.96); backdrop-filter: blur(10px); position: fixed; top: 60px; left: 0; width: 100%; z-index: 999; border-bottom: 1px solid #222; }
         .search-bar-container input { width: 100%; background: #1c1c20; border: 1px solid #333; padding: 10px 15px; border-radius: 6px; color: #fff; outline: none; font-size: 14px; }
 
         .hero-banner {
-            position: relative; width: 100%; height: 360px;
+            position: relative; width: 100%; height: 350px;
             background: url('https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg') center/cover no-repeat;
             display: flex; flex-direction: column; justify-content: flex-end;
             padding: 20px; text-align: center; margin-top: 60px; z-index: 1;
-            box-shadow: 0 20px 55px -10px color-mix(in srgb, var(--ambilight-color) 40%, transparent);
-            transition: box-shadow 0.8s ease;
+            box-shadow: 0 0 65px -5px var(--ambilight-color);
+            transition: box-shadow 0.4s ease;
         }
         .hero-banner::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 140px; background: linear-gradient(to top, var(--netflix-black), transparent); }
-        .hero-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; z-index: 2; text-shadow: 0 2px 12px rgba(0,0,0,0.8); }
+        .hero-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; z-index: 2; text-shadow: 0 2px 14px rgba(0,0,0,0.9); }
         .hero-btn {
             background: #fff; color: #000; border: none; padding: 10px 26px; border-radius: 6px;
             font-size: 14px; font-weight: bold; cursor: pointer; z-index: 2; margin: 0 auto;
             display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 0 25px color-mix(in srgb, var(--ambilight-color) 65%, transparent);
+            box-shadow: 0 0 28px var(--ambilight-color);
+            transition: box-shadow 0.4s ease;
         }
 
         .netflix-categories { position: relative; z-index: 1; display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
         .netflix-categories::-webkit-scrollbar { display: none; }
         .cat-chip { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
-        .cat-chip.active { background: #fff; color: #000; font-weight: bold; box-shadow: 0 0 15px color-mix(in srgb, var(--ambilight-color) 60%, transparent); }
+        .cat-chip.active { background: #fff; color: #000; font-weight: bold; box-shadow: 0 0 18px var(--ambilight-color); }
 
         .section-box { position: relative; z-index: 1; padding: 10px 20px; }
         .row-header { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #e5e5e5; }
-        .movies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .movies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         @media(min-width: 600px) { .movies-grid { grid-template-columns: repeat(5, 1fr); } }
 
         .movie-card {
-            background: #18181c; border-radius: 6px; overflow: hidden;
+            background: #16161a; border-radius: 8px; overflow: hidden;
             display: flex; flex-direction: column; cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.06);
-            transition: transform 0.25s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+            border: 2px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
-        .movie-card:hover, .movie-card:active {
-            transform: scale(1.03);
+        .movie-card.active-glow, .movie-card:active {
+            transform: scale(1.04);
             border-color: var(--card-glow, var(--ambilight-color));
-            box-shadow: 0 0 22px color-mix(in srgb, var(--card-glow, var(--ambilight-color)) 70%, transparent);
+            box-shadow: 0 0 28px var(--card-glow, var(--ambilight-color));
         }
         .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #222; }
         .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Tam Ekran / Sinematik Ambilight Oynatıcı Katmanı */
+        /* Tam Ekran / Güçlü Ambilight Oynatıcı Katmanı */
         .modal {
             display: none; position: fixed; inset: 0; width: 100vw; height: 100dvh;
             background: #050507; z-index: 2000; flex-direction: column;
         }
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
-            background: rgba(10, 10, 12, 0.92); padding: 8px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(10, 10, 12, 0.95); padding: 8px 10px;
+            border-bottom: 2px solid var(--ambilight-color);
+            box-shadow: 0 2px 20px var(--ambilight-color);
             height: 48px; flex-shrink: 0; gap: 5px; overflow-x: auto; z-index: 3;
         }
         .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
@@ -210,9 +218,8 @@ HTML_TEMPLATE = """
         .amb-btn {
             background: #1a1a1f; color: #fff;
             border: 1px solid var(--ambilight-color);
-            box-shadow: 0 0 12px color-mix(in srgb, var(--ambilight-color) 65%, transparent);
+            box-shadow: 0 0 15px var(--ambilight-color);
             padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap;
-            transition: all 0.3s ease;
         }
         .amb-btn.off { border-color: #333; box-shadow: none; color: #777; }
         .fs-btn { background: #1a1a1f; color: #fff; border: 1px solid #3a3a3a; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
@@ -220,37 +227,34 @@ HTML_TEMPLATE = """
         .modal-player-wrapper {
             position: relative; flex: 1; width: 100%; height: calc(100dvh - 48px);
             background: #050507; display: flex; align-items: center; justify-content: center;
-            padding: 10px; overflow: hidden;
+            padding: 14px; overflow: hidden;
         }
-        /* Oynatıcı Arkası Nefes Alan LED Işık Halesi */
         .player-ambilight-aura {
             position: absolute;
-            inset: 6px;
-            border-radius: 14px;
-            background: radial-gradient(circle at center, color-mix(in srgb, var(--ambilight-color) 55%, transparent), transparent 72%);
-            filter: blur(26px);
-            opacity: 0.95;
+            inset: 0;
+            background: radial-gradient(circle at center, var(--ambilight-color) 0%, transparent 68%);
+            filter: blur(42px);
+            opacity: 0.65;
             pointer-events: none;
-            animation: breatheGlow 4.5s ease-in-out infinite alternate;
-            transition: opacity 0.5s ease, background 0.8s ease;
+            animation: breatheGlow 3.6s ease-in-out infinite alternate;
         }
-        .player-ambilight-aura.hidden { opacity: 0; }
+        .player-ambilight-aura.hidden { opacity: 0; animation: none; }
 
         @keyframes breatheGlow {
-            0% { transform: scale(0.97); opacity: 0.72; }
-            100% { transform: scale(1.03); opacity: 1; }
+            0% { transform: scale(0.94); opacity: 0.48; }
+            100% { transform: scale(1.06); opacity: 0.82; }
         }
 
         .iframe-container {
             position: relative; z-index: 2; width: 100%; height: 100%;
             background: #000; border-radius: 10px; overflow: hidden;
-            box-shadow: 0 0 38px color-mix(in srgb, var(--ambilight-color) 65%, transparent), 0 0 2px rgba(255,255,255,0.2);
-            transition: box-shadow 0.6s ease;
+            border: 2px solid var(--ambilight-color);
+            box-shadow: 0 0 45px var(--ambilight-color);
         }
-        .iframe-container.no-glow { box-shadow: none; border-radius: 0; }
+        .iframe-container.no-glow { box-shadow: none; border: none; border-radius: 0; }
         .iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background-color: rgba(14,14,18,0.92); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); z-index: 1000; }
+        .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background-color: rgba(12,12,15,0.94); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--ambilight-color); box-shadow: 0 -2px 20px -4px var(--ambilight-color); z-index: 1000; }
         .nav-link { color: #8c8c8c; text-decoration: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; background: none; border: none; }
         .nav-link.active { color: #fff; }
         .nav-link i { font-size: 16px; }
@@ -270,7 +274,7 @@ HTML_TEMPLATE = """
 
     <div class="hero-banner" id="heroBanner">
         <div class="hero-title">Stranger Things</div>
-        <button class="hero-btn" onclick="openPlayer(66732, 'tv', 'Stranger Things', '#e50914')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
+        <button class="hero-btn" onclick="openPlayer(66732, 'tv', 'Stranger Things', '#ff1e2d')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
     </div>
 
     <div class="netflix-categories">
@@ -313,7 +317,7 @@ HTML_TEMPLATE = """
 
     <script>
         const localMovies = {{ catalog_json | safe }};
-        const dynamicPalette = ['#e50914', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
+        const dynamicPalette = ['#ff1e2d', '#a855f7', '#00e5ff', '#00ff88', '#fbbf24', '#ff2a85', '#2979ff'];
         let currentCategory = 'Tümü';
         let searchQuery = '';
         let remoteResults = [];
@@ -345,6 +349,12 @@ HTML_TEMPLATE = """
             }
         }
 
+        function highlightCard(cardEl, color) {
+            document.querySelectorAll('.movie-card').forEach(c => c.classList.remove('active-glow'));
+            if (cardEl) cardEl.classList.add('active-glow');
+            setAmbilightColor(color);
+        }
+
         function renderCards(items) {
             const grid = document.getElementById('movieGrid');
             grid.innerHTML = '';
@@ -360,12 +370,12 @@ HTML_TEMPLATE = """
                 card.className = 'movie-card';
                 card.style.setProperty('--card-glow', cardColor);
 
-                card.onmouseenter = () => setAmbilightColor(cardColor);
-                card.ontouchstart = () => setAmbilightColor(cardColor);
+                card.onmouseenter = () => highlightCard(card, cardColor);
+                card.ontouchstart = () => highlightCard(card, cardColor);
                 card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title, cardColor);
 
                 card.innerHTML = `
-                    <img src="${m.poster}" class="movie-poster" loading="lazy">
+                    <img src="${m.poster}" class="movie-poster" loading="lazy" onerror="this.src='https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg'">
                     <div class="movie-info">${m.title}</div>
                 `;
                 grid.appendChild(card);
@@ -406,10 +416,4 @@ HTML_TEMPLATE = """
             }, 350);
         }
 
-        function setCategory(cat, btn) {
-            currentCategory = cat;
-            document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
-            if(btn) btn.classList.add('active');
-            if (!searchQuery) {
-                document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
-                
+        function setCategory(cat, 
