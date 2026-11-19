@@ -13,6 +13,7 @@ CATALOG = [
         "title": "Stranger Things",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+        "glow": "#e50914",
         "overview": "Stranger Things oynatıcı ekranı."
     },
     {
@@ -21,6 +22,7 @@ CATALOG = [
         "title": "Wednesday",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
+        "glow": "#8b5cf6",
         "overview": "Wednesday oynatıcı ekranı."
     },
     {
@@ -29,6 +31,7 @@ CATALOG = [
         "title": "Squid Game",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
+        "glow": "#ec4899",
         "overview": "Squid Game oynatıcı ekranı."
     },
     {
@@ -37,6 +40,7 @@ CATALOG = [
         "title": "The Witcher",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
+        "glow": "#f59e0b",
         "overview": "The Witcher oynatıcı ekranı."
     },
     {
@@ -45,6 +49,7 @@ CATALOG = [
         "title": "Extraction 2",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/wkPPggLUDauAoukxuvXIPq70Ssx.jpg",
+        "glow": "#f97316",
         "overview": "Extraction 2 oynatıcı ekranı."
     },
     {
@@ -53,6 +58,7 @@ CATALOG = [
         "title": "Dark",
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
+        "glow": "#eab308",
         "overview": "Dark oynatıcı ekranı."
     },
     {
@@ -61,6 +67,7 @@ CATALOG = [
         "title": "Arcane",
         "category": "Anime & Animasyon",
         "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
+        "glow": "#06b6d4",
         "overview": "Arcane oynatıcı ekranı."
     },
     {
@@ -69,6 +76,7 @@ CATALOG = [
         "title": "Our Planet",
         "category": "Belgeseller",
         "poster": "https://image.tmdb.org/t/p/w500/1XgmBoiiapwFMCKkG8tYqA5qN8S.jpg",
+        "glow": "#10b981",
         "overview": "Our Planet oynatıcı ekranı."
     },
     {
@@ -77,6 +85,7 @@ CATALOG = [
         "title": "La Casa de Papel",
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
+        "glow": "#dc2626",
         "overview": "La Casa de Papel oynatıcı ekranı."
     },
     {
@@ -85,6 +94,7 @@ CATALOG = [
         "title": "The Gray Man",
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
+        "glow": "#3b82f6",
         "overview": "The Gray Man oynatıcı ekranı."
     }
 ]
@@ -98,54 +108,157 @@ HTML_TEMPLATE = """
     <title>medusafilm</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --netflix-red: #E50914; --netflix-black: #141414; }
+        :root {
+            --netflix-red: #E50914;
+            --netflix-black: #0c0c0e;
+            --ambilight-color: #e50914;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--netflix-black); color: #fff; font-family: Arial, sans-serif; padding-bottom: 70px; }
+        body {
+            background-color: var(--netflix-black);
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding-bottom: 75px;
+            transition: background 0.8s ease;
+            overflow-x: hidden;
+        }
 
-        .netflix-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; }
-        .netflix-logo { color: var(--netflix-red); font-size: 22px; font-weight: bold; text-decoration: none; font-family: Impact, sans-serif; }
+        /* Arka Plan Dinamik Ambilight Işık Katmanı */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--ambilight-color) 28%, transparent), transparent 68%);
+            transition: background 0.9s ease, opacity 0.6s ease;
+        }
+
+        .netflix-header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background: rgba(10, 10, 12, 0.85);
+            backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .netflix-logo {
+            color: var(--netflix-red); font-size: 22px; font-weight: bold;
+            text-decoration: none; font-family: Impact, sans-serif;
+            text-shadow: 0 0 18px color-mix(in srgb, var(--ambilight-color) 65%, transparent);
+            transition: text-shadow 0.6s ease;
+        }
         .search-icon-btn { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
 
-        .search-bar-container { display: none; padding: 15px; background: #000; position: fixed; top: 60px; left: 0; width: 100%; z-index: 999; border-bottom: 1px solid #222; }
-        .search-bar-container input { width: 100%; background: #222; border: 1px solid #444; padding: 10px 15px; border-radius: 4px; color: #fff; outline: none; font-size: 14px; }
+        .search-bar-container { display: none; padding: 15px; background: rgba(10,10,12,0.95); backdrop-filter: blur(10px); position: fixed; top: 60px; left: 0; width: 100%; z-index: 999; border-bottom: 1px solid #222; }
+        .search-bar-container input { width: 100%; background: #1c1c20; border: 1px solid #333; padding: 10px 15px; border-radius: 6px; color: #fff; outline: none; font-size: 14px; }
 
-        .hero-banner { position: relative; width: 100%; height: 350px; background: url('https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg') center/cover no-repeat; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; text-align: center; margin-top: 60px; }
-        .hero-banner::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; background: linear-gradient(to top, var(--netflix-black), transparent); }
-        .hero-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; z-index: 2; }
-        .hero-btn { background: #fff; color: #000; border: none; padding: 10px 25px; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; z-index: 2; margin: 0 auto; display: flex; align-items: center; gap: 8px; }
+        .hero-banner {
+            position: relative; width: 100%; height: 360px;
+            background: url('https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg') center/cover no-repeat;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 20px; text-align: center; margin-top: 60px; z-index: 1;
+            box-shadow: 0 20px 55px -10px color-mix(in srgb, var(--ambilight-color) 40%, transparent);
+            transition: box-shadow 0.8s ease;
+        }
+        .hero-banner::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 140px; background: linear-gradient(to top, var(--netflix-black), transparent); }
+        .hero-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; z-index: 2; text-shadow: 0 2px 12px rgba(0,0,0,0.8); }
+        .hero-btn {
+            background: #fff; color: #000; border: none; padding: 10px 26px; border-radius: 6px;
+            font-size: 14px; font-weight: bold; cursor: pointer; z-index: 2; margin: 0 auto;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 0 25px color-mix(in srgb, var(--ambilight-color) 65%, transparent);
+        }
 
-        .netflix-categories { display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; background: var(--netflix-black); }
+        .netflix-categories { position: relative; z-index: 1; display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
         .netflix-categories::-webkit-scrollbar { display: none; }
-        .cat-chip { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; }
-        .cat-chip.active { background: #fff; color: #000; font-weight: bold; }
+        .cat-chip { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.3s ease; }
+        .cat-chip.active { background: #fff; color: #000; font-weight: bold; box-shadow: 0 0 15px color-mix(in srgb, var(--ambilight-color) 60%, transparent); }
 
-        .section-box { padding: 10px 20px; }
-        .row-header { font-size: 15px; font-weight: bold; margin-bottom: 10px; color: #e5e5e5; }
-        .movies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .section-box { position: relative; z-index: 1; padding: 10px 20px; }
+        .row-header { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #e5e5e5; }
+        .movies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         @media(min-width: 600px) { .movies-grid { grid-template-columns: repeat(5, 1fr); } }
 
-        .movie-card { background: #1f1f1f; border-radius: 4px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; }
+        .movie-card {
+            background: #18181c; border-radius: 6px; overflow: hidden;
+            display: flex; flex-direction: column; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: transform 0.25s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+        }
+        .movie-card:hover, .movie-card:active {
+            transform: scale(1.03);
+            border-color: var(--card-glow, var(--ambilight-color));
+            box-shadow: 0 0 22px color-mix(in srgb, var(--card-glow, var(--ambilight-color)) 70%, transparent);
+        }
         .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #222; }
         .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Tam Ekran / Geniş Oynatıcı Katmanı */
-        .modal { display: none; position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 2000; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #0b0b0b; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; height: 48px; flex-shrink: 0; gap: 6px; overflow-x: auto; }
-        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-        .srv-btn { background: #1e1e1e; color: #ccc; border: 1px solid #333; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+        /* Tam Ekran / Sinematik Ambilight Oynatıcı Katmanı */
+        .modal {
+            display: none; position: fixed; inset: 0; width: 100vw; height: 100dvh;
+            background: #050507; z-index: 2000; flex-direction: column;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(10, 10, 12, 0.92); padding: 8px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            height: 48px; flex-shrink: 0; gap: 5px; overflow-x: auto; z-index: 3;
+        }
+        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .srv-btn { background: #1a1a1f; color: #ccc; border: 1px solid #333; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap; }
         .srv-btn.active { background: #fff; color: #000; font-weight: bold; border-color: #fff; }
-        .fs-btn { background: #222; color: #fff; border: 1px solid #3a3a3a; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
-        .modal-player-wrapper { flex: 1; width: 100%; height: calc(100dvh - 48px); background: #000; }
-        .iframe-container { width: 100%; height: 100%; background: #000; }
+        .amb-btn {
+            background: #1a1a1f; color: #fff;
+            border: 1px solid var(--ambilight-color);
+            box-shadow: 0 0 12px color-mix(in srgb, var(--ambilight-color) 65%, transparent);
+            padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+        .amb-btn.off { border-color: #333; box-shadow: none; color: #777; }
+        .fs-btn { background: #1a1a1f; color: #fff; border: 1px solid #3a3a3a; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+
+        .modal-player-wrapper {
+            position: relative; flex: 1; width: 100%; height: calc(100dvh - 48px);
+            background: #050507; display: flex; align-items: center; justify-content: center;
+            padding: 10px; overflow: hidden;
+        }
+        /* Oynatıcı Arkası Nefes Alan LED Işık Halesi */
+        .player-ambilight-aura {
+            position: absolute;
+            inset: 6px;
+            border-radius: 14px;
+            background: radial-gradient(circle at center, color-mix(in srgb, var(--ambilight-color) 55%, transparent), transparent 72%);
+            filter: blur(26px);
+            opacity: 0.95;
+            pointer-events: none;
+            animation: breatheGlow 4.5s ease-in-out infinite alternate;
+            transition: opacity 0.5s ease, background 0.8s ease;
+        }
+        .player-ambilight-aura.hidden { opacity: 0; }
+
+        @keyframes breatheGlow {
+            0% { transform: scale(0.97); opacity: 0.72; }
+            100% { transform: scale(1.03); opacity: 1; }
+        }
+
+        .iframe-container {
+            position: relative; z-index: 2; width: 100%; height: 100%;
+            background: #000; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 0 38px color-mix(in srgb, var(--ambilight-color) 65%, transparent), 0 0 2px rgba(255,255,255,0.2);
+            transition: box-shadow 0.6s ease;
+        }
+        .iframe-container.no-glow { box-shadow: none; border-radius: 0; }
         .iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background-color: rgba(18,18,18,0.95); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 1000; }
+        .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background-color: rgba(14,14,18,0.92); backdrop-filter: blur(10px); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); z-index: 1000; }
         .nav-link { color: #8c8c8c; text-decoration: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; background: none; border: none; }
         .nav-link.active { color: #fff; }
         .nav-link i { font-size: 16px; }
     </style>
 </head>
 <body>
+    <div class="ambient-bg" id="ambientBg"></div>
+
     <div class="netflix-header">
         <a href="/" class="netflix-logo">MEDUSAFILM</a>
         <button class="search-icon-btn" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
@@ -155,9 +268,9 @@ HTML_TEMPLATE = """
         <input type="text" id="searchInput" placeholder="Tüm film ve dizilerde ara..." oninput="handleSearchInput()">
     </div>
 
-    <div class="hero-banner">
+    <div class="hero-banner" id="heroBanner">
         <div class="hero-title">Stranger Things</div>
-        <button class="hero-btn" onclick="openPlayer(66732, 'tv', 'Stranger Things')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
+        <button class="hero-btn" onclick="openPlayer(66732, 'tv', 'Stranger Things', '#e50914')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
     </div>
 
     <div class="netflix-categories">
@@ -177,13 +290,15 @@ HTML_TEMPLATE = """
     <div id="mediaModal" class="modal">
         <div class="modal-header">
             <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri</button>
-            <button class="srv-btn active" id="srv1Btn" onclick="switchServer(1, this)">Sunucu 1</button>
-            <button class="srv-btn" id="srv2Btn" onclick="switchServer(2, this)">Sunucu 2</button>
-            <button class="srv-btn" id="srv3Btn" onclick="switchServer(3, this)">Sunucu 3</button>
+            <button class="srv-btn active" id="srv1Btn" onclick="switchServer(1, this)">S1</button>
+            <button class="srv-btn" id="srv2Btn" onclick="switchServer(2, this)">S2</button>
+            <button class="srv-btn" id="srv3Btn" onclick="switchServer(3, this)">S3</button>
+            <button class="amb-btn" id="ambToggleBtn" onclick="toggleAmbilight()"><i class="fa-solid fa-lightbulb"></i> LED</button>
             <button class="fs-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
         </div>
-        <div class="modal-player-wrapper">
-            <div class="iframe-container">
+        <div class="modal-player-wrapper" id="playerWrapper">
+            <div class="player-ambilight-aura" id="playerAura"></div>
+            <div class="iframe-container" id="iframeBox">
                 <iframe id="mediaFrame" src="" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" allow="autoplay; fullscreen; encrypted-media"></iframe>
             </div>
         </div>
@@ -198,6 +313,7 @@ HTML_TEMPLATE = """
 
     <script>
         const localMovies = {{ catalog_json | safe }};
+        const dynamicPalette = ['#e50914', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#3b82f6'];
         let currentCategory = 'Tümü';
         let searchQuery = '';
         let remoteResults = [];
@@ -205,6 +321,18 @@ HTML_TEMPLATE = """
 
         let activeMediaId = null;
         let activeMediaType = 'movie';
+        let ambilightOn = true;
+
+        function setAmbilightColor(hexColor) {
+            if (!hexColor) return;
+            document.documentElement.style.setProperty('--ambilight-color', hexColor);
+        }
+
+        function getColorForId(id, preset) {
+            if (preset) return preset;
+            const idx = Math.abs(Number(id) || 0) % dynamicPalette.length;
+            return dynamicPalette[idx];
+        }
 
         function buildServerUrl(srvNum, tmdbId, mediaType) {
             const typePath = mediaType === 'tv' ? 'tv' : 'movie';
@@ -227,9 +355,15 @@ HTML_TEMPLATE = """
             }
 
             items.forEach(m => {
+                const cardColor = getColorForId(m.id, m.glow);
                 const card = document.createElement('div');
                 card.className = 'movie-card';
-                card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title);
+                card.style.setProperty('--card-glow', cardColor);
+
+                card.onmouseenter = () => setAmbilightColor(cardColor);
+                card.ontouchstart = () => setAmbilightColor(cardColor);
+                card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title, cardColor);
+
                 card.innerHTML = `
                     <img src="${m.poster}" class="movie-poster" loading="lazy">
                     <div class="movie-info">${m.title}</div>
@@ -278,124 +412,4 @@ HTML_TEMPLATE = """
             if(btn) btn.classList.add('active');
             if (!searchQuery) {
                 document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
-                renderLocal();
-            }
-        }
-
-        function navClick(cat, btn) {
-            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            document.querySelectorAll('.cat-chip').forEach(chip => {
-                if(chip.innerText === cat || (cat === 'Tümü' && chip.innerText === 'Tümü')) {
-                    chip.click();
-                } else {
-                    chip.classList.remove('active');
-                }
-            });
-            currentCategory = cat;
-            if (!searchQuery) renderLocal();
-            window.scrollTo({top: 300, behavior: 'smooth'});
-        }
-
-        function toggleSearch() {
-            const bar = document.getElementById('searchBar');
-            bar.style.display = bar.style.display === 'block' ? 'none' : 'block';
-            if(bar.style.display === 'block') document.getElementById('searchInput').focus();
-        }
-
-        function openPlayer(tmdbId, mediaType, title) {
-            activeMediaId = tmdbId;
-            activeMediaType = mediaType || 'movie';
-            document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('srv1Btn').classList.add('active');
-            document.getElementById('mediaFrame').src = buildServerUrl(1, activeMediaId, activeMediaType);
-            document.getElementById('mediaModal').style.display = 'flex';
-        }
-
-        function switchServer(srvNum, btn) {
-            if (!activeMediaId) return;
-            document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-            document.getElementById('mediaFrame').src = buildServerUrl(srvNum, activeMediaId, activeMediaType);
-        }
-
-        function toggleFullscreen() {
-            const modal = document.getElementById('mediaModal');
-            const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
-            if (!fsEl) {
-                if (modal.requestFullscreen) {
-                    modal.requestFullscreen().catch(() => {});
-                } else if (modal.webkitRequestFullscreen) {
-                    modal.webkitRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(() => {});
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('mediaFrame').src = '';
-            document.getElementById('mediaModal').style.display = 'none';
-            const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
-            if (fsEl) {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(() => {});
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            }
-        }
-
-        renderLocal();
-    </script>
-</body>
-</html>
-"""
-
-@app.route('/')
-def index():
-    return render_template_string(HTML_TEMPLATE, catalog_json=json.dumps(CATALOG, ensure_ascii=False))
-
-@app.route('/api/search')
-def api_search():
-    q = request.args.get('q', '').strip()
-    if not q:
-        return jsonify({"results": []})
-
-    url = "https://api.themoviedb.org/3/search/multi"
-    params = {
-        "api_key": TMDB_API_KEY,
-        "query": q,
-        "language": "tr-TR",
-        "include_adult": "false"
-    }
-
-    try:
-        r = requests.get(url, params=params, timeout=8)
-        data = r.json()
-        out = []
-        for item in data.get("results", []):
-            m_type = item.get("media_type")
-            if m_type not in ("movie", "tv"):
-                continue
-            poster_path = item.get("poster_path")
-            if not poster_path:
-                continue
-            title = item.get("title") or item.get("name") or "İsimsiz"
-            out.append({
-                "id": item.get("id"),
-                "media_type": m_type,
-                "title": title,
-                "poster": f"https://image.tmdb.org/t/p/w500{poster_path}"
-            })
-        return jsonify({"results": out})
-    except Exception:
-        return jsonify({"results": []})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+                
