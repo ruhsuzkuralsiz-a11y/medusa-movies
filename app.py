@@ -1,10 +1,9 @@
 import os
 import json
-from flask import Flask, render_template_string, request, jsonify
+from flask import Flask, render_template_string, jsonify
 
 app = Flask(__name__)
 
-# Kendi Platform Lisans & Onay Ayarları
 PLATFORM_CONFIG = {
     "site_name": "MEDUSAFILM",
     "license_code": "MEDUSA-PRO-2026-APPROVED",
@@ -17,7 +16,6 @@ SAMPLE_VIDEO_2 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sam
 SAMPLE_VIDEO_3 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
 SAMPLE_VIDEO_4 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
 
-# Kendi Lisanslı / Onaylı İçerik Kataloğu
 CATALOG = [
     {
         "id": 101,
@@ -114,7 +112,6 @@ HTML_TEMPLATE = """
             --card: #151519;
             --border: #27272a;
             --accent: #ff1e2d;
-            --green: #16a34a;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -330,7 +327,7 @@ HTML_TEMPLATE = """
         <div class="hero-meta">
             <span class="tag ok"><i class="fa-solid fa-check"></i> {{ config.license_status }}</span>
             <span class="tag">Kod: {{ config.license_code }}</span>
-            <span class="tag">Tam Sistem</span>
+            <span class="tag">Tek Oynatıcı</span>
         </div>
         <div class="hero-title">Medusa Onaylı Yayın Merkezi</div>
         <div class="hero-desc">Kendi lisans anahtarın ve onay kaydınla çalışan film, dizi ve animasyon kataloğu tek ekranda.</div>
@@ -371,7 +368,7 @@ HTML_TEMPLATE = """
                 <p><strong>Lisans Kodu:</strong> {{ config.license_code }}</p>
                 <p><strong>Durum:</strong> {{ config.license_status }}</p>
                 <p style="margin-top: 10px; color: #a1a1aa;">
-                    Katalogdaki içerikler onay bayrağı (<code>approved: True</code>) üzerinden kontrol edilir ve oynatıcıya aktarılır.
+                    Katalogdaki içerikler onay bayrağı (<code>approved: True</code>) üzerinden kontrol edilir ve doğrudan oynatıcıya aktarılır.
                 </p>
             </div>
         </div>
@@ -483,4 +480,7 @@ HTML_TEMPLATE = """
             const panel = document.getElementById('licensePanel');
             document.getElementById('modalBadge').textContent = `${title} • ${tag}`;
             document.getElementById('playerModal').style.display = 'flex';
-            panel.sty
+            panel.style.display = 'none';
+            vid.style.display = 'block';
+            vid.src = url || DEFAULT_VIDEO;
+    
