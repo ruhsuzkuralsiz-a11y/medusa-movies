@@ -7,19 +7,20 @@ app = Flask(__name__)
 
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "")
 
+# Her içeriğin "dub_url" alanına Türkçe dublajlı video (.mp4 / .m3u8) veya embed linkini yazabilirsin.
 CATALOG = [
-    {"id": 27205, "media_type": "movie", "title": "Inception", "category": "Netflix Orijinal Filmler", "poster": "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg", "glow": "#00e5ff"},
-    {"id": 66732, "media_type": "tv", "title": "Stranger Things", "category": "Popüler Diziler", "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "glow": "#ff1e2d"},
-    {"id": 119051, "media_type": "tv", "title": "Wednesday", "category": "Popüler Diziler", "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg", "glow": "#a855f7"},
-    {"id": 93405, "media_type": "tv", "title": "Squid Game", "category": "Gündemdekiler", "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg", "glow": "#ff2a85"},
-    {"id": 71912, "media_type": "tv", "title": "The Witcher", "category": "Popüler Diziler", "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg", "glow": "#fbbf24"},
-    {"id": 697843, "media_type": "movie", "title": "Extraction 2", "category": "Netflix Orijinal Filmler", "poster": "https://image.tmdb.org/t/p/w500/7gKI9hpEMcZuQPNgKrkDzJpbnNS.jpg", "glow": "#ff6a00"},
-    {"id": 70523, "media_type": "tv", "title": "Dark", "category": "Popüler Diziler", "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg", "glow": "#facc15"},
-    {"id": 94605, "media_type": "tv", "title": "Arcane", "category": "Anime & Animasyon", "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg", "glow": "#00e5ff"},
-    {"id": 87108, "media_type": "tv", "title": "Our Planet", "category": "Belgeseller", "poster": "https://image.tmdb.org/t/p/w500/1XgmBoiiapwFMCKkG8tYqA5qN8S.jpg", "glow": "#00ff88"},
-    {"id": 71446, "media_type": "tv", "title": "La Casa de Papel", "category": "Gündemdekiler", "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg", "glow": "#ff1744"},
-    {"id": 545611, "media_type": "movie", "title": "The Gray Man", "category": "Netflix Orijinal Filmler", "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg", "glow": "#2979ff"},
-    {"id": 157336, "media_type": "movie", "title": "Interstellar", "category": "Netflix Orijinal Filmler", "poster": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", "glow": "#3b82f6"}
+    {"id": 27205, "media_type": "movie", "title": "Inception", "category": "Netflix Orijinal Filmler", "poster": "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg", "glow": "#00e5ff", "dub_url": ""},
+    {"id": 66732, "media_type": "tv", "title": "Stranger Things", "category": "Popüler Diziler", "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "glow": "#ff1e2d", "dub_url": ""},
+    {"id": 119051, "media_type": "tv", "title": "Wednesday", "category": "Popüler Diziler", "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg", "glow": "#a855f7", "dub_url": ""},
+    {"id": 93405, "media_type": "tv", "title": "Squid Game", "category": "Gündemdekiler", "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg", "glow": "#ff2a85", "dub_url": ""},
+    {"id": 71912, "media_type": "tv", "title": "The Witcher", "category": "Popüler Diziler", "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg", "glow": "#fbbf24", "dub_url": ""},
+    {"id": 697843, "media_type": "movie", "title": "Extraction 2", "category": "Netflix Orijinal Filmler", "poster": "https://image.tmdb.org/t/p/w500/7gKI9hpEMcZuQPNgKrkDzJpbnNS.jpg", "glow": "#ff6a00", "dub_url": ""},
+    {"id": 70523, "media_type": "tv", "title": "Dark", "category": "Popüler Diziler", "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg", "glow": "#facc15", "dub_url": ""},
+    {"id": 94605, "media_type": "tv", "title": "Arcane", "category": "Anime & Animasyon", "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg", "glow": "#00e5ff", "dub_url": ""},
+    {"id": 87108, "media_type": "tv", "title": "Our Planet", "category": "Belgeseller", "poster": "https://image.tmdb.org/t/p/w500/1XgmBoiiapwFMCKkG8tYqA5qN8S.jpg", "glow": "#00ff88", "dub_url": ""},
+    {"id": 71446, "media_type": "tv", "title": "La Casa de Papel", "category": "Gündemdekiler", "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg", "glow": "#ff1744", "dub_url": ""},
+    {"id": 545611, "media_type": "movie", "title": "The Gray Man", "category": "Netflix Orijinal Filmler", "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg", "glow": "#2979ff", "dub_url": ""},
+    {"id": 157336, "media_type": "movie", "title": "Interstellar", "category": "Netflix Orijinal Filmler", "poster": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", "glow": "#3b82f6", "dub_url": ""}
 ]
 
 HTML_TEMPLATE = """
@@ -56,12 +57,12 @@ HTML_TEMPLATE = """
         .poster-fallback span { font-size: 11px; font-weight: bold; color: #f3f4f6; line-height: 1.25; }
         .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .modal { display: none; position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #050507; z-index: 2000; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #0a0a0c; padding: 8px 10px; height: 48px; gap: 5px; overflow-x: auto; }
-        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .srv-btn { background: #1a1a1f; color: #ccc; border: 1px solid #333; padding: 5px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
-        .srv-btn.active { background: #fff; color: #000; font-weight: bold; }
-        .modal-player-wrapper { position: relative; flex: 1; width: 100%; height: calc(100dvh - 48px); background: #050507; }
-        .modal-player-wrapper iframe { width: 100%; height: 100%; border: none; display: block; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #0a0a0c; padding: 8px 12px; height: 48px; gap: 8px; }
+        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .dub-badge { background: #16a34a; color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .modal-player-wrapper { position: relative; flex: 1; width: 100%; height: calc(100dvh - 48px); background: #050507; display: flex; align-items: center; justify-content: center; }
+        .modal-player-wrapper iframe, .modal-player-wrapper video { width: 100%; height: 100%; border: none; display: none; background: #000; }
+        .empty-dub-box { display: none; text-align: center; padding: 24px; color: #d1d5db; font-size: 13px; max-width: 360px; line-height: 1.5; }
         .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background: rgba(12,12,15,0.94); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--ambilight-color); z-index: 1000; }
         .nav-link { color: #8c8c8c; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; background: none; border: none; }
         .nav-link.active { color: #fff; }
@@ -80,7 +81,7 @@ HTML_TEMPLATE = """
 
     <div class="hero-banner">
         <div class="hero-title">Stranger Things</div>
-        <button class="hero-btn" onclick="openPlayer(66732, 'tv', 'Stranger Things')"><i class="fa-solid fa-play"></i> Hemen İzle</button>
+        <button class="hero-btn" onclick="openDubPlayer(66732, 'Stranger Things')"><i class="fa-solid fa-play"></i> Türkçe Dublaj İzle</button>
     </div>
 
     <div class="netflix-categories">
@@ -100,12 +101,15 @@ HTML_TEMPLATE = """
     <div id="mediaModal" class="modal">
         <div class="modal-header">
             <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri</button>
-            <button class="srv-btn active" id="srv1Btn" onclick="switchServer(1, this)">S1</button>
-            <button class="srv-btn" id="srv2Btn" onclick="switchServer(2, this)">S2</button>
-            <button class="srv-btn" id="srv3Btn" onclick="switchServer(3, this)">S3</button>
+            <span class="dub-badge" id="modalTitleBadge"><i class="fa-solid fa-volume-high"></i> Türkçe Dublaj</span>
         </div>
         <div class="modal-player-wrapper">
-            <iframe id="mediaFrame" src="" allowfullscreen="true" allow="autoplay; fullscreen; encrypted-media"></iframe>
+            <video id="dubVideo" controls autoplay playsinline></video>
+            <iframe id="dubFrame" src="" allowfullscreen="true" allow="autoplay; fullscreen; encrypted-media"></iframe>
+            <div id="emptyDubBox" class="empty-dub-box">
+                <i class="fa-solid fa-circle-info" style="font-size: 26px; color: #E50914; margin-bottom: 10px;"></i><br>
+                Bu içerik için henüz <strong>Türkçe dublaj</strong> kaynağı eklenmemiş. Katalogdaki <code>dub_url</code> alanına Türkçe dublajlı video veya oynatıcı linkini ekleyince burada çalar.
+            </div>
         </div>
     </div>
 
@@ -123,20 +127,11 @@ HTML_TEMPLATE = """
         let currentCategory = 'Tümü';
         let searchQuery = '';
         let searchTimer = null;
-        let activeMediaId = null;
-        let activeMediaType = 'movie';
 
         function normalizeText(str) {
             return String(str || '').toLowerCase()
                 .replace(/ı/g, 'i').replace(/İ/g, 'i').replace(/ğ/g, 'g')
                 .replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').trim();
-        }
-
-        function buildServerUrl(srvNum, tmdbId, mediaType) {
-            const typePath = mediaType === 'tv' ? 'tv' : 'movie';
-            if (srvNum === 1) return `https://vidsrc.me/embed/${typePath}?tmdb=${tmdbId}&ds_lang=tr&language=tr`;
-            if (srvNum === 2) return `https://vidsrc.to/embed/${typePath}/${tmdbId}?ds_lang=tr&language=tr`;
-            return `https://vidsrc.cc/v2/embed/${typePath}/${tmdbId}?ds_lang=tr&language=tr`;
         }
 
         function createFallbackBox(titleText) {
@@ -164,7 +159,7 @@ HTML_TEMPLATE = """
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 card.style.setProperty('--card-glow', m.glow || '#E50914');
-                card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title);
+                card.onclick = () => openDubPlayer(m.id, m.title, m.dub_url || '');
 
                 const infoDiv = document.createElement('div');
                 infoDiv.className = 'movie-info';
@@ -222,7 +217,7 @@ HTML_TEMPLATE = """
                     remote.forEach(item => {
                         if (item && item.id && !seenIds.has(String(item.id))) {
                             seenIds.add(String(item.id));
-                            combined.push(item);
+                            combined.push({ ...item, dub_url: '' });
                         }
                     });
                     document.getElementById('sectionTitle').innerText = `"${searchQuery}" Sonuçları (${combined.length})`;
@@ -255,24 +250,49 @@ HTML_TEMPLATE = """
             if (bar.style.display === 'block') document.getElementById('searchInput').focus();
         }
 
-        function openPlayer(tmdbId, mediaType) {
-            activeMediaId = tmdbId;
-            activeMediaType = mediaType || 'movie';
-            document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('srv1Btn').classList.add('active');
-            document.getElementById('mediaModal').style.display = 'flex';
-            document.getElementById('mediaFrame').src = buildServerUrl(1, activeMediaId, activeMediaType);
-        }
+        function openDubPlayer(tmdbId, title, explicitDubUrl) {
+            const found = localMovies.find(x => String(x.id) === String(tmdbId));
+            const dubUrl = (explicitDubUrl || (found && found.dub_url) || '').trim();
 
-        function switchServer(srvNum, btn) {
-            if (!activeMediaId) return;
-            document.querySelectorAll('.srv-btn').forEach(b => b.classList.remove('active'));
-            if (btn) btn.classList.add('active');
-            document.getElementById('mediaFrame').src = buildServerUrl(srvNum, activeMediaId, activeMediaType);
+            const videoEl = document.getElementById('dubVideo');
+            const frameEl = document.getElementById('dubFrame');
+            const emptyBox = document.getElementById('emptyDubBox');
+            const badgeEl = document.getElementById('modalTitleBadge');
+
+            badgeEl.innerHTML = `<i class="fa-solid fa-volume-high"></i> ${title || 'İçerik'} — Türkçe Dublaj`;
+            document.getElementById('mediaModal').style.display = 'flex';
+
+            videoEl.pause();
+            videoEl.removeAttribute('src');
+            videoEl.style.display = 'none';
+            frameEl.src = '';
+            frameEl.style.display = 'none';
+            emptyBox.style.display = 'none';
+
+            if (!dubUrl) {
+                emptyBox.style.display = 'block';
+                return;
+            }
+
+            if (/\.mp4($|\?)/i.test(dubUrl)) {
+                videoEl.src = dubUrl;
+                videoEl.style.display = 'block';
+                videoEl.play().catch(() => {});
+            } else {
+                frameEl.src = dubUrl;
+                frameEl.style.display = 'block';
+            }
         }
 
         function closeModal() {
-            document.getElementById('mediaFrame').src = '';
+            const videoEl = document.getElementById('dubVideo');
+            const frameEl = document.getElementById('dubFrame');
+            videoEl.pause();
+            videoEl.removeAttribute('src');
+            videoEl.style.display = 'none';
+            frameEl.src = '';
+            frameEl.style.display = 'none';
+            document.getElementById('emptyDubBox').style.display = 'none';
             document.getElementById('mediaModal').style.display = 'none';
         }
 
@@ -304,19 +324,4 @@ def api_search():
         out = []
         for item in data.get("results", []):
             m_type = item.get("media_type")
-            if m_type not in ("movie", "tv"):
-                continue
-            poster_path = item.get("poster_path")
-            out.append({
-                "id": item.get("id"),
-                "media_type": m_type,
-                "title": item.get("title") or item.get("name") or "İsimsiz",
-                "poster": f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else ""
-            })
-        return jsonify({"results": out})
-    except Exception:
-        return jsonify({"results": []})
-
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+            if m_type not in ("movi
