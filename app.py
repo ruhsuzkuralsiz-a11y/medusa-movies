@@ -262,7 +262,16 @@ HTML_TEMPLATE = """
             border-color: var(--card-glow, var(--ambilight-color));
             box-shadow: 0 0 28px var(--card-glow, var(--ambilight-color));
         }
-        .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #1e1e24; }
+        .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #1e1e24; display: block; }
+        .poster-fallback {
+            width: 100%; height: 150px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 10px; text-align: center;
+            background: linear-gradient(145deg, #1b1b22, #0d0d11);
+            border-bottom: 2px solid var(--card-glow, #E50914);
+        }
+        .poster-fallback i { font-size: 24px; color: var(--card-glow, #E50914); margin-bottom: 6px; }
+        .poster-fallback span { font-size: 11px; font-weight: bold; color: #e5e7eb; line-height: 1.25; }
         .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .modal {
@@ -379,12 +388,24 @@ HTML_TEMPLATE = """
     <script>
         const localMovies = {{ catalog_json | safe }};
         const dynamicPalette = ['#ff1e2d', '#a855f7', '#00e5ff', '#00ff88', '#fbbf24', '#ff2a85', '#2979ff'];
-        const FALLBACK_POSTER = "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg";
 
         let currentCategory = 'Tümü';
         let searchQuery = '';
         let searchTimer = null;
         let ambilightOn = true;
+
+        function normalizeText(str) {
+            return String(str || '')
+                .toLowerCase()
+                .replace(/ı/g, 'i')
+                .replace(/İ/g, 'i')
+                .replace(/ğ/g, 'g')
+                .replace(/ü/g, 'u')
+                .replace(/ş/g, 's')
+                .replace(/ö/g, 'o')
+                .replace(/ç/g, 'c')
+                .trim();
+        }
 
         function setAmbilightColor(hexColor) {
             if (!hexColor) return;
@@ -419,27 +440,9 @@ HTML_TEMPLATE = """
 
             items.forEach(m => {
                 const cardColor = getColorForId(m.id, m.glow);
-                const posterUrl = m.poster || FALLBACK_POSTER;
+                const safeTitle = String(m.title || 'İçerik').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 card.style.setProperty('--card-glow', cardColor);
 
-                card.onmouseenter = () => highlightCard(card, cardColor);
-                card.ontouchstart = () => highlightCard(card, cardColor);
-                card.onclick = () => openPlayer(m.id, m.media_type || 'movie', m.title, cardColor);
-
-                card.innerHTML = `
-                    <img src="${posterUrl}" class="movie-poster" loading="lazy" onerror="this.onerror=null; this.src='${FALLBACK_POSTER}';">
-                    <div class="movie-info">${m.title}</div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        function renderLocal() {
-            let filtered = localMovies.filter(m => {
-                let matchCat = (currentCategory === 'Tümü' || m.category === currentCategory);
-                let matchSearch = !searchQuery || m.title.toLowerCase().includes(searchQuery.toLowerCase());
-                return matchCat && matchSearch;
-            });
-            renderCards(filtered, 'Katalo
+                card.onmouseenter = () => highlightCa
