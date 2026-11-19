@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, render_template_string, jsonify
+from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
@@ -314,7 +314,7 @@ HTML_TEMPLATE = """
     <header class="header">
         <div class="brand-group">
             <a href="/" class="logo">MEDUSAFILM</a>
-            <button class="license-pill" onclick="openLicenseInfo()"><i class="fa-solid fa-shield-check"></i> ONAYLI</button>
+            <button class="license-pill" onclick="openLicenseInfo()"><i class="fa-solid fa-shield-halved"></i> ONAYLI</button>
         </div>
         <button class="icon-btn" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
     </header>
@@ -483,4 +483,4 @@ HTML_TEMPLATE = """
             panel.style.display = 'none';
             vid.style.display = 'block';
             vid.src = url || DEFAULT_VIDEO;
-    
+            
