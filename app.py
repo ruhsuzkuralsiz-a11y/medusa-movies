@@ -12,7 +12,7 @@ CATALOG = [
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
         "link": "https://vidsrc.me/embed/tv?tmdb=66732&ds_lang=tr",
-        "overview": "Stranger Things Full Bölüm Türkçe Dublaj Kesintisiz İzleme."
+        "overview": "Stranger Things oynatıcı ekranı."
     },
     {
         "id": 2,
@@ -22,7 +22,7 @@ CATALOG = [
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
         "link": "https://vidsrc.me/embed/tv?tmdb=119051&ds_lang=tr",
-        "overview": "Wednesday Addams Türkçe Dublaj tam bölüm izle."
+        "overview": "Wednesday oynatıcı ekranı."
     },
     {
         "id": 3,
@@ -32,7 +32,7 @@ CATALOG = [
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
         "link": "https://vidsrc.me/embed/tv?tmdb=93405&ds_lang=tr",
-        "overview": "Squid Game Türkçe Dublaj tam dizi keyfi."
+        "overview": "Squid Game oynatıcı ekranı."
     },
     {
         "id": 4,
@@ -42,7 +42,7 @@ CATALOG = [
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
         "link": "https://vidsrc.me/embed/tv?tmdb=71912&ds_lang=tr",
-        "overview": "The Witcher Türkçe Dublaj tam bölüm oynatıcı."
+        "overview": "The Witcher oynatıcı ekranı."
     },
     {
         "id": 5,
@@ -52,7 +52,7 @@ CATALOG = [
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/wkPPggLUDauAoukxuvXIPq70Ssx.jpg",
         "link": "https://vidsrc.me/embed/movie?tmdb=697843&ds_lang=tr",
-        "overview": "Extraction 2 Türkçe Dublaj tam film izle."
+        "overview": "Extraction 2 oynatıcı ekranı."
     },
     {
         "id": 6,
@@ -62,7 +62,7 @@ CATALOG = [
         "category": "Popüler Diziler",
         "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg",
         "link": "https://vidsrc.me/embed/tv?tmdb=70523&ds_lang=tr",
-        "overview": "Dark Türkçe Dublaj tam dizi izleme."
+        "overview": "Dark oynatıcı ekranı."
     },
     {
         "id": 7,
@@ -72,7 +72,7 @@ CATALOG = [
         "category": "Anime & Animasyon",
         "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
         "link": "https://vidsrc.me/embed/tv?tmdb=94605&ds_lang=tr",
-        "overview": "Arcane Türkçe Dublaj tam bölüm animasyon serisi."
+        "overview": "Arcane oynatıcı ekranı."
     },
     {
         "id": 8,
@@ -82,7 +82,7 @@ CATALOG = [
         "category": "Belgeseller",
         "poster": "https://image.tmdb.org/t/p/w500/1XgmBoiiapwFMCKkG8tYqA5qN8S.jpg",
         "link": "https://vidsrc.me/embed/tv?tmdb=87108&ds_lang=tr",
-        "overview": "Our Planet belgesel serisi tam bölüm."
+        "overview": "Our Planet oynatıcı ekranı."
     },
     {
         "id": 9,
@@ -92,7 +92,7 @@ CATALOG = [
         "category": "Gündemdekiler",
         "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg",
         "link": "https://vidsrc.me/embed/tv?tmdb=71446&ds_lang=tr",
-        "overview": "La Casa de Papel Türkçe Dublaj tam dizi izle."
+        "overview": "La Casa de Papel oynatıcı ekranı."
     },
     {
         "id": 10,
@@ -102,7 +102,7 @@ CATALOG = [
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
         "link": "https://vidsrc.me/embed/movie?tmdb=545611&ds_lang=tr",
-        "overview": "The Gray Man Türkçe Dublaj tam film izle."
+        "overview": "The Gray Man oynatıcı ekranı."
     }
 ]
 
@@ -111,15 +111,15 @@ HTML_TEMPLATE = """
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>medusafilm - Full Türkçe Dublaj İzle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>medusafilm</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --netflix-red: #E50914; --netflix-black: #141414; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: var(--netflix-black); color: #fff; font-family: Arial, sans-serif; padding-bottom: 70px; }
-        
-        .netflix-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; }
+
+        .netflix-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; }
         .netflix-logo { color: var(--netflix-red); font-size: 22px; font-weight: bold; text-decoration: none; font-family: Impact, sans-serif; }
         .search-icon-btn { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
 
@@ -145,13 +145,14 @@ HTML_TEMPLATE = """
         .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #222; }
         .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Tam Ekran Duyarlı Video Modal Tasarımı */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 2000; flex-direction: column; justify-content: space-between; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 10px 15px; border-bottom: 1px solid #222; height: 50px; }
-        .back-btn { background: var(--netflix-red); color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-        .modal-player-wrapper { flex: 1; width: 100%; height: calc(100% - 50px); background: #000; display: flex; align-items: center; justify-content: center; }
+        /* Tam Ekran / Geniş Oynatıcı Katmanı */
+        .modal { display: none; position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #000; z-index: 2000; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #0b0b0b; padding: 8px 12px; border-bottom: 1px solid #1f1f1f; height: 46px; flex-shrink: 0; gap: 8px; }
+        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .fs-btn { background: #222; color: #fff; border: 1px solid #3a3a3a; padding: 6px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .modal-player-wrapper { flex: 1; width: 100%; height: calc(100dvh - 46px); background: #000; }
         .iframe-container { width: 100%; height: 100%; background: #000; }
-        .iframe-container iframe { width: 100%; height: 100%; border: none; }
+        .iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
 
         .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background-color: rgba(18,18,18,0.95); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #222; z-index: 1000; }
         .nav-link { color: #8c8c8c; text-decoration: none; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; background: none; border: none; }
@@ -184,15 +185,15 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="section-box">
-        <div class="row-header" id="sectionTitle">Full Türkçe Dublaj Film ve Dizi Arşivi</div>
+        <div class="row-header" id="sectionTitle">Arşivdeki İçerikler</div>
         <div class="movies-grid" id="movieGrid"></div>
     </div>
 
     <div id="mediaModal" class="modal">
         <div class="modal-header">
-            <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri Dön</button>
-            <span style="font-size: 12px; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;" id="modalTitle">Oynatıcı</span>
-            <div style="width: 50px;"></div>
+            <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri</button>
+            <span style="font-size: 12px; color: #fff; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; text-align: center;" id="modalTitle">Oynatıcı</span>
+            <button class="fs-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i> Tam Ekran</button>
         </div>
         <div class="modal-player-wrapper">
             <div class="iframe-container">
@@ -224,7 +225,7 @@ HTML_TEMPLATE = """
             });
 
             if(filtered.length === 0) {
-                grid.innerHTML = '<div style="grid-column: span 5; text-align: center; color: #888; padding: 30px; font-size: 13px;">Aradığın içerik bulunamadı kanka!</div>';
+                grid.innerHTML = '<div style="grid-column: span 5; text-align: center; color: #888; padding: 30px; font-size: 13px;">Aradığın içerik bulunamadı.</div>';
                 return;
             }
 
@@ -244,14 +245,14 @@ HTML_TEMPLATE = """
             currentCategory = cat;
             document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
             if(btn) btn.classList.add('active');
-            document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Full Türkçe Dublaj Film ve Dizi Arşivi' : cat;
+            document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
             render();
         }
 
         function navClick(cat, btn) {
             document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
+
             document.querySelectorAll('.cat-chip').forEach(chip => {
                 if(chip.innerText === cat || (cat === 'Tümü' && chip.innerText === 'Tümü')) {
                     chip.click();
@@ -277,25 +278,38 @@ HTML_TEMPLATE = """
 
         function openPlayer(url, title) {
             document.getElementById('mediaFrame').src = url;
-            document.getElementById('modalTitle').innerText = title + " (Türkçe Dublaj)";
+            document.getElementById('modalTitle').innerText = title;
             document.getElementById('mediaModal').style.display = 'flex';
-            
-            // Mobilde tam ekran desteği tetikleme
-            let elem = document.getElementById('mediaModal');
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(() => {});
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
+        }
+
+        function toggleFullscreen() {
+            const modal = document.getElementById('mediaModal');
+            const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+            if (!fsEl) {
+                if (modal.requestFullscreen) {
+                    modal.requestFullscreen().catch(() => {});
+                } else if (modal.webkitRequestFullscreen) {
+                    modal.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
             }
         }
 
         function closeModal() {
             document.getElementById('mediaFrame').src = '';
             document.getElementById('mediaModal').style.display = 'none';
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(() => {});
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
+            const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+            if (fsEl) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
             }
         }
 
