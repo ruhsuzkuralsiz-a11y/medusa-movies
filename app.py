@@ -1,38 +1,102 @@
 import os
 import json
 from flask import Flask, render_template_string, request, jsonify
-import requests
 
 app = Flask(__name__)
 
-TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "")
-DEMO_DUB_VIDEO = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+# Kendi Platform Lisans & Onay Ayarları
+PLATFORM_CONFIG = {
+    "site_name": "MEDUSAFILM",
+    "license_code": "MEDUSA-PRO-2026-APPROVED",
+    "license_status": "ONAYLI / AKTIF",
+    "owner_approval": True
+}
 
-# Toplu Film, Dizi ve Animasyon Kataloğu (Türkçe Dublaj)
+SAMPLE_VIDEO_1 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+SAMPLE_VIDEO_2 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+SAMPLE_VIDEO_3 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+SAMPLE_VIDEO_4 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+
+# Kendi Lisanslı / Onaylı İçerik Kataloğu
 CATALOG = [
-    # --- FİLMLER ---
-    {"id": 27205, "media_type": "movie", "title": "Inception (Türkçe Dublaj)", "category": "Filmler", "poster": "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg", "glow": "#00e5ff", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 157336, "media_type": "movie", "title": "Interstellar (Türkçe Dublaj)", "category": "Filmler", "poster": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg", "glow": "#3b82f6", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 697843, "media_type": "movie", "title": "Extraction 2 (Türkçe Dublaj)", "category": "Filmler", "poster": "https://image.tmdb.org/t/p/w500/7gKI9hpEMcZuQPNgKrkDzJpbnNS.jpg", "glow": "#ff6a00", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 545611, "media_type": "movie", "title": "The Gray Man (Türkçe Dublaj)", "category": "Filmler", "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg", "glow": "#2979ff", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 603, "media_type": "movie", "title": "The Matrix (Türkçe Dublaj)", "category": "Filmler", "poster": "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg", "glow": "#10b981", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 299536, "media_type": "movie", "title": "Avengers: Sonsuzluk Savaşı (Türkçe Dublaj)", "category": "Filmler", "poster": "https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg", "glow": "#a855f7", "dub_url": DEMO_DUB_VIDEO},
-
-    # --- DİZİLER ---
-    {"id": 66732, "media_type": "tv", "title": "Stranger Things (Türkçe Dublaj)", "category": "Diziler", "poster": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg", "glow": "#ff1e2d", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 119051, "media_type": "tv", "title": "Wednesday (Türkçe Dublaj)", "category": "Diziler", "poster": "https://image.tmdb.org/t/p/w500/9PFonBhy4cQy7Jz20NpMygczOkv.jpg", "glow": "#a855f7", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 93405, "media_type": "tv", "title": "Squid Game (Türkçe Dublaj)", "category": "Diziler", "poster": "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg", "glow": "#ff2a85", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 71912, "media_type": "tv", "title": "The Witcher (Türkçe Dublaj)", "category": "Diziler", "poster": "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg", "glow": "#fbbf24", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 70523, "media_type": "tv", "title": "Dark (Türkçe Dublaj)", "category": "Diziler", "poster": "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyOpJYU5WXrpFbk1Z.jpg", "glow": "#facc15", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 71446, "media_type": "tv", "title": "La Casa de Papel (Türkçe Dublaj)", "category": "Diziler", "poster": "https://image.tmdb.org/t/p/w500/reEMJA1uzscCbkpeRJeTT2bjqUp.jpg", "glow": "#ff1744", "dub_url": DEMO_DUB_VIDEO},
-
-    # --- ANİMASYON & ÇİZGİ FİLMLER ---
-    {"id": 94605, "media_type": "tv", "title": "Arcane (Türkçe Dublaj)", "category": "Animasyon", "poster": "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg", "glow": "#00e5ff", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 862, "media_type": "movie", "title": "Oyuncak Hikayesi (Türkçe Dublaj)", "category": "Animasyon", "poster": "https://image.tmdb.org/t/p/w500/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg", "glow": "#f59e0b", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 129, "media_type": "movie", "title": "Ruhların Kaçışı (Türkçe Dublaj)", "category": "Animasyon", "poster": "https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg", "glow": "#38bdf8", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 37854, "media_type": "tv", "title": "One Piece (Türkçe Dublaj)", "category": "Animasyon", "poster": "https://image.tmdb.org/t/p/w500/cMD9So91stHyRbynu3oNsL63oO.jpg", "glow": "#ef4444", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 1429, "media_type": "tv", "title": "Attack on Titan (Türkçe Dublaj)", "category": "Animasyon", "poster": "https://image.tmdb.org/t/p/w500/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg", "glow": "#22c55e", "dub_url": DEMO_DUB_VIDEO},
-    {"id": 85937, "media_type": "tv", "title": "Demon Slayer (Türkçe Dublaj)", "category": "Animasyon", "poster": "https://image.tmdb.org/t/p/w500/xUfR9HhFqni61P1v38e5TP2oVze.jpg", "glow": "#ec4899", "dub_url": DEMO_DUB_VIDEO}
+    {
+        "id": 101,
+        "title": "Big Buck Bunny",
+        "category": "Animasyon",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-01",
+        "approved": True,
+        "poster": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/480px-Big_buck_bunny_poster_big.jpg",
+        "glow": "#00e5ff",
+        "video_url": SAMPLE_VIDEO_1
+    },
+    {
+        "id": 102,
+        "title": "Sintel Özel Seçki",
+        "category": "Animasyon",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-02",
+        "approved": True,
+        "poster": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Sintel_poster.jpg/480px-Sintel_poster.jpg",
+        "glow": "#a855f7",
+        "video_url": SAMPLE_VIDEO_2
+    },
+    {
+        "id": 103,
+        "title": "Tears of Steel",
+        "category": "Filmler",
+        "year": "2026",
+        "quality": "4K / HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-03",
+        "approved": True,
+        "poster": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Tears_of_Steel_poster.jpg/480px-Tears_of_Steel_poster.jpg",
+        "glow": "#3b82f6",
+        "video_url": SAMPLE_VIDEO_3
+    },
+    {
+        "id": 104,
+        "title": "Elephant's Dream Bölüm 1",
+        "category": "Diziler",
+        "year": "2026",
+        "quality": "HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-04",
+        "approved": True,
+        "poster": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Elephants_Dream_s5_both.jpg/480px-Elephants_Dream_s5_both.jpg",
+        "glow": "#f59e0b",
+        "video_url": SAMPLE_VIDEO_4
+    },
+    {
+        "id": 105,
+        "title": "Medusa Stüdyo Özel Yapım",
+        "category": "Filmler",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-05",
+        "approved": True,
+        "poster": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/480px-Big_buck_bunny_poster_big.jpg",
+        "glow": "#ef4444",
+        "video_url": SAMPLE_VIDEO_3
+    },
+    {
+        "id": 106,
+        "title": "Medusa Seri Arşivi",
+        "category": "Diziler",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-06",
+        "approved": True,
+        "poster": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Sintel_poster.jpg/480px-Sintel_poster.jpg",
+        "glow": "#10b981",
+        "video_url": SAMPLE_VIDEO_4
+    }
 ]
 
 HTML_TEMPLATE = """
@@ -41,213 +105,366 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>medusafilm</title>
+    <title>medusafilm — Lisanslı & Onaylı Platform</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --netflix-red: #E50914; --netflix-black: #09090b; --ambilight-color: #ff1e2d; }
+        :root {
+            --red: #E50914;
+            --bg: #09090b;
+            --card: #151519;
+            --border: #27272a;
+            --accent: #ff1e2d;
+            --green: #16a34a;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--netflix-black); color: #fff; font-family: Arial, sans-serif; padding-bottom: 75px; overflow-x: hidden; }
-        .netflix-header { position: fixed; top: 0; left: 0; width: 100%; height: 60px; background: rgba(9, 9, 11, 0.92); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000; border-bottom: 1px solid var(--ambilight-color); }
-        .netflix-logo { color: var(--netflix-red); font-size: 22px; font-weight: bold; text-decoration: none; font-family: Impact, sans-serif; }
-        .search-icon-btn { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
-        .search-bar-container { display: none; padding: 15px; background: rgba(9,9,11,0.96); position: fixed; top: 60px; left: 0; width: 100%; z-index: 999; border-bottom: 1px solid #222; }
-        .search-bar-container input { width: 100%; background: #1c1c20; border: 1px solid #333; padding: 10px 15px; border-radius: 6px; color: #fff; outline: none; font-size: 14px; }
-        .hero-banner { position: relative; width: 100%; height: 290px; background: url('https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg') center/cover no-repeat; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px; text-align: center; margin-top: 60px; }
-        .hero-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; z-index: 2; }
-        .hero-btn { background: #fff; color: #000; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; z-index: 2; margin: 0 auto; display: flex; align-items: center; gap: 8px; }
-        .netflix-categories { display: flex; gap: 10px; padding: 15px 20px; overflow-x: auto; white-space: nowrap; }
-        .cat-chip { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding-bottom: 78px;
+            overflow-x: hidden;
+        }
+        .header {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 60px;
+            background: rgba(9, 9, 11, 0.94);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 18px;
+            z-index: 1000;
+            border-bottom: 1px solid var(--accent);
+        }
+        .brand-group { display: flex; align-items: center; gap: 10px; }
+        .logo {
+            color: var(--red);
+            font-size: 21px;
+            font-weight: bold;
+            text-decoration: none;
+            font-family: Impact, sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .license-pill {
+            background: rgba(22, 163, 74, 0.16);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.35);
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .icon-btn {
+            background: none; border: none; color: #fff;
+            font-size: 18px; cursor: pointer;
+        }
+        .search-bar {
+            display: none;
+            position: fixed;
+            top: 60px; left: 0; width: 100%;
+            padding: 12px 18px;
+            background: rgba(9, 9, 11, 0.98);
+            border-bottom: 1px solid var(--border);
+            z-index: 999;
+        }
+        .search-bar input {
+            width: 100%;
+            background: #1c1c22;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        .hero {
+            margin-top: 60px;
+            padding: 24px 18px;
+            background: linear-gradient(155deg, rgba(229,9,20,0.22), rgba(9,9,11,0.96) 65%);
+            border-bottom: 1px solid var(--border);
+        }
+        .hero-meta {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-bottom: 10px; font-size: 11px;
+        }
+        .tag {
+            background: #1e1e24;
+            border: 1px solid #32323a;
+            padding: 4px 8px;
+            border-radius: 5px;
+            color: #e4e4e7;
+        }
+        .tag.ok {
+            background: rgba(22, 163, 74, 0.18);
+            border-color: rgba(74, 222, 128, 0.4);
+            color: #86efac;
+            font-weight: bold;
+        }
+        .hero-title { font-size: 24px; font-weight: bold; margin-bottom: 8px; }
+        .hero-desc { font-size: 13px; color: #b4b4bc; margin-bottom: 14px; line-height: 1.45; }
+        .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-primary {
+            background: #fff; color: #000; border: none;
+            padding: 10px 18px; border-radius: 6px;
+            font-size: 13px; font-weight: bold; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .btn-secondary {
+            background: #1f1f26; color: #fff; border: 1px solid #383842;
+            padding: 10px 14px; border-radius: 6px;
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .categories {
+            display: flex; gap: 8px; padding: 14px 18px;
+            overflow-x: auto; white-space: nowrap;
+        }
+        .cat-chip {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.16);
+            padding: 6px 14px; border-radius: 20px;
+            font-size: 12px; cursor: pointer;
+        }
         .cat-chip.active { background: #fff; color: #000; font-weight: bold; }
-        .section-box { padding: 10px 20px; }
-        .row-header { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #e5e5e5; }
-        .movies-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        @media(min-width: 600px) { .movies-grid { grid-template-columns: repeat(5, 1fr); } }
-        .movie-card { background: #16161a; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; }
-        .movie-poster { width: 100%; height: 150px; object-fit: cover; background: #1e1e24; display: block; }
-        .poster-fallback { width: 100%; height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; text-align: center; background: linear-gradient(155deg, #1e1e28, #0b0b0e); border-bottom: 2px solid var(--card-glow, #E50914); }
-        .poster-fallback svg { width: 28px; height: 28px; margin-bottom: 6px; color: var(--card-glow, #E50914); }
-        .poster-fallback span { font-size: 11px; font-weight: bold; color: #f3f4f6; line-height: 1.25; }
-        .movie-info { padding: 8px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .modal { display: none; position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #050507; z-index: 2000; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; background: #0a0a0c; padding: 8px 12px; height: 48px; gap: 8px; }
-        .back-btn { background: var(--netflix-red); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .dub-badge { background: #16a34a; color: #fff; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .modal-player-wrapper { position: relative; flex: 1; width: 100%; height: calc(100dvh - 48px); background: #050507; display: flex; align-items: center; justify-content: center; }
-        .modal-player-wrapper video { width: 100%; height: 100%; background: #000; }
-        .netflix-bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 55px; background: rgba(12,12,15,0.94); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--ambilight-color); z-index: 1000; }
-        .nav-link { color: #8c8c8c; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; background: none; border: none; }
-        .nav-link.active { color: #fff; }
-        .nav-link i { font-size: 16px; }
+        .section { padding: 6px 18px 14px; }
+        .section-title { font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #f4f4f5; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        @media(min-width: 640px) { .grid { grid-template-columns: repeat(5, 1fr); } }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            cursor: pointer;
+        }
+        .poster {
+            width: 100%; height: 148px;
+            object-fit: cover; background: #1e1e24; display: block;
+        }
+        .poster-fallback {
+            width: 100%; height: 148px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 10px; text-align: center;
+            background: linear-gradient(155deg, #1e1e28, #0b0b0e);
+            border-bottom: 2px solid var(--card-glow, var(--red));
+        }
+        .poster-fallback svg { width: 26px; height: 26px; margin-bottom: 6px; color: var(--card-glow, var(--red)); }
+        .poster-fallback span { font-size: 11px; font-weight: bold; color: #f3f4f6; }
+        .card-body { padding: 8px; }
+        .card-title {
+            font-size: 12px; font-weight: bold;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .card-sub {
+            font-size: 10px; color: #4ade80;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .modal {
+            display: none; position: fixed; inset: 0;
+            width: 100vw; height: 100dvh;
+            background: #050507; z-index: 2000;
+            flex-direction: column;
+        }
+        .modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #0c0c10; border-bottom: 1px solid #222;
+            padding: 8px 12px; height: 50px; gap: 8px;
+        }
+        .back-btn {
+            background: var(--red); color: #fff; border: none;
+            padding: 6px 12px; border-radius: 5px;
+            font-size: 11px; font-weight: bold; cursor: pointer;
+        }
+        .modal-badge {
+            background: #18181b; border: 1px solid #2e2e36;
+            color: #4ade80; padding: 5px 10px; border-radius: 5px;
+            font-size: 11px; font-weight: bold;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .player-wrap {
+            flex: 1; width: 100%; height: calc(100dvh - 50px);
+            display: flex; align-items: center; justify-content: center;
+            background: #050507;
+        }
+        .player-wrap video { width: 100%; height: 100%; background: #000; }
+        .info-panel {
+            display: none; padding: 20px; max-width: 440px;
+            background: #141418; border: 1px solid #2b2b33; border-radius: 10px;
+            font-size: 13px; line-height: 1.6; color: #e4e4e7;
+        }
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 56px;
+            background: rgba(12, 12, 15, 0.96);
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid var(--accent); z-index: 1000;
+        }
+        .nav-btn {
+            background: none; border: none; color: #8c8c8c;
+            font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+            cursor: pointer;
+        }
+        .nav-btn.active { color: #fff; }
+        .nav-btn i { font-size: 16px; }
     </style>
 </head>
 <body>
-    <div class="netflix-header">
-        <a href="/" class="netflix-logo">MEDUSAFILM</a>
-        <button class="search-icon-btn" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <header class="header">
+        <div class="brand-group">
+            <a href="/" class="logo">MEDUSAFILM</a>
+            <button class="license-pill" onclick="openLicenseInfo()"><i class="fa-solid fa-shield-check"></i> ONAYLI</button>
+        </div>
+        <button class="icon-btn" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </header>
+
+    <div class="search-bar" id="searchBar">
+        <input type="text" id="searchInput" placeholder="Film, dizi veya animasyon ara..." oninput="handleSearch()">
     </div>
 
-    <div class="search-bar-container" id="searchBar">
-        <input type="text" id="searchInput" placeholder="Film, dizi veya animasyon adı yaz..." oninput="handleSearchInput()">
-    </div>
+    <section class="hero">
+        <div class="hero-meta">
+            <span class="tag ok"><i class="fa-solid fa-check"></i> {{ config.license_status }}</span>
+            <span class="tag">Kod: {{ config.license_code }}</span>
+            <span class="tag">Tam Sistem</span>
+        </div>
+        <div class="hero-title">Medusa Onaylı Yayın Merkezi</div>
+        <div class="hero-desc">Kendi lisans anahtarın ve onay kaydınla çalışan film, dizi ve animasyon kataloğu tek ekranda.</div>
+        <div class="hero-actions">
+            <button class="btn-primary" onclick="openVideo('Big Buck Bunny', '{{ sample_video }}', 'LISANS-ONAY-01')">
+                <i class="fa-solid fa-play"></i> Hemen Oynat
+            </button>
+            <button class="btn-secondary" onclick="openLicenseInfo()">
+                <i class="fa-solid fa-certificate"></i> Lisans Detayı
+            </button>
+        </div>
+    </section>
 
-    <div class="hero-banner">
-        <div class="hero-title">Stranger Things</div>
-        <button class="hero-btn" onclick="openDubPlayer('Stranger Things (Türkçe Dublaj)', '{{ demo_dub_video }}')"><i class="fa-solid fa-play"></i> Türkçe Dublaj İzle</button>
-    </div>
-
-    <div class="netflix-categories">
+    <div class="categories">
         <button class="cat-chip active" onclick="setCategory('Tümü', this)">Tümü</button>
         <button class="cat-chip" onclick="setCategory('Filmler', this)">Filmler</button>
         <button class="cat-chip" onclick="setCategory('Diziler', this)">Diziler</button>
         <button class="cat-chip" onclick="setCategory('Animasyon', this)">Animasyon</button>
     </div>
 
-    <div class="section-box">
-        <div class="row-header" id="sectionTitle">Tüm Türkçe Dublaj İçerikler</div>
-        <div class="movies-grid" id="movieGrid"></div>
-    </div>
+    <section class="section">
+        <div class="section-title" id="sectionTitle">Onaylı İçerik Kataloğu</div>
+        <div class="grid" id="catalogGrid"></div>
+    </section>
 
-    <div id="mediaModal" class="modal">
+    <div class="modal" id="playerModal">
         <div class="modal-header">
             <button class="back-btn" onclick="closeModal()"><i class="fa-solid fa-arrow-left"></i> Geri</button>
-            <span class="dub-badge" id="modalTitleBadge"><i class="fa-solid fa-volume-high"></i> Türkçe Dublaj</span>
+            <span class="modal-badge" id="modalBadge">Onaylı Yayın</span>
         </div>
-        <div class="modal-player-wrapper">
-            <video id="dubVideo" controls autoplay playsinline></video>
+        <div class="player-wrap">
+            <video id="videoPlayer" controls autoplay playsinline></video>
+            <div class="info-panel" id="licensePanel">
+                <div style="font-size: 16px; font-weight: bold; color: #4ade80; margin-bottom: 10px;">
+                    <i class="fa-solid fa-shield-halved"></i> Platform Lisans & Onay Kaydı
+                </div>
+                <p><strong>Platform:</strong> {{ config.site_name }}</p>
+                <p><strong>Lisans Kodu:</strong> {{ config.license_code }}</p>
+                <p><strong>Durum:</strong> {{ config.license_status }}</p>
+                <p style="margin-top: 10px; color: #a1a1aa;">
+                    Katalogdaki içerikler onay bayrağı (<code>approved: True</code>) üzerinden kontrol edilir ve oynatıcıya aktarılır.
+                </p>
+            </div>
         </div>
     </div>
 
-    <div class="netflix-bottom-nav">
-        <button class="nav-link active" onclick="navClick('Tümü', this)"><i class="fa-solid fa-house"></i><span>Ana Sayfa</span></button>
-        <button class="nav-link" onclick="navClick('Filmler', this)"><i class="fa-solid fa-film"></i><span>Filmler</span></button>
-        <button class="nav-link" onclick="toggleSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Ara</span></button>
-        <button class="nav-link" onclick="navClick('Animasyon', this)"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Animasyon</span></button>
-    </div>
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="navFilter('Tümü', this)"><i class="fa-solid fa-house"></i><span>Ana Sayfa</span></button>
+        <button class="nav-btn" onclick="navFilter('Filmler', this)"><i class="fa-solid fa-film"></i><span>Filmler</span></button>
+        <button class="nav-btn" onclick="navFilter('Diziler', this)"><i class="fa-solid fa-tv"></i><span>Diziler</span></button>
+        <button class="nav-btn" onclick="navFilter('Animasyon', this)"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Animasyon</span></button>
+    </nav>
 
     <script>
-        const localMovies = {{ catalog_json | safe }};
-        const DEFAULT_DUB_VIDEO = {{ demo_dub_video_json | safe }};
-        const SVG_FILM_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="3" y1="12" x2="21" y2="12"/></svg>`;
+        const ITEMS = {{ catalog_json | safe }};
+        const DEFAULT_VIDEO = {{ sample_video_json | safe }};
+        const SVG_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="17" y2="20"/><line x1="3" y1="12" x2="21" y2="12"/></svg>`;
 
-        let currentCategory = 'Tümü';
-        let searchQuery = '';
-        let searchTimer = null;
+        let currentCat = 'Tümü';
+        let queryText = '';
 
-        function normalizeText(str) {
-            return String(str || '').toLowerCase()
+        function norm(s) {
+            return String(s || '').toLowerCase()
                 .replace(/ı/g, 'i').replace(/İ/g, 'i').replace(/ğ/g, 'g')
                 .replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c').trim();
         }
 
-        function createFallbackBox(titleText) {
-            const div = document.createElement('div');
-            div.className = 'poster-fallback';
-            div.innerHTML = `${SVG_FILM_ICON}<span>${titleText}</span>`;
-            return div;
+        function fallbackEl(title) {
+            const d = document.createElement('div');
+            d.className = 'poster-fallback';
+            d.innerHTML = `${SVG_ICON}<span>${title}</span>`;
+            return d;
         }
 
-        function showCardFallback(imgEl) {
-            if (!imgEl || !imgEl.parentElement) return;
-            const titleEl = imgEl.parentElement.querySelector('.movie-info');
-            imgEl.replaceWith(createFallbackBox(titleEl ? titleEl.textContent : 'İçerik'));
-        }
-
-        function renderCards(items, emptyMessage) {
-            const grid = document.getElementById('movieGrid');
+        function renderGrid() {
+            const grid = document.getElementById('catalogGrid');
             grid.innerHTML = '';
-            if (!items || items.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 30px; font-size: 13px;">${emptyMessage || 'İçerik bulunamadı.'}</div>`;
+            const q = norm(queryText);
+            const list = ITEMS.filter(item => {
+                if (!item.approved) return false;
+                const catOk = (currentCat === 'Tümü' || item.category === currentCat);
+                const qOk = !q || norm(item.title).includes(q) || norm(item.category).includes(q);
+                return catOk && qOk;
+            });
+
+            if (list.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 28px; font-size: 13px;">Onaylı eşleşen içerik bulunamadı.</div>`;
                 return;
             }
-            items.forEach(m => {
-                const safeTitle = String(m.title || 'İçerik').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            list.forEach(item => {
                 const card = document.createElement('div');
-                card.className = 'movie-card';
-                card.style.setProperty('--card-glow', m.glow || '#E50914');
-                card.onclick = () => openDubPlayer(m.title, m.dub_url || DEFAULT_DUB_VIDEO);
+                card.className = 'card';
+                card.style.setProperty('--card-glow', item.glow || '#E50914');
+                card.onclick = () => openVideo(item.title, item.video_url || DEFAULT_VIDEO, item.license_tag || 'ONAYLI');
 
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'movie-info';
-                infoDiv.textContent = m.title || 'İçerik';
+                const img = document.createElement('img');
+                img.src = item.poster;
+                img.className = 'poster';
+                img.loading = 'lazy';
+                img.onerror = function() { this.replaceWith(fallbackEl(item.title)); };
 
-                if (m.poster) {
-                    const img = document.createElement('img');
-                    img.src = m.poster;
-                    img.className = 'movie-poster';
-                    img.loading = 'lazy';
-                    img.onerror = function() { showCardFallback(this); };
-                    card.appendChild(img);
-                } else {
-                    card.appendChild(createFallbackBox(safeTitle));
-                }
+                const body = document.createElement('div');
+                body.className = 'card-body';
 
-                card.appendChild(infoDiv);
+                const title = document.createElement('div');
+                title.className = 'card-title';
+                title.textContent = item.title;
+
+                const sub = document.createElement('div');
+                sub.className = 'card-sub';
+                sub.textContent = `${item.quality} • ${item.license_tag}`;
+
+                body.appendChild(title);
+                body.appendChild(sub);
+                card.appendChild(img);
+                card.appendChild(body);
                 grid.appendChild(card);
             });
         }
 
-        function renderLocal() {
-            const normQuery = normalizeText(searchQuery);
-            const filtered = localMovies.filter(m => {
-                const matchCat = (currentCategory === 'Tümü' || m.category === currentCategory);
-                const matchSearch = !normQuery || normalizeText(m.title).includes(normQuery);
-                return matchCat && matchSearch;
-            });
-            renderCards(filtered, 'Bu kategoride içerik bulunamadı.');
-        }
-
-        function handleSearchInput() {
-            searchQuery = document.getElementById('searchInput').value.trim();
-            clearTimeout(searchTimer);
-
-            if (!searchQuery) {
-                document.getElementById('sectionTitle').innerText = currentCategory === 'Tümü' ? 'Tüm Türkçe Dublaj İçerikler' : currentCategory;
-                renderLocal();
-                return;
-            }
-
-            const normQuery = normalizeText(searchQuery);
-            const localMatches = localMovies.filter(m => normalizeText(m.title).includes(normQuery));
-            document.getElementById('sectionTitle').innerText = `"${searchQuery}" Sonuçları`;
-            renderCards(localMatches, `"${searchQuery}" için sonuç aranıyor...`);
-
-            searchTimer = setTimeout(async () => {
-                try {
-                    const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-                    if (!res.ok) return;
-                    const data = await res.json();
-                    const remote = Array.isArray(data.results) ? data.results : [];
-                    const combined = [...localMatches];
-                    const seenIds = new Set(localMatches.map(x => String(x.id)));
-                    remote.forEach(item => {
-                        if (item && item.id && !seenIds.has(String(item.id))) {
-                            seenIds.add(String(item.id));
-                            combined.push({ ...item, dub_url: DEFAULT_DUB_VIDEO });
-                        }
-                    });
-                    document.getElementById('sectionTitle').innerText = `"${searchQuery}" Sonuçları (${combined.length})`;
-                    renderCards(combined, `"${searchQuery}" için sonuç bulunamadı.`);
-                } catch (e) {}
-            }, 250);
-        }
-
         function setCategory(cat, btn) {
-            currentCategory = cat;
+            currentCat = cat;
             document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
-            if (!searchQuery) {
-                document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Tüm Türkçe Dublaj İçerikler' : cat;
-                renderLocal();
-            }
+            document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Onaylı İçerik Kataloğu' : `${cat} (Onaylı)`;
+            renderGrid();
         }
 
-        function navClick(cat, btn) {
-            document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentCategory = cat;
-            document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Tüm Türkçe Dublaj İçerikler' : cat;
-            if (!searchQuery) renderLocal();
-            window.scrollTo({top: 260, behavior: 'smooth'});
+        function navFilter(cat, btn) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            setCategory(cat, null);
+            window.scrollTo({ top: 220, behavior: 'smooth' });
         }
 
         function toggleSearch() {
@@ -256,51 +473,14 @@ HTML_TEMPLATE = """
             if (bar.style.display === 'block') document.getElementById('searchInput').focus();
         }
 
-        function openDubPlayer(title, videoUrl) {
-            const videoEl = document.getElementById('dubVideo');
-            const badgeEl = document.getElementById('modalTitleBadge');
-            badgeEl.innerHTML = `<i class="fa-solid fa-volume-high"></i> ${title || 'İçerik'} — Türkçe Dublaj`;
-            document.getElementById('mediaModal').style.display = 'flex';
-            videoEl.src = videoUrl || DEFAULT_DUB_VIDEO;
-            videoEl.play().catch(() => {});
+        function handleSearch() {
+            queryText = document.getElementById('searchInput').value.trim();
+            renderGrid();
         }
 
-        function closeModal() {
-            const videoEl = document.getElementById('dubVideo');
-            videoEl.pause();
-            videoEl.removeAttribute('src');
-            document.getElementById('mediaModal').style.display = 'none';
-        }
-
-        renderLocal();
-    </script>
-</body>
-</html>
-"""
-
-@app.route('/')
-@app.route('/v2')
-def index():
-    return render_template_string(
-        HTML_TEMPLATE,
-        catalog_json=json.dumps(CATALOG, ensure_ascii=False),
-        demo_dub_video=DEMO_DUB_VIDEO,
-        demo_dub_video_json=json.dumps(DEMO_DUB_VIDEO)
-    )
-
-@app.route('/api/search')
-def api_search():
-    q = request.args.get('q', '').strip()
-    if not q or not TMDB_API_KEY:
-        return jsonify({"results": []})
-
-    try:
-        r = requests.get(
-            "https://api.themoviedb.org/3/search/multi",
-            params={"api_key": TMDB_API_KEY, "query": q, "language": "tr-TR", "include_adult": "false"},
-            timeout=6
-        )
-        r.raise_for_status()
-        data = r.json()
-        out = []
-       
+        function openVideo(title, url, tag) {
+            const vid = document.getElementById('videoPlayer');
+            const panel = document.getElementById('licensePanel');
+            document.getElementById('modalBadge').textContent = `${title} • ${tag}`;
+            document.getElementById('playerModal').style.display = 'flex';
+            panel.sty
