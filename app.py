@@ -449,10 +449,17 @@ HTML_TEMPLATE = """
             });
         }
 
+        function syncCategoryChips(cat) {
+            document.querySelectorAll('.cat-chip').forEach(b => {
+                b.classList.toggle('active', b.textContent.trim() === cat);
+            });
+        }
+
         function setCategory(cat, btn) {
             currentCat = cat;
             document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
+            else syncCategoryChips(cat);
             document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Onaylı İçerik Kataloğu' : `${cat} (Onaylı)`;
             renderGrid();
         }
@@ -478,9 +485,4 @@ HTML_TEMPLATE = """
         function openVideo(title, url, tag) {
             const vid = document.getElementById('videoPlayer');
             const panel = document.getElementById('licensePanel');
-            document.getElementById('modalBadge').textContent = `${title} • ${tag}`;
-            document.getElementById('playerModal').style.display = 'flex';
-            panel.style.display = 'none';
-            vid.style.display = 'block';
-            vid.src = url || DEFAULT_VIDEO;
-            
+            document.getElementById('modalBadge
