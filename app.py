@@ -134,9 +134,9 @@ HTML_TEMPLATE = """
 
         function buildServerUrl(srvNum, tmdbId, mediaType) {
             const typePath = mediaType === 'tv' ? 'tv' : 'movie';
-            if (srvNum === 1) return `https://vidsrc.me/embed/${typePath}?tmdb=${tmdbId}&ds_lang=tr`;
-            if (srvNum === 2) return `https://vidsrc.xyz/embed/${typePath}/${tmdbId}?ds_lang=tr`;
-            return `https://embed.su/embed/${typePath}/${tmdbId}`;
+            if (srvNum === 1) return `https://vidsrc.me/embed/${typePath}?tmdb=${tmdbId}&ds_lang=tr&language=tr`;
+            if (srvNum === 2) return `https://vidsrc.to/embed/${typePath}/${tmdbId}?ds_lang=tr&language=tr`;
+            return `https://vidsrc.cc/v2/embed/${typePath}/${tmdbId}?ds_lang=tr&language=tr`;
         }
 
         function createFallbackBox(titleText) {
