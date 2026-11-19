@@ -8,6 +8,14 @@ TMDB_API_KEY = "Abdea525bebc9ce403ea266dc78f3555"
 
 CATALOG = [
     {
+        "id": 27205,
+        "media_type": "movie",
+        "title": "Inception",
+        "category": "Netflix Orijinal Filmler",
+        "poster": "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
+        "glow": "#00e5ff"
+    },
+    {
         "id": 66732,
         "media_type": "tv",
         "title": "Stranger Things",
@@ -86,6 +94,78 @@ CATALOG = [
         "category": "Netflix Orijinal Filmler",
         "poster": "https://image.tmdb.org/t/p/w500/8cXruOfGMhV8YQJaLnyN1v1meZr.jpg",
         "glow": "#2979ff"
+    },
+    {
+        "id": 157336,
+        "media_type": "movie",
+        "title": "Interstellar",
+        "category": "Netflix Orijinal Filmler",
+        "poster": "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+        "glow": "#3b82f6"
+    },
+    {
+        "id": 155,
+        "media_type": "movie",
+        "title": "The Dark Knight",
+        "category": "Netflix Orijinal Filmler",
+        "poster": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+        "glow": "#a855f7"
+    },
+    {
+        "id": 603,
+        "media_type": "movie",
+        "title": "The Matrix",
+        "category": "Netflix Orijinal Filmler",
+        "poster": "https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+        "glow": "#00ff88"
+    },
+    {
+        "id": 496243,
+        "media_type": "movie",
+        "title": "Parasite",
+        "category": "Gündemdekiler",
+        "poster": "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
+        "glow": "#10b981"
+    },
+    {
+        "id": 238,
+        "media_type": "movie",
+        "title": "The Godfather",
+        "category": "Netflix Orijinal Filmler",
+        "poster": "https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+        "glow": "#f59e0b"
+    },
+    {
+        "id": 1399,
+        "media_type": "tv",
+        "title": "Game of Thrones",
+        "category": "Popüler Diziler",
+        "poster": "https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg",
+        "glow": "#ff1e2d"
+    },
+    {
+        "id": 1396,
+        "media_type": "tv",
+        "title": "Breaking Bad",
+        "category": "Popüler Diziler",
+        "poster": "https://image.tmdb.org/t/p/w500/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
+        "glow": "#10b981"
+    },
+    {
+        "id": 1429,
+        "media_type": "tv",
+        "title": "Attack on Titan",
+        "category": "Anime & Animasyon",
+        "poster": "https://image.tmdb.org/t/p/w500/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+        "glow": "#ff6a00"
+    },
+    {
+        "id": 37854,
+        "media_type": "tv",
+        "title": "One Piece",
+        "category": "Anime & Animasyon",
+        "poster": "https://image.tmdb.org/t/p/w500/cMD9Ygz11zjJzAovURpO75Qg7rT.jpg",
+        "glow": "#00e5ff"
     }
 ]
 
@@ -134,7 +214,6 @@ HTML_TEMPLATE = """
             padding: 0 20px; z-index: 1000;
             border-bottom: 1px solid var(--ambilight-color);
             box-shadow: 0 2px 24px -4px var(--ambilight-color);
-            transition: border-color 0.4s ease, box-shadow 0.4s ease;
         }
         .netflix-logo {
             color: var(--netflix-red); font-size: 22px; font-weight: bold;
@@ -363,56 +442,4 @@ HTML_TEMPLATE = """
                 let matchSearch = !searchQuery || m.title.toLowerCase().includes(searchQuery.toLowerCase());
                 return matchCat && matchSearch;
             });
-            renderCards(filtered, 'Katalogda eşleşen içerik bulunamadı.');
-        }
-
-        function handleSearchInput() {
-            searchQuery = document.getElementById('searchInput').value.trim();
-            clearTimeout(searchTimer);
-
-            if (!searchQuery) {
-                document.getElementById('sectionTitle').innerText = currentCategory === 'Tümü' ? 'Arşivdeki İçerikler' : currentCategory;
-                renderLocal();
-                return;
-            }
-
-            const localMatches = localMovies.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
-            if (localMatches.length > 0) {
-                document.getElementById('sectionTitle').innerText = `"${searchQuery}" Sonuçları`;
-                renderCards(localMatches);
-            } else {
-                document.getElementById('sectionTitle').innerText = `"${searchQuery}" aranıyor...`;
-            }
-
-            searchTimer = setTimeout(async () => {
-                try {
-                    const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
-                    const data = await res.json();
-                    const remote = data.results || [];
-                    const combined = [...localMatches];
-                    const seenIds = new Set(localMatches.map(x => String(x.id)));
-
-                    remote.forEach(item => {
-                        if (!seenIds.has(String(item.id))) {
-                            seenIds.add(String(item.id));
-                            combined.push(item);
-                        }
-                    });
-
-                    document.getElementById('sectionTitle').innerText = `"${searchQuery}" Sonuçları (${combined.length})`;
-                    renderCards(combined, `"${searchQuery}" için sonuç bulunamadı. Yazımı kontrol edip tekrar deneyebilirsin.`);
-                } catch (e) {
-                    if (localMatches.length === 0) {
-                        renderCards([], 'Arama servisine şu an ulaşılamıyor, tekrar dene.');
-                    }
-                }
-            }, 300);
-        }
-
-        function setCategory(cat, btn) {
-            currentCategory = cat;
-            document.querySelectorAll('.cat-chip').forEach(b => b.classList.remove('active'));
-            if(btn) btn.classList.add('active');
-            if (!searchQuery) {
-                document.getElementById('sectionTitle').innerText = cat === 'Tümü' ? 'Arşivdeki İçerikler' : cat;
-           
+            renderCards(filtered, 'Katalo
