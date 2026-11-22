@@ -206,5 +206,57 @@ CATALOG = [
         "poster": "",
         "glow": "#14b8a6",
         "video_url": SAMPLE_VIDEO_1
+    },
+    {
+        "id": 117,
+        "title": "Kızıl Ufuk",
+        "category": "Filmler",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-17",
+        "approved": True,
+        "poster": "",
+        "glow": "#fb7185",
+        "video_url": SAMPLE_VIDEO_2
+    },
+    {
+        "id": 118,
+        "title": "Buzul Kırığı",
+        "category": "Filmler",
+        "year": "2026",
+        "quality": "4K / HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-18",
+        "approved": True,
+        "poster": "",
+        "glow": "#60a5fa",
+        "video_url": SAMPLE_VIDEO_3
+    },
+    {
+        "id": 119,
+        "title": "Zaman Kasası",
+        "category": "Filmler",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-19",
+        "approved": True,
+        "poster": "",
+        "glow": "#c084fc",
+        "video_url": SAMPLE_VIDEO_4
+    },
+    {
+        "id": 120,
+        "title": "Medusa Gecesi: Özel",
+        "category": "Filmler",
+        "year": "2026",
+        "quality": "4K / HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-20",
+        "approved": True,
+        "poster": "",
+        "glow": "#34d399",
+        "video_url": SAMPLE_VIDEO_1
     }
 ]
