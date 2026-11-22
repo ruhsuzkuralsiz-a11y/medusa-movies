@@ -3,37 +3,39 @@ from flask import Flask, jsonify, render_template_string, request
 
 app = Flask(__name__)
 
+AVATAR_URL = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23ef4444'/%3E%3Ctext x='50' y='63' font-size='38' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='white'%3EM%3C/text%3E%3C/svg%3E"
+
 SAMPLE_VIDEO_1 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
 SAMPLE_VIDEO_2 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
 SAMPLE_VIDEO_3 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
 SAMPLE_VIDEO_4 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
 
-POSTER_1 = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Big_buck_bunny_poster_big.jpg/480px-Big_buck_bunny_poster_big.jpg"
-POSTER_2 = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Sintel_poster.jpg/480px-Sintel_poster.jpg"
-POSTER_3 = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Tears_of_Steel_poster.jpg/480px-Tears_of_Steel_poster.jpg"
-POSTER_4 = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Elephants_Dream_s5_both.jpg/480px-Elephants_Dream_s5_both.jpg"
+POSTER_1 = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450'%3E%3Crect width='300' height='450' fill='%23162447'/%3E%3Ctext x='150' y='215' font-size='26' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%2300e5ff'%3EMEDUSA%3C/text%3E%3Ctext x='150' y='250' font-size='16' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3EANIMASYON%3C/text%3E%3C/svg%3E"
+POSTER_2 = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450'%3E%3Crect width='300' height='450' fill='%232e1065'/%3E%3Ctext x='150' y='215' font-size='26' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%23d8b4fe'%3EMEDUSA%3C/text%3E%3Ctext x='150' y='250' font-size='16' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3EONAYLI ARSIV%3C/text%3E%3C/svg%3E"
+POSTER_3 = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450'%3E%3Crect width='300' height='450' fill='%23450a0a'/%3E%3Ctext x='150' y='215' font-size='26' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%23f87171'%3EMEDUSA%3C/text%3E%3Ctext x='150' y='250' font-size='16' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3EFILMLER HD%3C/text%3E%3C/svg%3E"
+POSTER_4 = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='450'%3E%3Crect width='300' height='450' fill='%23052e16'/%3E%3Ctext x='150' y='215' font-size='26' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%234ade80'%3EMEDUSA%3C/text%3E%3Ctext x='150' y='250' font-size='16' font-family='sans-serif' text-anchor='middle' fill='%23ffffff'%3EDIZILER%3C/text%3E%3C/svg%3E"
 
 CATALOG = [
     {"id": 101, "title": "Big Buck Bunny", "category": "Animasyon", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-01", "approved": True, "poster": POSTER_1, "glow": "#00e5ff", "video_url": SAMPLE_VIDEO_1},
     {"id": 102, "title": "Sintel Özel Seçki", "category": "Animasyon", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-02", "approved": True, "poster": POSTER_2, "glow": "#a855f7", "video_url": SAMPLE_VIDEO_2},
     {"id": 103, "title": "Tears of Steel", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-03", "approved": True, "poster": POSTER_3, "glow": "#3b82f6", "video_url": SAMPLE_VIDEO_3},
     {"id": 104, "title": "Elephant's Dream Bölüm 1", "category": "Diziler", "year": "2026", "quality": "HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-04", "approved": True, "poster": POSTER_4, "glow": "#f59e0b", "video_url": SAMPLE_VIDEO_4},
-    {"id": 105, "title": "Medusa Stüdyo Özel Yapım", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-05", "approved": True, "poster": POSTER_1, "glow": "#ef4444", "video_url": SAMPLE_VIDEO_3},
-    {"id": 106, "title": "Medusa Seri Arşivi", "category": "Diziler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-06", "approved": True, "poster": POSTER_2, "glow": "#10b981", "video_url": SAMPLE_VIDEO_4},
+    {"id": 105, "title": "Medusa Stüdyo Özel Yapım", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-05", "approved": True, "poster": POSTER_3, "glow": "#ef4444", "video_url": SAMPLE_VIDEO_3},
+    {"id": 106, "title": "Medusa Seri Arşivi", "category": "Diziler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-06", "approved": True, "poster": POSTER_4, "glow": "#10b981", "video_url": SAMPLE_VIDEO_4},
     {"id": 107, "title": "Gece Vardiyası", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-07", "approved": True, "poster": POSTER_3, "glow": "#06b6d4", "video_url": SAMPLE_VIDEO_3},
-    {"id": 108, "title": "Kayıp Sinyal", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-08", "approved": True, "poster": POSTER_1, "glow": "#ec4899", "video_url": SAMPLE_VIDEO_1},
-    {"id": 109, "title": "Son Rota", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-09", "approved": True, "poster": POSTER_2, "glow": "#f97316", "video_url": SAMPLE_VIDEO_2},
-    {"id": 110, "title": "Çelik Şehir", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-10", "approved": True, "poster": POSTER_3, "glow": "#8b5cf6", "video_url": SAMPLE_VIDEO_3},
-    {"id": 111, "title": "Karanlık Koridor", "category": "Filmler", "year": "2026", "quality": "HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-11", "approved": True, "poster": POSTER_4, "glow": "#eab308", "video_url": SAMPLE_VIDEO_4},
-    {"id": 112, "title": "Medusa Seçkisi: Final", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-12", "approved": True, "poster": POSTER_1, "glow": "#22c55e", "video_url": SAMPLE_VIDEO_1},
-    {"id": 113, "title": "Sıfır Noktası", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-13", "approved": True, "poster": POSTER_2, "glow": "#38bdf8", "video_url": SAMPLE_VIDEO_2},
-    {"id": 114, "title": "Gölgelerin İzinde", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-14", "approved": True, "poster": POSTER_3, "glow": "#f43f5e", "video_url": SAMPLE_VIDEO_3},
+    {"id": 108, "title": "Kayıp Sinyal", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-08", "approved": True, "poster": POSTER_2, "glow": "#ec4899", "video_url": SAMPLE_VIDEO_1},
+    {"id": 109, "title": "Son Rota", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-09", "approved": True, "poster": POSTER_3, "glow": "#f97316", "video_url": SAMPLE_VIDEO_2},
+    {"id": 110, "title": "Çelik Şehir", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-10", "approved": True, "poster": POSTER_2, "glow": "#8b5cf6", "video_url": SAMPLE_VIDEO_3},
+    {"id": 111, "title": "Karanlık Koridor", "category": "Filmler", "year": "2026", "quality": "HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-11", "approved": True, "poster": POSTER_3, "glow": "#eab308", "video_url": SAMPLE_VIDEO_4},
+    {"id": 112, "title": "Medusa Seçkisi: Final", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-12", "approved": True, "poster": POSTER_2, "glow": "#22c55e", "video_url": SAMPLE_VIDEO_1},
+    {"id": 113, "title": "Sıfır Noktası", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-13", "approved": True, "poster": POSTER_3, "glow": "#38bdf8", "video_url": SAMPLE_VIDEO_2},
+    {"id": 114, "title": "Gölgelerin İzinde", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-14", "approved": True, "poster": POSTER_2, "glow": "#f43f5e", "video_url": SAMPLE_VIDEO_3},
     {"id": 115, "title": "Derin Dosya", "category": "Diziler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-15", "approved": True, "poster": POSTER_4, "glow": "#a855f7", "video_url": SAMPLE_VIDEO_4},
     {"id": 116, "title": "Yıldız Tozu Seçkisi", "category": "Animasyon", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-16", "approved": True, "poster": POSTER_1, "glow": "#14b8a6", "video_url": SAMPLE_VIDEO_1},
-    {"id": 117, "title": "Kızıl Ufuk", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-17", "approved": True, "poster": POSTER_2, "glow": "#fb7185", "video_url": SAMPLE_VIDEO_2},
-    {"id": 118, "title": "Buzul Kırığı", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-18", "approved": True, "poster": POSTER_3, "glow": "#60a5fa", "video_url": SAMPLE_VIDEO_3},
-    {"id": 119, "title": "Zaman Kasası", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-19", "approved": True, "poster": POSTER_4, "glow": "#c084fc", "video_url": SAMPLE_VIDEO_4},
-    {"id": 120, "title": "Medusa Gecesi: Özel", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-20", "approved": True, "poster": POSTER_1, "glow": "#34d399", "video_url": SAMPLE_VIDEO_1},
+    {"id": 117, "title": "Kızıl Ufuk", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-17", "approved": True, "poster": POSTER_3, "glow": "#fb7185", "video_url": SAMPLE_VIDEO_2},
+    {"id": 118, "title": "Buzul Kırığı", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-18", "approved": True, "poster": POSTER_2, "glow": "#60a5fa", "video_url": SAMPLE_VIDEO_3},
+    {"id": 119, "title": "Zaman Kasası", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-19", "approved": True, "poster": POSTER_3, "glow": "#c084fc", "video_url": SAMPLE_VIDEO_4},
+    {"id": 120, "title": "Medusa Gecesi: Özel", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-20", "approved": True, "poster": POSTER_2, "glow": "#34d399", "video_url": SAMPLE_VIDEO_1},
 ]
 
 HTML_TEMPLATE = """
@@ -69,9 +71,22 @@ HTML_TEMPLATE = """
       font-size: 1.1rem;
       letter-spacing: 0.5px;
     }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
     .count {
       font-size: 0.8rem;
       color: #a1a1aa;
+    }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ef4444;
+      background: #1e1e28;
     }
     .toolbar {
       padding: 10px 14px;
@@ -130,7 +145,7 @@ HTML_TEMPLATE = """
       position: fixed;
       inset: 0;
       z-index: 50;
-      background: rgba(0, 0, 0, 0.88);
+      background: rgba(0, 0, 0, 0.9);
       padding: 16px;
       align-items: center;
       justify-content: center;
@@ -150,6 +165,19 @@ HTML_TEMPLATE = """
       border-radius: 8px;
       background: #000;
       margin-top: 10px;
+    }
+    .status-msg {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: #fbbf24;
+      min-height: 18px;
+    }
+    .ext-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #38bdf8;
+      text-decoration: underline;
     }
     .close-btn {
       float: right;
@@ -185,7 +213,10 @@ HTML_TEMPLATE = """
 <body>
   <header>
     <div class="brand">MEDUSAFILM</div>
-    <div class="count" id="itemCount">{{ items|length }} İçerik</div>
+    <div class="header-right">
+      <div class="count" id="itemCount">{{ items|length }} İçerik</div>
+      <img class="avatar" src="{{ avatar_url }}" alt="Medusa Profil" />
+    </div>
   </header>
 
   <div class="toolbar">
@@ -205,7 +236,9 @@ HTML_TEMPLATE = """
       <button class="close-btn" id="closeModal">Kapat</button>
       <h3 id="modalTitle"></h3>
       <p class="card-meta" id="modalMeta"></p>
-      <video id="videoPlayer" controls playsinline></video>
+      <video id="videoPlayer" controls playsinline preload="metadata"></video>
+      <div class="status-msg" id="playerStatus"></div>
+      <a class="ext-link" id="directLink" href="#" target="_blank" rel="noopener noreferrer">Videoyu doğrudan bağlantıda aç</a>
     </div>
   </div>
 
@@ -226,6 +259,8 @@ HTML_TEMPLATE = """
     const categorySelect = document.getElementById("categorySelect");
     const modal = document.getElementById("playerModal");
     const videoPlayer = document.getElementById("videoPlayer");
+    const playerStatus = document.getElementById("playerStatus");
+    const directLink = document.getElementById("directLink");
 
     function renderGrid(list) {
       countEl.textContent = `${list.length} İçerik`;
@@ -245,14 +280,30 @@ HTML_TEMPLATE = """
       if (!item) return;
       document.getElementById("modalTitle").textContent = item.title;
       document.getElementById("modalMeta").textContent = `${item.category} · ${item.year} · ${item.quality} · ${item.license_tag}`;
+      playerStatus.textContent = "Video yükleniyor...";
+      directLink.href = item.video_url;
       videoPlayer.src = item.video_url;
       modal.classList.add("open");
-      videoPlayer.play().catch(() => {});
+      videoPlayer.play().then(() => {
+        playerStatus.textContent = "";
+      }).catch(() => {
+        playerStatus.textContent = "Otomatik başlatma engellendi, oynat tuşuna bas veya alttaki bağlantıyı kullan.";
+      });
     }
+
+    videoPlayer.addEventListener("playing", () => {
+      playerStatus.textContent = "";
+    });
+
+    videoPlayer.addEventListener("error", () => {
+      playerStatus.textContent = "Tarayıcı bu video kaynağını oynatamadı; alttaki doğrudan bağlantıyı deneyebilirsin.";
+    });
 
     document.getElementById("closeModal").onclick = () => {
       videoPlayer.pause();
       videoPlayer.removeAttribute("src");
+      videoPlayer.load();
+      playerStatus.textContent = "";
       modal.classList.remove("open");
     };
 
@@ -293,7 +344,7 @@ def get_approved_catalog():
 
 @app.route("/")
 def index():
-    return render_template_string(HTML_TEMPLATE, items=get_approved_catalog())
+    return render_template_string(HTML_TEMPLATE, items=get_approved_catalog(), avatar_url=AVATAR_URL)
 
 
 @app.route("/api/catalog")
