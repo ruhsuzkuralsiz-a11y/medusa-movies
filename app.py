@@ -1,3 +1,8 @@
+import os
+from flask import Flask, jsonify, render_template_string, request
+
+app = Flask(__name__)
+
 SAMPLE_VIDEO_1 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
 SAMPLE_VIDEO_2 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
 SAMPLE_VIDEO_3 = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
@@ -28,5 +33,286 @@ CATALOG = [
     {"id": 117, "title": "Kızıl Ufuk", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-17", "approved": True, "poster": POSTER_2, "glow": "#fb7185", "video_url": SAMPLE_VIDEO_2},
     {"id": 118, "title": "Buzul Kırığı", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-18", "approved": True, "poster": POSTER_3, "glow": "#60a5fa", "video_url": SAMPLE_VIDEO_3},
     {"id": 119, "title": "Zaman Kasası", "category": "Filmler", "year": "2026", "quality": "1080p HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-19", "approved": True, "poster": POSTER_4, "glow": "#c084fc", "video_url": SAMPLE_VIDEO_4},
-    {"id": 120, "title": "Medusa Gecesi: Özel", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-20", "approved": True, "poster": POSTER_1, "glow": "#34d399", "video_url": SAMPLE_VIDEO_1}
+    {"id": 120, "title": "Medusa Gecesi: Özel", "category": "Filmler", "year": "2026", "quality": "4K / HD", "audio": "Onaylı Ses", "license_tag": "LISANS-ONAY-20", "approved": True, "poster": POSTER_1, "glow": "#34d399", "video_url": SAMPLE_VIDEO_1},
 ]
+
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEDUSAFILM</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0b0b0e;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding-bottom: 76px;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #121217;
+      border-bottom: 1px solid #23232d;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .brand {
+      color: #ef4444;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+    }
+    .count {
+      font-size: 0.8rem;
+      color: #a1a1aa;
+    }
+    .toolbar {
+      padding: 10px 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: #0e0e13;
+      border-bottom: 1px solid #1e1e27;
+    }
+    input, select {
+      background: #181820;
+      color: #fff;
+      border: 1px solid #2b2b38;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+    input { flex: 1; min-width: 150px; }
+    .grid {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .card {
+      background: #15151c;
+      border: 1px solid #242430;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .card img {
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      object-fit: cover;
+      display: block;
+      background: #1e1e28;
+    }
+    .card-body {
+      padding: 7px 8px;
+    }
+    .card-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-meta {
+      font-size: 0.7rem;
+      color: #a1a1aa;
+      margin-top: 2px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.88);
+      padding: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.open { display: flex; }
+    .modal-box {
+      width: 100%;
+      max-width: 540px;
+      background: #15151d;
+      border: 1px solid #2c2c3a;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    video {
+      width: 100%;
+      max-height: 280px;
+      border-radius: 8px;
+      background: #000;
+      margin-top: 10px;
+    }
+    .close-btn {
+      float: right;
+      background: #ef4444;
+      color: #fff;
+      border: 0;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #121217;
+      border-top: 1px solid #23232d;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+    }
+    nav button {
+      background: none;
+      border: 0;
+      color: #a1a1aa;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    nav button.active { color: #fff; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">MEDUSAFILM</div>
+    <div class="count" id="itemCount">{{ items|length }} İçerik</div>
+  </header>
+
+  <div class="toolbar">
+    <input id="searchInput" type="text" placeholder="Film, dizi veya animasyon ara..." />
+    <select id="categorySelect">
+      <option value="">Tümü</option>
+      <option value="Filmler">Filmler</option>
+      <option value="Diziler">Diziler</option>
+      <option value="Animasyon">Animasyon</option>
+    </select>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="modal" id="playerModal">
+    <div class="modal-box">
+      <button class="close-btn" id="closeModal">Kapat</button>
+      <h3 id="modalTitle"></h3>
+      <p class="card-meta" id="modalMeta"></p>
+      <video id="videoPlayer" controls playsinline></video>
+    </div>
+  </div>
+
+  <nav>
+    <button class="active" data-cat="">Ana Sayfa</button>
+    <button data-cat="Filmler">Filmler</button>
+    <button data-cat="Diziler">Diziler</button>
+    <button data-cat="Animasyon">Animasyon</button>
+  </nav>
+
+  <script>
+    const INITIAL_ITEMS = {{ items|tojson }};
+    let currentItems = INITIAL_ITEMS;
+
+    const grid = document.getElementById("grid");
+    const countEl = document.getElementById("itemCount");
+    const searchInput = document.getElementById("searchInput");
+    const categorySelect = document.getElementById("categorySelect");
+    const modal = document.getElementById("playerModal");
+    const videoPlayer = document.getElementById("videoPlayer");
+
+    function renderGrid(list) {
+      countEl.textContent = `${list.length} İçerik`;
+      grid.innerHTML = list.map(item => `
+        <div class="card" onclick="openItem(${item.id})">
+          <img src="${item.poster}" alt="${item.title}" loading="lazy" />
+          <div class="card-body">
+            <div class="card-title">${item.title}</div>
+            <div class="card-meta">${item.category} · ${item.quality}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function openItem(id) {
+      const item = currentItems.find(x => x.id === id);
+      if (!item) return;
+      document.getElementById("modalTitle").textContent = item.title;
+      document.getElementById("modalMeta").textContent = `${item.category} · ${item.year} · ${item.quality} · ${item.license_tag}`;
+      videoPlayer.src = item.video_url;
+      modal.classList.add("open");
+      videoPlayer.play().catch(() => {});
+    }
+
+    document.getElementById("closeModal").onclick = () => {
+      videoPlayer.pause();
+      videoPlayer.removeAttribute("src");
+      modal.classList.remove("open");
+    };
+
+    async function filterCatalog() {
+      const q = searchInput.value.trim();
+      const cat = categorySelect.value;
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      if (cat) params.set("category", cat);
+      const res = await fetch(`/api/catalog?${params.toString()}`);
+      const data = await res.json();
+      currentItems = data.items || [];
+      renderGrid(currentItems);
+    }
+
+    searchInput.addEventListener("input", filterCatalog);
+    categorySelect.addEventListener("change", filterCatalog);
+
+    document.querySelectorAll("nav button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        categorySelect.value = btn.dataset.cat;
+        filterCatalog();
+      });
+    });
+
+    renderGrid(currentItems);
+  </script>
+</body>
+</html>
+"""
+
+
+def get_approved_catalog():
+    return [item for item in CATALOG if item.get("approved")]
+
+
+@app.route("/")
+def index():
+    return render_template_string(HTML_TEMPLATE, items=get_approved_catalog())
+
+
+@app.route("/api/catalog")
+def api_catalog():
+    q = (request.args.get("q") or "").strip().lower()
+    category = (request.args.get("category") or "").strip()
+    items = get_approved_catalog()
+    if category:
+        items = [x for x in items if x.get("category") == category]
+    if q:
+        items = [x for x in items if q in x.get("title", "").lower() or q in x.get("category", "").lower()]
+    return jsonify({"count": len(items), "items": items})
+
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok", "count": len(get_approved_catalog())})
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
