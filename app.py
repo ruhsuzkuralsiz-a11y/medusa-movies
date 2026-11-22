@@ -154,5 +154,57 @@ CATALOG = [
         "poster": "",
         "glow": "#22c55e",
         "video_url": SAMPLE_VIDEO_1
+    },
+    {
+        "id": 113,
+        "title": "Sıfır Noktası",
+        "category": "Filmler",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-13",
+        "approved": True,
+        "poster": "",
+        "glow": "#38bdf8",
+        "video_url": SAMPLE_VIDEO_2
+    },
+    {
+        "id": 114,
+        "title": "Gölgelerin İzinde",
+        "category": "Filmler",
+        "year": "2026",
+        "quality": "4K / HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-14",
+        "approved": True,
+        "poster": "",
+        "glow": "#f43f5e",
+        "video_url": SAMPLE_VIDEO_3
+    },
+    {
+        "id": 115,
+        "title": "Derin Dosya",
+        "category": "Diziler",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-15",
+        "approved": True,
+        "poster": "",
+        "glow": "#a855f7",
+        "video_url": SAMPLE_VIDEO_4
+    },
+    {
+        "id": 116,
+        "title": "Yıldız Tozu Seçkisi",
+        "category": "Animasyon",
+        "year": "2026",
+        "quality": "1080p HD",
+        "audio": "Onaylı Ses",
+        "license_tag": "LISANS-ONAY-16",
+        "approved": True,
+        "poster": "",
+        "glow": "#14b8a6",
+        "video_url": SAMPLE_VIDEO_1
     }
 ]
