@@ -1,13 +1,13 @@
 import os
 import sqlite3
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 import requests
 from flask import (
     Flask,
     render_template_string,
     request,
     redirect,
-    url_for,
     jsonify,
     session,
 )
@@ -43,12 +43,18 @@ def init_db():
                 overview TEXT,
                 rating REAL DEFAULT 0,
                 release_date TEXT,
+                source_url TEXT DEFAULT '',
                 status TEXT NOT NULL DEFAULT 'pending',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
             """
         )
+        # Eski tablo varsa source_url kolonunu ekle
+        cols = [r["name"] for r in conn.execute("PRAGMA table_info(movies)").fetchall()]
+        if "source_url" not in cols:
+            conn.execute("ALTER TABLE movies ADD COLUMN source_url TEXT DEFAULT ''")
+
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS settings (
@@ -89,6 +95,18 @@ def set_setting(key: str, value: str):
             (key, value),
         )
         conn.commit()
+
+
+def is_safe_http_url(url: str) -> bool:
+    if not url:
+        return False
+    parsed = urlparse(url.strip())
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
+def is_direct_video_url(url: str) -> bool:
+    path = urlparse(url.strip()).path.lower()
+    return path.endswith((".mp4", ".webm", ".ogg", ".m3u8"))
 
 
 def fetch_from_tmdb(min_date: str | None = None, pages: int = 2) -> dict:
@@ -142,8 +160,8 @@ def fetch_from_tmdb(min_date: str | None = None, pages: int = 2) -> dict:
                         """
                         INSERT INTO movies (
                             tmdb_id, title, poster_url, overview, rating, release_date,
-                            status, created_at, updated_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+                            source_url, status, created_at, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, '', 'pending', ?, ?)
                         """,
                         (
                             tmdb_id,
@@ -176,8 +194,7 @@ def maybe_run_daily_fetch():
         last_fetch = datetime.fromisoformat(last_fetch_str)
         if last_fetch.tzinfo is None:
             last_fetch = last_fetch.replace(tzinfo=timezone.utc)
-        elapsed_seconds = (now - last_fetch).total_seconds()
-        if elapsed_seconds >= 86400:
+        if (now - last_fetch).total_seconds() >= 86400:
             fetch_from_tmdb(pages=2)
     except Exception:
         fetch_from_tmdb(pages=2)
@@ -220,11 +237,38 @@ def home():
                 """
             ).fetchall()
 
+    movies = []
+    for r in rows:
+        item = dict(r)
+        raw_url = (item.get("source_url") or "").strip()
+        item["valid_source"] = is_safe_http_url(raw_url)
+        item["is_video_file"] = is_direct_video_url(raw_url) if item["valid_source"] else False
+        movies.append(item)
+
     return render_template_string(
         PUBLIC_HTML,
-        movies=[dict(r) for r in rows],
+        movies=movies,
         query=request.args.get("q", ""),
     )
+
+
+@app.route("/watch/<int:movie_id>")
+def watch_movie(movie_id: int):
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM movies WHERE id = ? AND status = 'approved'",
+            (movie_id,),
+        ).fetchone()
+
+    if not row:
+        return redirect("/")
+
+    movie = dict(row)
+    raw_url = (movie.get("source_url") or "").strip()
+    movie["valid_source"] = is_safe_http_url(raw_url)
+    movie["is_video_file"] = is_direct_video_url(raw_url) if movie["valid_source"] else False
+
+    return render_template_string(WATCH_HTML, movie=movie)
 
 
 @app.route("/admin", methods=["GET", "POST"])
@@ -271,13 +315,21 @@ def admin_panel():
 
             elif action == "approve_one":
                 movie_id = request.form.get("movie_id")
-                with get_db() as conn:
-                    conn.execute(
-                        "UPDATE movies SET status = 'approved', updated_at = ? WHERE id = ?",
-                        (now_iso, movie_id),
-                    )
-                    conn.commit()
-                message = "Film onaylandı ve yayına alındı."
+                source_url = request.form.get("source_url", "").strip()
+                if source_url and not is_safe_http_url(source_url):
+                    error = "Kaynak bağlantısı http:// veya https:// ile başlamalı."
+                else:
+                    with get_db() as conn:
+                        conn.execute(
+                            """
+                            UPDATE movies
+                            SET status = 'approved', source_url = ?, updated_at = ?
+                            WHERE id = ?
+                            """,
+                            (source_url, now_iso, movie_id),
+                        )
+                        conn.commit()
+                    message = "Film onaylandı ve oynatıcı bağlantısı kaydedildi."
 
             elif action == "reject_one":
                 movie_id = request.form.get("movie_id")
@@ -298,12 +350,29 @@ def admin_panel():
                     conn.commit()
                 message = f"{cur.rowcount} bekleyen film toplu olarak onaylandı."
 
+            elif action == "update_source":
+                movie_id = request.form.get("movie_id")
+                source_url = request.form.get("source_url", "").strip()
+                if source_url and not is_safe_http_url(source_url):
+                    error = "Kaynak bağlantısı http:// veya https:// ile başlamalı."
+                else:
+                    with get_db() as conn:
+                        conn.execute(
+                            "UPDATE movies SET source_url = ?, updated_at = ? WHERE id = ?",
+                            (source_url, now_iso, movie_id),
+                        )
+                        conn.commit()
+                    message = "Onaylı filmin oynatıcı bağlantısı güncellendi."
+
     if not is_admin():
         return render_template_string(ADMIN_LOGIN_HTML, error=error)
 
     with get_db() as conn:
         pending_rows = conn.execute(
             "SELECT * FROM movies WHERE status = 'pending' ORDER BY release_date DESC, id DESC"
+        ).fetchall()
+        approved_rows = conn.execute(
+            "SELECT * FROM movies WHERE status = 'approved' ORDER BY id DESC LIMIT 30"
         ).fetchall()
         approved_count = conn.execute(
             "SELECT COUNT(*) AS c FROM movies WHERE status = 'approved'"
@@ -315,6 +384,7 @@ def admin_panel():
     return render_template_string(
         ADMIN_PANEL_HTML,
         pending_movies=[dict(r) for r in pending_rows],
+        approved_movies=[dict(r) for r in approved_rows],
         min_release_date=get_setting("min_release_date", DEFAULT_MIN_DATE),
         last_auto_fetch=get_setting("last_auto_fetch", "Henüz çalışmadı"),
         approved_count=approved_count,
@@ -368,11 +438,7 @@ PUBLIC_HTML = """
       color: #f59e0b;
       text-decoration: none;
     }
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    .nav-links { display: flex; align-items: center; gap: 10px; }
     .nav-btn {
       text-decoration: none;
       padding: 7px 14px;
@@ -395,11 +461,7 @@ PUBLIC_HTML = """
       padding: 20px 16px 40px;
       flex: 1;
     }
-    .search-form {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
+    .search-form { display: flex; gap: 8px; margin-bottom: 20px; }
     .search-input {
       flex: 1;
       padding: 11px 14px;
@@ -424,10 +486,7 @@ PUBLIC_HTML = """
       gap: 14px;
     }
     @media (min-width: 768px) {
-      .grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 18px;
-      }
+      .grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
     }
     .card {
       background: #151a24;
@@ -437,41 +496,35 @@ PUBLIC_HTML = """
       display: flex;
       flex-direction: column;
     }
-    .poster {
-      aspect-ratio: 2 / 3;
-      background: #0d1017;
-    }
-    .poster img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .card-body {
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      flex: 1;
-    }
-    .title {
-      font-size: 1rem;
-      font-weight: 700;
-    }
-    .meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.82rem;
-      color: #9ca3af;
-    }
+    .poster { aspect-ratio: 2 / 3; background: #0d1017; }
+    .poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .title { font-size: 1rem; font-weight: 700; }
+    .meta { display: flex; justify-content: space-between; font-size: 0.82rem; color: #9ca3af; }
     .overview {
       font-size: 0.85rem;
       color: #cbd5e1;
       line-height: 1.45;
       display: -webkit-box;
-      -webkit-line-clamp: 4;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+    .watch-btn {
+      margin-top: auto;
+      display: inline-block;
+      text-align: center;
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      background: #f59e0b;
+      color: #111827;
+    }
+    .watch-btn.disabled {
+      background: #222938;
+      color: #9ca3af;
     }
     footer {
       border-top: 1px solid #222938;
@@ -494,13 +547,7 @@ PUBLIC_HTML = """
 
   <main class="container">
     <form class="search-form" method="get" action="/">
-      <input
-        class="search-input"
-        type="text"
-        name="q"
-        value="{{ query }}"
-        placeholder="Onaylanmış filmlerde ara..."
-      />
+      <input class="search-input" type="text" name="q" value="{{ query }}" placeholder="Onaylanmış filmlerde ara..." />
       <button class="search-btn" type="submit">Ara</button>
     </form>
 
@@ -508,11 +555,11 @@ PUBLIC_HTML = """
       <div class="grid">
         {% for m in movies %}
           <article class="card">
-            <div class="poster">
+            <a class="poster" href="/watch/{{ m.id }}">
               {% if m.poster_url %}
                 <img src="{{ m.poster_url }}" alt="{{ m.title }}" loading="lazy" />
               {% endif %}
-            </div>
+            </a>
             <div class="card-body">
               <div class="title">{{ m.title }}</div>
               <div class="meta">
@@ -520,6 +567,11 @@ PUBLIC_HTML = """
                 <span>★ {{ m.rating }}</span>
               </div>
               <p class="overview">{{ m.overview }}</p>
+              {% if m.valid_source %}
+                <a class="watch-btn" href="/watch/{{ m.id }}">Oynat</a>
+              {% else %}
+                <a class="watch-btn disabled" href="/watch/{{ m.id }}">Kaynak Bekleniyor</a>
+              {% endif %}
             </div>
           </article>
         {% endfor %}
@@ -536,158 +588,27 @@ PUBLIC_HTML = """
 </html>
 """
 
-ADMIN_LOGIN_HTML = """
+WATCH_HTML = """
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Yönetim Girişi — MEDUSAFILM</title>
-  <style>
-    body {
-      background: #0d0f14;
-      color: #f3f4f6;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 16px;
-    }
-    .box {
-      background: #151a24;
-      border: 1px solid #262f42;
-      border-radius: 12px;
-      padding: 24px;
-      width: 100%;
-      max-width: 380px;
-    }
-    h1 { font-size: 1.25rem; margin-bottom: 14px; color: #f59e0b; }
-    input {
-      width: 100%;
-      padding: 11px 12px;
-      border-radius: 8px;
-      border: 1px solid #2d374c;
-      background: #0e1118;
-      color: #fff;
-      margin-bottom: 12px;
-      font-size: 1rem;
-    }
-    button {
-      width: 100%;
-      padding: 11px;
-      border: none;
-      border-radius: 8px;
-      background: #f59e0b;
-      color: #111827;
-      font-weight: 700;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    .err { color: #f87171; font-size: 0.9rem; margin-bottom: 10px; }
-  </style>
-</head>
-<body>
-  <form class="box" method="post">
-    <h1>MEDUSAFILM Admin Giriş</h1>
-    {% if error %}<div class="err">{{ error }}</div>{% endif %}
-    <input type="hidden" name="action" value="login" />
-    <input type="password" name="password" placeholder="Yönetim şifresi" required />
-    <button type="submit">Giriş Yap</button>
-  </form>
-</body>
-</html>
-"""
-
-ADMIN_PANEL_HTML = """
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Onay Kuyruğu — MEDUSAFILM</title>
+  <title>{{ movie.title }} — MEDUSAFILM</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: #0d0f14;
       color: #f3f4f6;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      padding: 16px;
+      min-height: 100vh;
     }
-    .wrap { max-width: 1200px; margin: 0 auto; }
-    .top {
+    header {
+      background: #121620;
+      border-bottom: 1px solid #222938;
+      padding: 14px 18px;
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 18px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #222938;
     }
-    .btn {
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .btn-amber { background: #f59e0b; color: #111827; }
-    .btn-green { background: #22c55e; color: #07130a; }
-    .btn-red { background: #ef4444; color: #fff; }
-    .btn-gray { background: #232a3a; color: #e5e7eb; }
-    .panel-box {
-      background: #151a24;
-      border: 1px solid #232b3c;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 18px;
-    }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-    input[type="date"] {
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #2f394e;
-      background: #0e1118;
-      color: #fff;
-    }
-    .stats {
-      margin-top: 10px;
-      font-size: 0.88rem;
-      color: #9ca3af;
-    }
-    .msg {
-      background: #13281c;
-      border: 1px solid #22c55e;
-      color: #86efac;
-      padding: 10px 14px;
-      border-radius: 8px;
-      margin-bottom: 14px;
-    }
-    .err {
-      background: #2c1518;
-      border: 1px solid #ef4444;
-      color: #fca5a5;
-      padding: 10px 14px;
-      border-radius: 8px;
-      margin-bottom: 14px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(1, 1fr);
-      gap: 14px;
-    }
-    @media (min-width: 768px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    .item {
-      background: #151a24;
-      border: 1px solid #232b3c;
-      bor
+ 
