@@ -1,36 +1,41 @@
 import os
-import sqlite3
 from urllib.parse import urlparse
 from flask import Flask, render_template_string, request, redirect
 
 app = Flask(__name__)
-DB_PATH = os.environ.get("DB_PATH", "movies.db")
 
-
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_db():
-    with get_db() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS movies (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                poster_url TEXT DEFAULT '',
-                overview TEXT DEFAULT '',
-                release_date TEXT DEFAULT '',
-                source_url TEXT DEFAULT '',
-                is_upcoming INTEGER NOT NULL DEFAULT 0
-            )
-            """
-        )
-        # Mevcut tüm filmleri temizle
-        conn.execute("DELETE FROM movies")
-        conn.commit()
+# Vizyonda sekmesinde gösterilecek çıkacak filmlerin tanıtım / afiş kartları
+# Kendi istediğin filmleri ve afiş (poster) URL'lerini buradan ekleyip güncelleyebilirsin.
+UPCOMING_PROMOS = [
+    {
+        "title": "Avengers: Doomsday",
+        "release_date": "Yakında Vizyonda",
+        "poster_url": "https://image.tmdb.org/t/p/w500/8x53328533285332853328533.jpg",
+        "overview": "Henüz vizyona girmemiş yapım — yeni tanıtım ve afiş vitrini.",
+        "trailer_url": "",
+    },
+    {
+        "title": "Spider-Man: Brand New Day",
+        "release_date": "Yakında Vizyonda",
+        "poster_url": "",
+        "overview": "Vizyona çıkacak yeni yapım tanıtım kartı.",
+        "trailer_url": "",
+    },
+    {
+        "title": "Dune: Messiah",
+        "release_date": "Yakında Vizyonda",
+        "poster_url": "",
+        "overview": "Yaklaşan sinema projesi afiş vitrini.",
+        "trailer_url": "",
+    },
+    {
+        "title": "The Batman Part II",
+        "release_date": "Yakında Vizyonda",
+        "poster_url": "",
+        "overview": "Vizyon takvimindeki yeni film tanıtımı.",
+        "trailer_url": "",
+    },
+]
 
 
 def is_safe_http_url(url: str) -> bool:
@@ -40,12 +45,34 @@ def is_safe_http_url(url: str) -> bool:
     return parsed.scheme in ("http", "https") and bool(parsed.netloc)
 
 
-def is_direct_video_url(url: str) -> bool:
-    path = urlparse(url.strip()).path.lower()
-    return path.endswith((".mp4", ".webm", ".ogg", ".m3u8"))
+def rank_promos(items: list[dict], raw_q: str) -> list[dict]:
+    q_norm = " ".join(raw_q.lower().split())
+    terms = [t for t in q_norm.split(" ") if t]
+    if not terms:
+        return items
 
+    matched = []
+    for item in items:
+        title_l = " ".join((item.get("title") or "").lower().split())
+        overview_l = " ".join((item.get("overview") or "").lower().split())
 
-init_db()
+        if all((t in title_l) or (t in overview_l) for t in terms):
+            if title_l == q_norm:
+                score = 0
+            elif title_l.startswith(q_norm):
+                score = 1
+            elif all(t in title_l for t in terms):
+                score = 2
+            else:
+                score = 3
+            copy_item = dict(item)
+            copy_item["_score"] = score
+            matched.append(copy_item)
+
+    matched.sort(key=lambda x: x["_score"])
+    for m in matched:
+        m.pop("_score", None)
+    return matched
 
 
 @app.route("/")
@@ -54,12 +81,26 @@ def home():
     tab = request.args.get("tab", "tumu").strip().lower()
     if tab not in ("tumu", "vizyonda"):
         tab = "tumu"
+
     raw_q = request.args.get("q", "").strip()
 
+    promo_cards = []
+    if tab == "vizyonda":
+        prepared = []
+        for p in UPCOMING_PROMOS:
+            item = dict(p)
+            raw_poster = (item.get("poster_url") or "").strip()
+            raw_trailer = (item.get("trailer_url") or "").strip()
+            item["valid_poster"] = is_safe_http_url(raw_poster)
+            item["valid_trailer"] = is_safe_http_url(raw_trailer)
+            prepared.append(item)
+        promo_cards = rank_promos(prepared, raw_q)
+
     return render_template_string(
-        MENU_ONLY_HTML,
+        MENU_HTML,
         query=raw_q,
         active_tab=tab,
+        promo_cards=promo_cards,
     )
 
 
@@ -68,7 +109,7 @@ def watch_movie(movie_id: int):
     return redirect("/")
 
 
-MENU_ONLY_HTML = """
+MENU_HTML = """
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -137,7 +178,7 @@ MENU_ONLY_HTML = """
       color: #111827;
       border-color: #f59e0b;
     }
-    .search-form { display: flex; gap: 8px; }
+    .search-form { display: flex; gap: 8px; margin-bottom: 20px; }
     .search-input {
       flex: 1;
       padding: 11px 14px;
@@ -155,6 +196,85 @@ MENU_ONLY_HTML = """
       color: #111827;
       font-weight: 700;
       cursor: pointer;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    @media (min-width: 768px) {
+      .grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    }
+    .card {
+      background: #151a24;
+      border: 1px solid #232b3c;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(245, 158, 11, 0.95);
+      color: #111827;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      z-index: 2;
+    }
+    .poster {
+      aspect-ratio: 2 / 3;
+      background: linear-gradient(160deg, #1b2232, #0d1017);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      text-align: center;
+    }
+    .poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .poster-placeholder {
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .card-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    .title { font-size: 0.98rem; font-weight: 700; }
+    .meta { font-size: 0.8rem; color: #f59e0b; font-weight: 600; }
+    .overview {
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .promo-link {
+      margin-top: auto;
+      display: inline-block;
+      text-align: center;
+      text-decoration: none;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      background: #2563eb;
+      color: #fff;
     }
   </style>
 </head>
@@ -177,6 +297,37 @@ MENU_ONLY_HTML = """
       <input class="search-input" type="text" name="q" value="{{ query }}" placeholder="Ara..." />
       <button class="search-btn" type="submit">Ara</button>
     </form>
+
+    {% if active_tab == 'vizyonda' %}
+      {% if promo_cards %}
+        <div class="grid">
+          {% for c in promo_cards %}
+            <article class="card">
+              <span class="badge">YAKINDA VİZYONDA</span>
+              <div class="poster">
+                {% if c.valid_poster %}
+                  <img src="{{ c.poster_url }}" alt="{{ c.title }}" loading="lazy" />
+                {% else %}
+                  <span class="poster-placeholder">{{ c.title }}</span>
+                {% endif %}
+              </div>
+              <div class="card-body">
+                <div class="title">{{ c.title }}</div>
+                <div class="meta">{{ c.release_date }}</div>
+                {% if c.overview %}
+                  <p class="overview">{{ c.overview }}</p>
+                {% endif %}
+                {% if c.valid_trailer %}
+                  <a class="promo-link" href="{{ c.trailer_url }}" target="_blank" rel="noopener noreferrer">Tanıtımı Aç</a>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color:#9ca3af;">Aramanla eşleşen vizyon tanıtımı bulunamadı.</p>
+      {% endif %}
+    {% endif %}
   </main>
 </body>
 </html>
