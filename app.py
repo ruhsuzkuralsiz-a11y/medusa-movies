@@ -12,7 +12,7 @@ ITEMS = [
         "badge": "CANLI & ETKİNLİK",
         "title": "Özel Oda & Etkinlik Duyuruları",
         "tag": "Yayın İçi Katılım",
-        "summary": "Özel odalar, turnuva veya mini etkinlik saatleri ve katılım şartları yayında duyurulur. Siteden güncel kurallara hızlıca bakabilirsin.",
+        "summary": "Özel odalar, turnuva veya mini etkinlik saatleri ve katılım şartları yayında duyurulur. Güncel duyuru ve kurallara buradan bakabilirsin.",
         "action_label": "İletişime Geç",
         "action_url": SUPPORT_URL,
     },
@@ -108,6 +108,11 @@ def home():
 
 @app.route("/watch/<int:movie_id>")
 def watch_movie(movie_id: int):
+    return redirect("/")
+
+
+@app.errorhandler(404)
+def not_found_redirect(e):
     return redirect("/")
 
 
