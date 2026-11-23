@@ -12,7 +12,9 @@ from flask import (
     session,
 )
 
-app = Flask(__name__)
+app = Flask(__name__)from tmdb_makine import makine_bp
+app.register_blueprint(makine_bp)
+
 app.secret_key = os.environ.get("SECRET_KEY", "medusafilm-gizli-anahtar-degistir")
 
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "BURAYA_TMDB_API_KEY_YAZ")
