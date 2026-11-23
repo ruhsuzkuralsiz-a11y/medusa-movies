@@ -1,6 +1,7 @@
+import json
 import os
 import random
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
@@ -8,8 +9,45 @@ AVATAR_SVG = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 
 GUEST_AVATAR_SVG = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%232563eb'/%3E%3Ccircle cx='50' cy='38' r='16' fill='%23ffffff'/%3E%3Cpath d='M22 84c2-16 14-26 28-26s26 10 28 26' fill='%23ffffff'/%3E%3C/svg%3E"
 
+
+def make_poster(title, tag, bg="#1f1f24", accent="#e50914"):
+    safe_title = title.replace("&", "ve").replace("<", "").replace(">", "")[:20]
+    safe_tag = tag.replace("&", "ve").replace("<", "").replace(">", "")[:14]
+    svg = (
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='300' height='450'>"
+        f"<rect width='300' height='450' fill='{bg}'/>"
+        f"<rect x='16' y='16' width='268' height='418' rx='12' fill='none' stroke='{accent}' stroke-width='2' opacity='0.55'/>"
+        f"<text x='150' y='72' font-size='14' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='{accent}'>MEDUSAFILM</text>"
+        f"<text x='150' y='215' font-size='22' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='#ffffff'>{safe_title}</text>"
+        f"<text x='150' y='250' font-size='13' font-family='sans-serif' text-anchor='middle' fill='#d4d4d8'>{safe_tag}</text>"
+        f"</svg>"
+    )
+    return "data:image/svg+xml;utf8," + svg.replace("#", "%23").replace(" ", "%20")
+
+
 SUPPORT_URL = ""
-CATALOG = []
+
+CATALOG = [
+    {"id": 1, "title": "Stranger Things", "category": "Diziler", "year": "2016-2026", "poster": make_poster("Stranger Things", "DIZILER", "#2a0a0e", "#ef4444"), "video_url": ""},
+    {"id": 2, "title": "Wednesday", "category": "Diziler", "year": "2022-2026", "poster": make_poster("Wednesday", "DIZILER", "#1e1035", "#a855f7"), "video_url": ""},
+    {"id": 3, "title": "Squid Game", "category": "Diziler", "year": "2021-2026", "poster": make_poster("Squid Game", "DIZILER", "#36071d", "#ec4899"), "video_url": ""},
+    {"id": 4, "title": "Dark", "category": "Diziler", "year": "2017-2020", "poster": make_poster("Dark", "DIZILER", "#232318", "#eab308"), "video_url": ""},
+    {"id": 5, "title": "Breaking Bad", "category": "Diziler", "year": "2008-2013", "poster": make_poster("Breaking Bad", "DIZILER", "#082617", "#22c55e"), "video_url": ""},
+    {"id": 6, "title": "Peaky Blinders", "category": "Diziler", "year": "2013-2022", "poster": make_poster("Peaky Blinders", "DIZILER", "#1f1d1b", "#d4d4d8"), "video_url": ""},
+    {"id": 7, "title": "Inception", "category": "Filmler", "year": "2010", "poster": make_poster("Inception", "FILMLER", "#0d1b2a", "#38bdf8"), "video_url": ""},
+    {"id": 8, "title": "Interstellar", "category": "Filmler", "year": "2014", "poster": make_poster("Interstellar", "FILMLER", "#111827", "#818cf8"), "video_url": ""},
+    {"id": 9, "title": "The Matrix", "category": "Filmler", "year": "1999", "poster": make_poster("The Matrix", "FILMLER", "#052e16", "#4ade80"), "video_url": ""},
+    {"id": 10, "title": "John Wick", "category": "Filmler", "year": "2014", "poster": make_poster("John Wick", "FILMLER", "#18181b", "#f87171"), "video_url": ""},
+    {"id": 11, "title": "Dune", "category": "Filmler", "year": "2021", "poster": make_poster("Dune", "FILMLER", "#2d1a0a", "#fb923c"), "video_url": ""},
+    {"id": 12, "title": "Fight Club", "category": "Filmler", "year": "1999", "poster": make_poster("Fight Club", "FILMLER", "#2a0909", "#ef4444"), "video_url": ""},
+    {"id": 13, "title": "Solo Leveling", "category": "Animasyon", "year": "2024-2026", "poster": make_poster("Solo Leveling", "ANIMASYON", "#17153b", "#818cf8"), "video_url": ""},
+    {"id": 14, "title": "Attack on Titan", "category": "Animasyon", "year": "2013-2023", "poster": make_poster("Attack on Titan", "ANIMASYON", "#3b0a0a", "#f87171"), "video_url": ""},
+    {"id": 15, "title": "Jujutsu Kaisen", "category": "Animasyon", "year": "2020-2026", "poster": make_poster("Jujutsu Kaisen", "ANIMASYON", "#0f1e46", "#60a5fa"), "video_url": ""},
+    {"id": 16, "title": "Arcane", "category": "Animasyon", "year": "2021-2024", "poster": make_poster("Arcane", "ANIMASYON", "#082f49", "#38bdf8"), "video_url": ""},
+    {"id": 17, "title": "Ben 10", "category": "Animasyon", "year": "2005-2021", "poster": make_poster("Ben 10", "ANIMASYON", "#072b14", "#84cc16"), "video_url": ""},
+    {"id": 18, "title": "Rick and Morty", "category": "Animasyon", "year": "2013-2026", "poster": make_poster("Rick and Morty", "ANIMASYON", "#062c2b", "#2dd4bf"), "video_url": ""},
+]
+
 VERIFIED_USERS = []
 
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -144,11 +182,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       z-index: 30;
       background: rgba(20, 20, 20, 0.95);
       border-bottom: 1px solid #262626;
-      padding: 12px 16px;
+      padding: 12px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
     }
     .nav-links {
       display: flex;
@@ -189,7 +227,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     .hero {
       margin: 14px 16px;
-      padding: 20px 18px;
+      padding: 18px 16px;
       border-radius: 12px;
       background: linear-gradient(90deg, rgba(20,20,20,0.95) 20%, rgba(229,9,20,0.22) 100%), #1f1f1f;
       border: 1px solid #2d2d2d;
@@ -202,10 +240,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       font-weight: 800;
       padding: 3px 8px;
       border-radius: 4px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
-    .hero h1 { font-size: 1.3rem; margin-bottom: 8px; }
-    .hero p { font-size: 0.86rem; color: #d4d4d8; line-height: 1.45; }
+    .hero h1 { font-size: 1.25rem; margin-bottom: 6px; }
+    .hero p { font-size: 0.84rem; color: #d4d4d8; line-height: 1.45; }
     .search-bar { padding: 0 16px 12px; }
     .search-bar input {
       width: 100%;
@@ -226,7 +264,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       text-align: center;
       color: #b3b3b3;
       font-size: 0.88rem;
-      line-height: 1.5;
+      display: none;
     }
     .grid {
       padding: 0 16px 36px;
@@ -253,6 +291,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    .card-sub {
+      padding: 0 8px 7px;
+      font-size: 0.68rem;
+      color: #a1a1aa;
     }
     .modal {
       display: none;
@@ -289,6 +332,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       border-radius: 8px;
       background: #000;
       margin-top: 12px;
+      display: none;
+    }
+    .no-video-note {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #141416;
+      border: 1px dashed #383842;
+      font-size: 0.82rem;
+      color: #b3b3b3;
+      line-height: 1.45;
     }
   </style>
 </head>
@@ -343,17 +397,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </header>
 
     <section class="hero">
-      <div class="hero-badge">DOGRULANMIS GIRIS</div>
+      <div class="hero-badge">ADIM 1 · KATALOG</div>
       <h1 id="welcomeHeading">Hos Geldin</h1>
-      <p id="verifiedUserInfo">E-posta dogrulamasi aktif.</p>
+      <p id="verifiedUserInfo">Diziler, Filmler ve Animasyon katalogu yuklendi.</p>
     </section>
 
     <div class="search-bar">
-      <input id="searchInput" type="text" placeholder="Ara..." />
+      <input id="searchInput" type="text" placeholder="Icerik ara..." />
     </div>
 
     <div class="section-title" id="sectionTitle">Katalog</div>
-    <div class="empty-state" id="emptyState">Katalog su an bos (0 icerik).</div>
+    <div class="empty-state" id="emptyState">Aramaya uygun icerik bulunamadi.</div>
     <div class="grid" id="grid"></div>
   </div>
 
@@ -363,6 +417,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <h3 id="modalTitle"></h3>
       <p id="modalMeta" style="font-size:0.8rem;color:#b3b3b3;margin-top:4px;"></p>
       <video id="videoPlayer" controls playsinline></video>
+      <div class="no-video-note" id="noVideoNote">
+        Bu icerik icin <strong>video_url</strong> alani su an bos. Katalogdaki <code>video_url</code> kismina kendi video baglantini eklediginde burada oynatilacak.
+      </div>
     </div>
   </div>
 
@@ -478,99 +535,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     });
 
-    function renderItems() {
-      const q = document.getElementById("searchInput").value.trim().toLowerCase();
-      const grid = document.getElementById("grid");
-      const emptyState = document.getElementById("emptyState");
-
-      const filtered = ITEMS.filter(function(item) {
-        const matchCat = !selectedCategory || item.category === selectedCategory;
-        const matchQ = !q || (item.title || "").toLowerCase().indexOf(q) !== -1;
-        return matchCat && matchQ;
-      });
-
-      if (filtered.length === 0) {
-        grid.innerHTML = "";
-        emptyState.style.display = "block";
-        return;
-      }
-
-      emptyState.style.display = "none";
-      grid.innerHTML = filtered.map(function(item) {
-        return '<div class="card" data-id="' + item.id + '">' +
-          '<img src="' + item.poster + '" alt="' + item.title + '" />' +
-          '<div class="card-title">' + item.title + '</div>' +
-          '</div>';
-      }).join("");
-    }
-
-    document.getElementById("searchInput").addEventListener("input", renderItems);
-
-    document.querySelectorAll("#categoryTabs button").forEach(function(btn) {
-      btn.addEventListener("click", function() {
-        document.querySelectorAll("#categoryTabs button").forEach(function(b) { b.classList.remove("active"); });
-        btn.classList.add("active");
-        selectedCategory = btn.getAttribute("data-cat") || "";
-        document.getElementById("sectionTitle").textContent = selectedCategory || "Katalog";
-        renderItems();
-      });
-    });
-
-    document.getElementById("closeModal").addEventListener("click", function() {
+    function openPlayer(id) {
+      const item = ITEMS.find(function(x) { return x.id === id; });
+      if (!item) return;
+      document.getElementById("modalTitle").textContent = item.title;
+      document.getElementById("modalMeta").textContent = item.category + " · " + (item.year || "");
       const vp = document.getElementById("videoPlayer");
-      vp.pause();
-      vp.removeAttribute("src");
-      document.getElementById("playerModal").classList.remove("open");
-    });
-  </script>
-</body>
-</html>"""
-
-
-def render_app():
-    import json
-    page = HTML_TEMPLATE.replace("__AVATAR__", AVATAR_SVG)
-    page = page.replace("__GUEST_AVATAR__", GUEST_AVATAR_SVG)
-    page = page.replace("__ITEMS_JSON__", json.dumps(CATALOG))
-    page = page.replace("__SUPPORT_JSON__", json.dumps(SUPPORT_URL))
-    return page
-
-
-@app.route("/")
-def index():
-    return render_app()
-
-
-@app.route("/api/send-code", methods=["POST"])
-def api_send_code():
-    data = request.get_json(silent=True) or {}
-    email = (data.get("email") or "").strip().lower()
-    if "@" not in email or "." not in email:
-        return jsonify({"ok": False, "error": "Gecersiz e-posta adresi."}), 400
-    code = f"{random.randint(100000, 999999)}"
-    return jsonify({"ok": True, "code": code})
-
-
-@app.route("/api/verify-code", methods=["POST"])
-def api_verify_code():
-    data = request.get_json(silent=True) or {}
-    email = (data.get("email") or "").strip().lower()
-    profile = (data.get("profile") or "Medusa").strip()
-    if email and not any(u["email"] == email for u in VERIFIED_USERS):
-        VERIFIED_USERS.append({"email": email, "profile": profile})
-    return jsonify({"ok": True, "verified_count": len(VERIFIED_USERS)})
-
-
-@app.route("/api/catalog")
-def api_catalog():
-    return jsonify({"count": len(CATALOG), "items": CATALOG})
-
-
-@app.route("/health")
-def health():
-    return jsonify({"status": "ok", "count": len(CATALOG), "verified_users": len(VERIFIED_USERS)})
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+      const note = document.getElementById("noVideoNote");
+      if
