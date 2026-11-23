@@ -1,12 +1,18 @@
 import html
+import os
 from urllib.parse import quote, urlparse
+import requests
 from flask import Flask, render_template_string, request, redirect
 
 app = Flask(__name__)
 
+TMDB_KEY = os.environ.get("TMDB_KEY", "").strip()
+IMG_BASE = "https://image.tmdb.org/t/p/w500"
+
 UPCOMING_PROMOS = [
     {
         "title": "Avengers: Doomsday",
+        "year": 2026,
         "release_date": "18 Aralık 2026",
         "poster_url": "",
         "accent": "#ef4444",
@@ -15,6 +21,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "Dune: Part Three",
+        "year": 2026,
         "release_date": "18 Aralık 2026",
         "poster_url": "",
         "accent": "#f59e0b",
@@ -23,6 +30,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "The Angry Birds Movie 3",
+        "year": 2026,
         "release_date": "23 Aralık 2026",
         "poster_url": "",
         "accent": "#22c55e",
@@ -31,6 +39,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "Jumanji: Open World",
+        "year": 2026,
         "release_date": "25 Aralık 2026",
         "poster_url": "",
         "accent": "#10b981",
@@ -39,6 +48,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "The Beekeeper 2",
+        "year": 2027,
         "release_date": "15 Ocak 2027",
         "poster_url": "",
         "accent": "#eab308",
@@ -47,6 +57,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "Ice Age: Boiling Point",
+        "year": 2027,
         "release_date": "5 Şubat 2027",
         "poster_url": "",
         "accent": "#38bdf8",
@@ -55,6 +66,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "Sonic the Hedgehog 4",
+        "year": 2027,
         "release_date": "19 Mart 2027",
         "poster_url": "",
         "accent": "#3b82f6",
@@ -63,6 +75,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "Godzilla x Kong: Supernova",
+        "year": 2027,
         "release_date": "26 Mart 2027",
         "poster_url": "",
         "accent": "#f97316",
@@ -71,6 +84,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "Avengers: Secret Wars",
+        "year": 2027,
         "release_date": "17 Aralık 2027",
         "poster_url": "",
         "accent": "#a855f7",
@@ -79,6 +93,7 @@ UPCOMING_PROMOS = [
     },
     {
         "title": "The Batman: Part II",
+        "year": 2028,
         "release_date": "Şubat 2028",
         "poster_url": "",
         "accent": "#94a3b8",
@@ -86,6 +101,51 @@ UPCOMING_PROMOS = [
         "trailer_url": "",
     },
 ]
+
+POSTER_CACHE = {}
+
+
+def is_safe_http_url(url: str) -> bool:
+    if not url:
+        return False
+    parsed = urlparse(url.strip())
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
+def get_poster(title: str, year=None):
+    if not TMDB_KEY or not title:
+        return None
+
+    cache_key = f"{title.strip().lower()}|{year or ''}"
+    if cache_key in POSTER_CACHE:
+        return POSTER_CACHE[cache_key]
+
+    try:
+        params = {
+            "api_key": TMDB_KEY,
+            "query": title,
+            "language": "tr-TR",
+        }
+        if year:
+            params["year"] = year
+
+        r = requests.get(
+            "https://api.themoviedb.org/3/search/movie",
+            params=params,
+            timeout=10,
+        )
+        r.raise_for_status()
+        results = r.json().get("results", [])
+        for m in results:
+            if m.get("poster_path"):
+                url = IMG_BASE + m["poster_path"]
+                POSTER_CACHE[cache_key] = url
+                return url
+    except Exception:
+        pass
+
+    POSTER_CACHE[cache_key] = None
+    return None
 
 
 def build_svg_poster(title: str, release_date: str, accent: str) -> str:
@@ -133,13 +193,6 @@ def build_svg_poster(title: str, release_date: str, accent: str) -> str:
     return "data:image/svg+xml;utf8," + quote(svg)
 
 
-def is_safe_http_url(url: str) -> bool:
-    if not url:
-        return False
-    parsed = urlparse(url.strip())
-    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
-
-
 def rank_promos(items: list[dict], raw_q: str) -> list[dict]:
     q_norm = " ".join(raw_q.lower().split())
     terms = [t for t in q_norm.split(" ") if t]
@@ -184,16 +237,16 @@ def home():
         prepared = []
         for p in UPCOMING_PROMOS:
             item = dict(p)
-            raw_poster = (item.get("poster_url") or "").strip()
-            raw_trailer = (item.get("trailer_url") or "").strip()
+            manual_poster = (item.get("poster_url") or "").strip()
+            tmdb_poster = manual_poster if is_safe_http_url(manual_poster) else get_poster(item.get("title", ""), item.get("year"))
             fallback_svg = build_svg_poster(
                 item.get("title", ""),
                 item.get("release_date", ""),
                 item.get("accent", "#f59e0b"),
             )
-            item["display_poster"] = raw_poster if is_safe_http_url(raw_poster) else fallback_svg
+            item["display_poster"] = tmdb_poster if is_safe_http_url(tmdb_poster or "") else fallback_svg
             item["fallback_poster"] = fallback_svg
-            item["valid_trailer"] = is_safe_http_url(raw_trailer)
+            item["valid_trailer"] = is_safe_http_url((item.get("trailer_url") or "").strip())
             prepared.append(item)
         promo_cards = rank_promos(prepared, raw_q)
 
