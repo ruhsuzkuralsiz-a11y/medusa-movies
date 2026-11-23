@@ -34,27 +34,28 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       display: none !important;
     }
 
-    /* ÜST BAR (TEK TUŞ KONTROLLER) */
+    /* ÜST BAR (TEK TUŞ KONTROLLER - YAZI ÜSTÜNE BİNMEZ) */
     .top-controls {
       position: fixed;
-      top: 6px;
+      top: 4px;
       right: 6px;
       z-index: 60;
       display: flex;
-      gap: 5px;
+      gap: 4px;
       align-items: center;
     }
 
     .ctrl-btn {
-      background: rgba(15, 20, 17, 0.92);
+      background: rgba(10, 14, 12, 0.94);
       color: #39ff14;
       border: 1px solid rgba(57, 255, 20, 0.65);
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-size: 0.66rem;
+      border-radius: 5px;
+      padding: 2px 6px;
+      font-size: 0.56rem;
       font-weight: 800;
       cursor: pointer;
       white-space: nowrap;
+      line-height: 1.2;
     }
 
     .ctrl-btn.live-btn {
@@ -71,8 +72,8 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
 
     /* ÜST BANNER */
     .top-banner {
-      min-height: 60px;
-      max-height: 13vh;
+      min-height: 64px;
+      max-height: 14vh;
       background: linear-gradient(135deg, rgba(10, 14, 12, 0.94), rgba(18, 34, 24, 0.94));
       border-bottom: 2px solid #39ff14;
       box-shadow: 0 4px 16px rgba(57, 255, 20, 0.2);
@@ -80,24 +81,28 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 5px 12px;
+      padding: 16px 12px 6px 12px;
       text-align: center;
     }
 
     .brand-title {
-      font-size: clamp(1.1rem, 3.4vw, 1.75rem);
+      font-size: clamp(1rem, 3.2vw, 1.65rem);
       font-weight: 900;
-      letter-spacing: 3.5px;
+      letter-spacing: 3px;
       color: #39ff14;
       text-shadow: 0 0 12px rgba(57, 255, 20, 0.55);
       line-height: 1.05;
+      max-width: 72vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .sub-tag {
-      margin-top: 2px;
-      font-size: clamp(0.6rem, 1.4vw, 0.74rem);
+      margin-top: 3px;
+      font-size: clamp(0.58rem, 1.35vw, 0.72rem);
       font-weight: 700;
-      letter-spacing: 1.1px;
+      letter-spacing: 1px;
       color: #e6ffe6;
       background: rgba(57, 255, 20, 0.12);
       border: 1px solid rgba(57, 255, 20, 0.45);
@@ -213,18 +218,18 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
 
     @media (orientation: landscape) and (max-height: 500px) {
       .top-banner {
-        min-height: 42px;
-        max-height: 12vh;
-        padding: 3px 10px;
+        min-height: 46px;
+        max-height: 13vh;
+        padding: 14px 10px 4px 10px;
       }
       .brand-title {
-        font-size: 1rem;
-        letter-spacing: 2.5px;
+        font-size: 0.95rem;
+        letter-spacing: 2.2px;
       }
       .sub-tag {
-        font-size: 0.56rem;
+        font-size: 0.54rem;
         padding: 1px 8px;
-        margin-top: 1px;
+        margin-top: 2px;
       }
       .bottom-banner {
         min-height: 50px;
@@ -245,7 +250,7 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
     .panel {
       display: none;
       position: fixed;
-      top: 34px;
+      top: 28px;
       right: 6px;
       z-index: 60;
       width: 245px;
