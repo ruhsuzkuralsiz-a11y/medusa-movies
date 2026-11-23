@@ -8,47 +8,47 @@ SUPPORT_URL = os.environ.get("SUPPORT_URL", "https://www.instagram.com/ttlewiss2
 
 ITEMS = [
     {
-        "tab": "yayin",
-        "badge": "CANLI & ETKİNLİK",
-        "title": "Özel Oda & Etkinlik Duyuruları",
-        "tag": "Yayın İçi Katılım",
-        "summary": "Özel odalar, turnuva veya mini etkinlik saatleri ve katılım şartları yayında duyurulur. Güncel duyuru ve kurallara buradan bakabilirsin.",
-        "action_label": "İletişime Geç",
+        "tab": "paketler",
+        "badge": "TEKİL İŞ",
+        "title": "Özel Görsel, Afiş & Duyuru Kartı",
+        "tag": "Sipariş / Hazırlık",
+        "summary": "Yayın afişi, etkinlik duyurusu veya profil/kapak görseli hazırlanır. İsteğini ve tarzını yazarak hızlıca fiyat ve teslim süresi alabilirsin.",
+        "action_label": "Sipariş Ver",
         "action_url": SUPPORT_URL,
     },
     {
-        "tab": "yayin",
-        "badge": "DESTEK & ÖZEL İSTEK",
-        "title": "Yayın Desteği & Özel Talepler",
-        "tag": "Destek Hattı",
-        "summary": "Yayınlara destek olmak, özel oda/etkinlik talebi iletmek veya birebir iş/destek konuşmak için doğrudan ulaşabilirsin.",
-        "action_label": "Destek Aç",
+        "tab": "paketler",
+        "badge": "PAKET",
+        "title": "Yayıncı & Oyuncu Görsel Paketi",
+        "tag": "Çoklu Parça",
+        "summary": "Profil görseli, banner/afiş ve duyuru/kural kartı düzeni tek pakette hazırlanır. Tek tek uğraşmak yerine bütünlüklü görünüm isteyenler için uygundur.",
+        "action_label": "Paket Sor",
         "action_url": SUPPORT_URL,
     },
     {
-        "tab": "yayin",
-        "badge": "VİTRİN",
-        "title": "Özel Görsel, Afiş & Düzen İşleri",
-        "tag": "Dijital Paket / Tasarım",
-        "summary": "Yayıncılar ve oyuncular için profil/banner görselleri, duyuru kartları veya özel düzen çalışmaları hazırlanır.",
-        "action_label": "Detay Sor",
+        "tab": "paketler",
+        "badge": "ÖZEL İSTEK",
+        "title": "Kişiye Özel Düzen & Ek Talepler",
+        "tag": "Birebir Çalışma",
+        "summary": "Mevcut görsel düzenleme, özel tema veya ekstra parça talepleri netleştirilir. Önce ne istediğini yaz, ona göre net dönüş yapalım.",
+        "action_label": "Detay Yaz",
         "action_url": SUPPORT_URL,
     },
     {
         "tab": "kurallar",
         "badge": "KURAL",
-        "title": "Sohbet & Yayın Kuralları",
-        "tag": "Topluluk Düzeni",
-        "summary": "Spam, hakaret, reklam ve huzur bozucu davranışlar yasaktır. Etkinliklerde sıraya ve moderatör uyarılarına uymak zorunludur.",
+        "title": "Sipariş & Yayın Kuralları",
+        "tag": "Net İşleyiş",
+        "summary": "Özel işlerde önce istek ve detaylar netleşir. Yayında ve sohbetlerde spam, hakaret ve gereksiz oyalama yapılmaması esastır.",
         "action_label": "",
         "action_url": "",
     },
     {
         "tab": "kurallar",
-        "badge": "BİLGİ",
-        "title": "Sık Sorulanlar & İletişim",
-        "tag": "Hızlı Yanıt",
-        "summary": "Özel işler, destek veya duyuru önerileri için tek resmi iletişim kanalı üzerinden mesaj bırakabilirsin.",
+        "badge": "İLETİŞİM",
+        "title": "Doğrudan İletişim & Destek",
+        "tag": "Tek Kanal",
+        "summary": "Fiyat sormak, özel iş vermek veya yayın desteği konuşmak için tek iletişim bağlantısı üzerinden doğrudan mesaj bırakabilirsin.",
         "action_label": "Mesaj Gönder",
         "action_url": SUPPORT_URL,
     },
@@ -90,9 +90,9 @@ def filter_items(items: list[dict], tab: str, raw_q: str) -> list[dict]:
 @app.route("/")
 @app.route("/makine")
 def home():
-    tab = request.args.get("tab", "yayin").strip().lower()
-    if tab not in ("yayin", "kurallar", "tumu"):
-        tab = "yayin"
+    tab = request.args.get("tab", "paketler").strip().lower()
+    if tab not in ("paketler", "kurallar", "tumu"):
+        tab = "paketler"
 
     raw_q = request.args.get("q", "").strip()
     cards = filter_items(ITEMS, tab, raw_q)
@@ -290,19 +290,19 @@ HUB_HTML = """<!DOCTYPE html>
 
   <main class="container">
     <section class="hero">
-      <h1>Yayın Duyuruları, Etkinlikler ve Destek Merkezi</h1>
-      <p>Güncel yayın notları, etkinlik bilgileri, kurallar ve özel talepler tek yerde.</p>
+      <h1>Özel Görsel, Afiş & Düzen Sipariş Merkezi</h1>
+      <p>Yayın ve profil görselleri, afişler ve özel düzen talepleri için tek merkez. İsteğini seçip doğrudan yazabilirsin.</p>
     </section>
 
     <div class="tabs">
-      <a class="tab-btn {% if active_tab == 'yayin' %}active{% endif %}" href="/?tab=yayin{% if query %}&q={{ query }}{% endif %}">Yayın & Etkinlik</a>
-      <a class="tab-btn {% if active_tab == 'kurallar' %}active{% endif %}" href="/?tab=kurallar{% if query %}&q={{ query }}{% endif %}">Destek & Kurallar</a>
+      <a class="tab-btn {% if active_tab == 'paketler' %}active{% endif %}" href="/?tab=paketler{% if query %}&q={{ query }}{% endif %}">Paketler & İşler</a>
+      <a class="tab-btn {% if active_tab == 'kurallar' %}active{% endif %}" href="/?tab=kurallar{% if query %}&q={{ query }}{% endif %}">Kurallar & İletişim</a>
       <a class="tab-btn {% if active_tab == 'tumu' %}active{% endif %}" href="/?tab=tumu{% if query %}&q={{ query }}{% endif %}">Tümü</a>
     </div>
 
     <form class="search-form" method="get" action="/">
       <input type="hidden" name="tab" value="{{ active_tab }}" />
-      <input class="search-input" type="text" name="q" value="{{ query }}" placeholder="Duyuru, kural veya destek ara..." />
+      <input class="search-input" type="text" name="q" value="{{ query }}" placeholder="Paket, afiş veya iletişim ara..." />
       <button class="search-btn" type="submit">Ara</button>
     </form>
 
