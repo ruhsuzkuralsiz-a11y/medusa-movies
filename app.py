@@ -106,6 +106,11 @@ def home():
     )
 
 
+@app.route("/overlay")
+def overlay():
+    return render_template_string(OVERLAY_HTML)
+
+
 @app.route("/watch/<int:movie_id>")
 def watch_movie(movie_id: int):
     return redirect("/")
@@ -298,6 +303,7 @@ HUB_HTML = """<!DOCTYPE html>
       <a class="tab-btn {% if active_tab == 'paketler' %}active{% endif %}" href="/?tab=paketler{% if query %}&q={{ query }}{% endif %}">Paketler & İşler</a>
       <a class="tab-btn {% if active_tab == 'kurallar' %}active{% endif %}" href="/?tab=kurallar{% if query %}&q={{ query }}{% endif %}">Kurallar & İletişim</a>
       <a class="tab-btn {% if active_tab == 'tumu' %}active{% endif %}" href="/?tab=tumu{% if query %}&q={{ query }}{% endif %}">Tümü</a>
+      <a class="tab-btn" href="/overlay">Yayın Banner</a>
     </div>
 
     <form class="search-form" method="get" action="/">
@@ -326,6 +332,230 @@ HUB_HTML = """<!DOCTYPE html>
       <p style="color:#9ca3af;">Aramanla eşleşen bir kayıt bulunamadı.</p>
     {% endif %}
   </main>
+</body>
+</html>
+"""
+
+OVERLAY_HTML = """<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEDUSA - Yayın Banner</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      color: #ffffff;
+    }
+    .top-banner {
+      height: 21vh;
+      min-height: 125px;
+      background: linear-gradient(135deg, rgba(10, 14, 12, 0.96), rgba(18, 34, 24, 0.96));
+      border-bottom: 3px solid #39ff14;
+      box-shadow: 0 6px 25px rgba(57, 255, 20, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 16px;
+      text-align: center;
+    }
+    .brand-title {
+      font-size: clamp(2.1rem, 8vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: #39ff14;
+      text-shadow: 0 0 18px rgba(57, 255, 20, 0.65);
+      line-height: 1.05;
+    }
+    .sub-tag {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #e6ffe6;
+      background: rgba(57, 255, 20, 0.12);
+      border: 1px solid rgba(57, 255, 20, 0.45);
+      padding: 4px 14px;
+      border-radius: 999px;
+    }
+    .game-area {
+      flex: 1;
+      background: transparent;
+      pointer-events: none;
+    }
+    .bottom-banner {
+      height: 24vh;
+      min-height: 152px;
+      background: linear-gradient(180deg, rgba(14, 18, 16, 0.96), rgba(8, 10, 9, 0.99));
+      border-top: 3px solid #39ff14;
+      box-shadow: 0 -6px 25px rgba(57, 255, 20, 0.2);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .bottom-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      min-width: 0;
+    }
+    .channel-name {
+      font-size: clamp(1.2rem, 5vw, 1.55rem);
+      font-weight: 900;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+    .channel-name span {
+      color: #39ff14;
+    }
+    .live-note {
+      font-size: 0.88rem;
+      color: #b9c7bc;
+      line-height: 1.3;
+    }
+    .action-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 44%;
+      max-width: 190px;
+      flex-shrink: 0;
+    }
+    .action-btn {
+      background: rgba(24, 28, 26, 0.95);
+      border: 1.5px solid rgba(57, 255, 20, 0.65);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #39ff14;
+      box-shadow: 0 0 8px #39ff14;
+      flex-shrink: 0;
+    }
+    .edit-toggle {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 50;
+      background: rgba(15, 20, 17, 0.9);
+      color: #39ff14;
+      border: 1px solid rgba(57, 255, 20, 0.6);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .panel {
+      display: none;
+      position: fixed;
+      top: 44px;
+      right: 10px;
+      z-index: 50;
+      width: 240px;
+      background: rgba(12, 16, 14, 0.98);
+      border: 1.5px solid #39ff14;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .panel.open {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .panel input {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 7px;
+      border: 1px solid rgba(57, 255, 20, 0.4);
+      background: #080b09;
+      color: #fff;
+      font-size: 0.8rem;
+    }
+    .panel button {
+      padding: 7px;
+      border: none;
+      border-radius: 7px;
+      background: #39ff14;
+      color: #000;
+      font-weight: 800;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <button class="edit-toggle" onclick="togglePanel()">DÜZENLE</button>
+  <div class="panel" id="editPanel">
+    <input type="text" id="inTitle" value="MEDUSA" />
+    <input type="text" id="inSub" value="CANLI YAYIN • İYİ SEYİRLER" />
+    <input type="text" id="inChannel" value="@MEDUSA" />
+    <input type="text" id="inNote" value="Desteğin için teşekkürler!" />
+    <button onclick="applyChanges()">UYGULA</button>
+  </div>
+
+  <header class="top-banner">
+    <div class="brand-title" id="outTitle">MEDUSA</div>
+    <div class="sub-tag" id="outSub">CANLI YAYIN • İYİ SEYİRLER</div>
+  </header>
+
+  <main class="game-area"></main>
+
+  <footer class="bottom-banner">
+    <div class="bottom-left">
+      <div class="channel-name" id="outChannel"><span>@</span>MEDUSA</div>
+      <div class="live-note" id="outNote">Desteğin için teşekkürler!</div>
+    </div>
+    <div class="action-list">
+      <div class="action-btn"><span class="dot"></span>TAKİP ET</div>
+      <div class="action-btn"><span class="dot"></span>BEĞEN</div>
+      <div class="action-btn"><span class="dot"></span>YORUM YAP</div>
+    </div>
+  </footer>
+
+  <script>
+    function togglePanel() {
+      document.getElementById('editPanel').classList.toggle('open');
+    }
+    function applyChanges() {
+      const title = document.getElementById('inTitle').value.trim() || 'MEDUSA';
+      const sub = document.getElementById('inSub').value.trim() || 'CANLI YAYIN • İYİ SEYİRLER';
+      const rawChannel = document.getElementById('inChannel').value.trim() || '@MEDUSA';
+      const note = document.getElementById('inNote').value.trim() || 'Desteğin için teşekkürler!';
+
+      document.getElementById('outTitle').textContent = title;
+      document.getElementById('outSub').textContent = sub;
+      document.getElementById('outNote').textContent = note;
+      document.getElementById('outChannel').innerHTML = `<span>@</span>${rawChannel.replace(/^@+/, '')}`;
+      togglePanel();
+    }
+  </script>
 </body>
 </html>
 """
