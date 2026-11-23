@@ -25,7 +25,8 @@ def make_poster(title, tag, bg="#1f1f24", accent="#e50914"):
     return "data:image/svg+xml;utf8," + svg.replace("#", "%23").replace(" ", "%20")
 
 
-SUPPORT_URL = ""
+SUPPORT_URL = "https://www.instagram.com/ttlewiss21/"
+SUPPORT_HANDLE = "@ttlewiss21"
 
 CATALOG = [
     {"id": 1, "title": "Stranger Things", "category": "Diziler", "year": "2016-2026", "poster": make_poster("Stranger Things", "DIZILER", "#2a0a0e", "#ef4444"), "video_url": ""},
@@ -209,14 +210,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       gap: 8px;
     }
     .support-btn {
-      background: #26262c;
+      background: #e50914;
       color: #fff;
-      border: 1px solid #3a3a44;
+      border: 0;
       border-radius: 6px;
-      padding: 5px 8px;
-      font-size: 0.75rem;
+      padding: 6px 10px;
+      font-size: 0.76rem;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
     }
     .top-avatar {
       width: 32px;
@@ -314,7 +316,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       background: #1c1c1c;
       border: 1px solid #333;
       border-radius: 12px;
-      padding: 14px;
+      padding: 16px;
     }
     .close-btn {
       float: right;
@@ -343,6 +345,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       font-size: 0.82rem;
       color: #b3b3b3;
       line-height: 1.45;
+    }
+    .go-ig-btn {
+      display: inline-block;
+      margin-top: 12px;
+      background: #e50914;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 0.86rem;
+      font-weight: 700;
     }
   </style>
 </head>
@@ -397,9 +410,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </header>
 
     <section class="hero">
-      <div class="hero-badge">ADIM 1 · KATALOG</div>
+      <div class="hero-badge">MEDUSA TOPLULUK</div>
       <h1 id="welcomeHeading">Hos Geldin</h1>
-      <p id="verifiedUserInfo">Diziler, Filmler ve Animasyon katalogu yuklendi.</p>
+      <p id="verifiedUserInfo">Destek hesabi baglandi: __HANDLE__</p>
     </section>
 
     <div class="search-bar">
@@ -417,15 +430,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <h3 id="modalTitle"></h3>
       <p id="modalMeta" style="font-size:0.8rem;color:#b3b3b3;margin-top:4px;"></p>
       <video id="videoPlayer" controls playsinline></video>
-      <div class="no-video-note" id="noVideoNote">
-        Bu icerik icin <strong>video_url</strong> alani su an bos. Katalogdaki <code>video_url</code> kismina kendi video baglantini eklediginde burada oynatilacak.
-      </div>
+      <div class="no-video-note" id="noVideoNote"></div>
     </div>
   </div>
 
   <script>
     const ITEMS = __ITEMS_JSON__;
     const SUPPORT_URL = __SUPPORT_JSON__;
+    const SUPPORT_HANDLE = __HANDLE_JSON__;
 
     let selectedCategory = "";
     let pendingProfile = { name: "Medusa", avatar: "__AVATAR__" };
@@ -522,24 +534,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         document.getElementById("topAvatar").src = pendingProfile.avatar;
       }
       document.getElementById("welcomeHeading").textContent = "Hos Geldin, " + pendingProfile.name;
-      document.getElementById("verifiedUserInfo").textContent = "Dogrulanan e-posta: " + email;
+      document.getElementById("verifiedUserInfo").textContent = "Dogrulanan e-posta: " + email + " · Destek: " + SUPPORT_HANDLE;
       showScreen(appScreen);
       renderItems();
     });
 
     document.getElementById("supportBtn").addEventListener("click", function() {
-      if (SUPPORT_URL) {
-        window.open(SUPPORT_URL, "_blank", "noopener,noreferrer");
-      } else {
-        alert("Destek baglantisi henuz eklenmedi.");
-      }
-    });
-
-    function openPlayer(id) {
-      const item = ITEMS.find(function(x) { return x.id === id; });
-      if (!item) return;
-      document.getElementById("modalTitle").textContent = item.title;
-      document.getElementById("modalMeta").textContent = item.category + " · " + (item.year || "");
+      document.getElementById("modalTitle").textContent = "Destek ve Iletisim";
+      document.getElementById("modalMeta").textContent = "Resmi Instagram Hesabi: " + SUPPORT_HANDLE;
       const vp = document.getElementById("videoPlayer");
-      const note = document.getElementById("noVideoNote");
-      if
+      vp.pause();
+      vp.removeAttribute("src");
+      vp.style.display = "none";
+      const note = document.getElementById("noVid
