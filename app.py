@@ -1,38 +1,79 @@
-import os
 from urllib.parse import urlparse
 from flask import Flask, render_template_string, request, redirect
 
 app = Flask(__name__)
 
-# Vizyonda sekmesinde gösterilecek çıkacak filmlerin tanıtım / afiş kartları
-# Kendi istediğin filmleri ve afiş (poster) URL'lerini buradan ekleyip güncelleyebilirsin.
+# Vizyona girecek filmlerin tanıtım / afiş listesi
+# Çalışan doğrudan görsel linklerini (https://.../afis.jpg) poster_url alanına ekleyebilirsin.
 UPCOMING_PROMOS = [
     {
         "title": "Avengers: Doomsday",
-        "release_date": "Yakında Vizyonda",
-        "poster_url": "https://image.tmdb.org/t/p/w500/8x53328533285332853328533.jpg",
-        "overview": "Henüz vizyona girmemiş yapım — yeni tanıtım ve afiş vitrini.",
+        "release_date": "18 Aralık 2026",
+        "poster_url": "",
+        "overview": "MCU'nun yeni büyük buluşması ve yaklaşan vizyon filmi.",
         "trailer_url": "",
     },
     {
-        "title": "Spider-Man: Brand New Day",
-        "release_date": "Yakında Vizyonda",
+        "title": "Dune: Part Three",
+        "release_date": "18 Aralık 2026",
         "poster_url": "",
-        "overview": "Vizyona çıkacak yeni yapım tanıtım kartı.",
+        "overview": "Arrakis destanının devamı ve vizyona girecek yeni film.",
         "trailer_url": "",
     },
     {
-        "title": "Dune: Messiah",
-        "release_date": "Yakında Vizyonda",
+        "title": "The Angry Birds Movie 3",
+        "release_date": "23 Aralık 2026",
         "poster_url": "",
-        "overview": "Yaklaşan sinema projesi afiş vitrini.",
+        "overview": "Animasyon serisinin yaklaşan yeni vizyon yapımı.",
         "trailer_url": "",
     },
     {
-        "title": "The Batman Part II",
-        "release_date": "Yakında Vizyonda",
+        "title": "Jumanji: Open World",
+        "release_date": "25 Aralık 2026",
         "poster_url": "",
-        "overview": "Vizyon takvimindeki yeni film tanıtımı.",
+        "overview": "Macera serisinin vizyona girecek yeni filmi.",
+        "trailer_url": "",
+    },
+    {
+        "title": "The Beekeeper 2",
+        "release_date": "15 Ocak 2027",
+        "poster_url": "",
+        "overview": "Aksiyon devam filmi vizyon takviminde.",
+        "trailer_url": "",
+    },
+    {
+        "title": "Ice Age: Boiling Point",
+        "release_date": "5 Şubat 2027",
+        "poster_url": "",
+        "overview": "Buz Devri serisinin yaklaşan yeni macerası.",
+        "trailer_url": "",
+    },
+    {
+        "title": "Sonic the Hedgehog 4",
+        "release_date": "19 Mart 2027",
+        "poster_url": "",
+        "overview": "Sonic serisinin vizyona çıkacak yeni filmi.",
+        "trailer_url": "",
+    },
+    {
+        "title": "Godzilla x Kong: Supernova",
+        "release_date": "26 Mart 2027",
+        "poster_url": "",
+        "overview": "MonsterVerse'ün yaklaşan yeni dev kapışması.",
+        "trailer_url": "",
+    },
+    {
+        "title": "Avengers: Secret Wars",
+        "release_date": "17 Aralık 2027",
+        "poster_url": "",
+        "overview": "Çoklu evren finaline doğru yaklaşan büyük yapım.",
+        "trailer_url": "",
+    },
+    {
+        "title": "The Batman: Part II",
+        "release_date": "Şubat 2028",
+        "poster_url": "",
+        "overview": "Gotham evreninin beklenen devam filmi.",
         "trailer_url": "",
     },
 ]
@@ -232,8 +273,9 @@ MENU_HTML = """
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 12px;
+      padding: 14px;
       text-align: center;
+      overflow: hidden;
     }
     .poster img {
       width: 100%;
@@ -241,10 +283,11 @@ MENU_HTML = """
       object-fit: cover;
       display: block;
     }
-    .poster-placeholder {
+    .poster-label {
       color: #94a3b8;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 700;
+      line-height: 1.35;
     }
     .card-body {
       padding: 12px;
@@ -306,9 +349,10 @@ MENU_HTML = """
               <span class="badge">YAKINDA VİZYONDA</span>
               <div class="poster">
                 {% if c.valid_poster %}
-                  <img src="{{ c.poster_url }}" alt="{{ c.title }}" loading="lazy" />
+                  <img src="{{ c.poster_url }}" alt="{{ c.title }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                  <span class="poster-label" style="display:none;">{{ c.title }}</span>
                 {% else %}
-                  <span class="poster-placeholder">{{ c.title }}</span>
+                  <span class="poster-label">{{ c.title }}</span>
                 {% endif %}
               </div>
               <div class="card-body">
