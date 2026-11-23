@@ -11,16 +11,17 @@ from flask import (
     jsonify,
     session,
 )
+from tmdb_makine import makine_bp
 
-app = Flask(__name__)from tmdb_makine import makine_bp
+app = Flask(__name__)
 app.register_blueprint(makine_bp)
 
 app.secret_key = os.environ.get("SECRET_KEY", "medusafilm-gizli-anahtar-degistir")
 
-TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "BURAYA_TMDB_API_KEY_YAZ")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "medusa123")
-CRON_TOKEN = os.environ.get("CRON_TOKEN", "medusa-cron-gizli-token")
-DEFAULT_MIN_DATE = os.environ.get("MIN_RELEASE_DATE", "2020-01-01")
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip()
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "medusa123").strip()
+CRON_TOKEN = os.environ.get("CRON_TOKEN", "medusa-cron-gizli-token").strip()
+DEFAULT_MIN_DATE = os.environ.get("MIN_RELEASE_DATE", "2020-01-01").strip()
 
 DB_PATH = os.environ.get("DB_PATH", "movies.db")
 TMDB_DISCOVER_URL = "https://api.themoviedb.org/3/discover/movie"
@@ -94,7 +95,7 @@ def set_setting(key: str, value: str):
 
 
 def fetch_from_tmdb(min_date: str | None = None, pages: int = 2) -> dict:
-    if not TMDB_API_KEY or TMDB_API_KEY == "BURAYA_TMDB_API_KEY_YAZ":
+    if not TMDB_API_KEY:
         return {"ok": False, "error": "TMDB_API_KEY ayarlanmamış.", "added": 0, "skipped": 0}
 
     date_filter = (min_date or get_setting("min_release_date", DEFAULT_MIN_DATE)).strip()
@@ -179,7 +180,7 @@ def maybe_run_daily_fetch():
         if last_fetch.tzinfo is None:
             last_fetch = last_fetch.replace(tzinfo=timezone.utc)
         elapsed_seconds = (now - last_fetch).total_seconds()
-        if elapsed_seconds >= 86400:  # 24 saat geçtiyse
+        if elapsed_seconds >= 86400:
             fetch_from_tmdb(pages=2)
     except Exception:
         fetch_from_tmdb(pages=2)
@@ -488,6 +489,7 @@ PUBLIC_HTML = """
     <a class="brand" href="/">MEDUSAFILM</a>
     <div class="nav-links">
       <a class="nav-btn" href="/admin">Yönetim Paneli</a>
+      <a class="nav-btn" href="/makine">Makine Vitrini</a>
       <a class="nav-btn support" href="https://www.instagram.com/ttlewiss21/" target="_blank" rel="noopener">Destek</a>
     </div>
   </header>
@@ -687,7 +689,4 @@ ADMIN_PANEL_HTML = """
     @media (min-width: 768px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
     }
-    .item {
-      background: #151a24;
-      border: 1px solid #232b3c;
-      bo
+    .ite
