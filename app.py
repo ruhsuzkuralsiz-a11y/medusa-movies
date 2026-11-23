@@ -2,28 +2,18 @@ import os
 import sqlite3
 from datetime import datetime, timezone
 from urllib.parse import urlparse
-import requests
 from flask import (
     Flask,
     render_template_string,
     request,
     redirect,
-    jsonify,
     session,
 )
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "medusafilm-gizli-anahtar-degistir")
-
-TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip()
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "medusa123").strip()
-CRON_TOKEN = os.environ.get("CRON_TOKEN", "medusa-cron-gizli-token").strip()
-DEFAULT_MIN_DATE = os.environ.get("MIN_RELEASE_DATE", "2020-01-01").strip()
-
 DB_PATH = os.environ.get("DB_PATH", "movies.db")
-TMDB_DISCOVER_URL = "https://api.themoviedb.org/3/discover/movie"
-TMDB_UPCOMING_URL = "https://api.themoviedb.org/3/movie/upcoming"
-IMG_BASE = "https://image.tmdb.org/t/p/w500"
 
 
 def get_db():
@@ -38,64 +28,16 @@ def init_db():
             """
             CREATE TABLE IF NOT EXISTS movies (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                tmdb_id INTEGER UNIQUE NOT NULL,
                 title TEXT NOT NULL,
-                poster_url TEXT,
-                overview TEXT,
-                rating REAL DEFAULT 0,
-                release_date TEXT,
+                poster_url TEXT DEFAULT '',
+                overview TEXT DEFAULT '',
+                release_date TEXT DEFAULT 'Yakında',
                 source_url TEXT DEFAULT '',
                 is_upcoming INTEGER NOT NULL DEFAULT 0,
-                status TEXT NOT NULL DEFAULT 'pending',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
             """
-        )
-        cols = [r["name"] for r in conn.execute("PRAGMA table_info(movies)").fetchall()]
-        if "source_url" not in cols:
-            conn.execute("ALTER TABLE movies ADD COLUMN source_url TEXT DEFAULT ''")
-        if "is_upcoming" not in cols:
-            conn.execute("ALTER TABLE movies ADD COLUMN is_upcoming INTEGER NOT NULL DEFAULT 0")
-
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS settings (
-                key TEXT PRIMARY KEY,
-                value TEXT NOT NULL
-            )
-            """
-        )
-        conn.execute(
-            """
-            INSERT OR IGNORE INTO settings (key, value)
-            VALUES ('min_release_date', ?)
-            """,
-            (DEFAULT_MIN_DATE,),
-        )
-        conn.execute(
-            """
-            INSERT OR IGNORE INTO settings (key, value)
-            VALUES ('last_auto_fetch', '')
-            """
-        )
-        conn.commit()
-
-
-def get_setting(key: str, default: str = "") -> str:
-    with get_db() as conn:
-        row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
-        return row["value"] if row else default
-
-
-def set_setting(key: str, value: str):
-    with get_db() as conn:
-        conn.execute(
-            """
-            INSERT INTO settings (key, value) VALUES (?, ?)
-            ON CONFLICT(key) DO UPDATE SET value = excluded.value
-            """,
-            (key, value),
         )
         conn.commit()
 
@@ -112,156 +54,11 @@ def is_direct_video_url(url: str) -> bool:
     return path.endswith((".mp4", ".webm", ".ogg", ".m3u8"))
 
 
-def fetch_from_tmdb(min_date: str | None = None, pages: int = 2) -> dict:
-    if not TMDB_API_KEY:
-        return {"ok": False, "error": "TMDB_API_KEY ayarlanmamış.", "added": 0, "skipped": 0}
-
-    date_filter = (min_date or get_setting("min_release_date", DEFAULT_MIN_DATE)).strip()
-    now_iso = datetime.now(timezone.utc).isoformat()
-    added = 0
-    skipped = 0
-
-    try:
-        with get_db() as conn:
-            # 1) Genel popüler filmler
-            for page in range(1, pages + 1):
-                resp = requests.get(
-                    TMDB_DISCOVER_URL,
-                    params={
-                        "api_key": TMDB_API_KEY,
-                        "language": "tr-TR",
-                        "primary_release_date.gte": date_filter,
-                        "sort_by": "popularity.desc",
-                        "page": page,
-                    },
-                    timeout=12,
-                )
-                resp.raise_for_status()
-                for item in resp.json().get("results", []):
-                    tmdb_id = item.get("id")
-                    if not tmdb_id:
-                        continue
-                    exists = conn.execute(
-                        "SELECT id FROM movies WHERE tmdb_id = ?", (tmdb_id,)
-                    ).fetchone()
-                    if exists:
-                        skipped += 1
-                        continue
-
-                    title = item.get("title") or item.get("original_title") or "İsimsiz Film"
-                    poster_path = item.get("poster_path")
-                    poster_url = f"{IMG_BASE}{poster_path}" if poster_path else ""
-                    overview = item.get("overview") or "Özet bilgisi bulunmuyor."
-                    rating = round(float(item.get("vote_average") or 0), 1)
-                    release_date = item.get("release_date") or "—"
-
-                    conn.execute(
-                        """
-                        INSERT INTO movies (
-                            tmdb_id, title, poster_url, overview, rating, release_date,
-                            source_url, is_upcoming, status, created_at, updated_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, '', 0, 'pending', ?, ?)
-                        """,
-                        (
-                            tmdb_id,
-                            title,
-                            poster_url,
-                            overview,
-                            rating,
-                            release_date,
-                            now_iso,
-                            now_iso,
-                        ),
-                    )
-                    added += 1
-
-            # 2) Yakında vizyona girecek filmler (Vizyonda reklam sekmesi için)
-            up_resp = requests.get(
-                TMDB_UPCOMING_URL,
-                params={
-                    "api_key": TMDB_API_KEY,
-                    "language": "tr-TR",
-                    "page": 1,
-                },
-                timeout=12,
-            )
-            if up_resp.ok:
-                for item in up_resp.json().get("results", [])[:12]:
-                    tmdb_id = item.get("id")
-                    if not tmdb_id:
-                        continue
-                    exists = conn.execute(
-                        "SELECT id FROM movies WHERE tmdb_id = ?", (tmdb_id,)
-                    ).fetchone()
-                    if exists:
-                        conn.execute(
-                            "UPDATE movies SET is_upcoming = 1, updated_at = ? WHERE id = ?",
-                            (now_iso, exists["id"]),
-                        )
-                        continue
-
-                    title = item.get("title") or item.get("original_title") or "Yakında Vizyonda"
-                    poster_path = item.get("poster_path")
-                    poster_url = f"{IMG_BASE}{poster_path}" if poster_path else ""
-                    overview = item.get("overview") or "Yakında vizyona girecek film tanıtımı."
-                    rating = round(float(item.get("vote_average") or 0), 1)
-                    release_date = item.get("release_date") or "Yakında"
-
-                    conn.execute(
-                        """
-                        INSERT INTO movies (
-                            tmdb_id, title, poster_url, overview, rating, release_date,
-                            source_url, is_upcoming, status, created_at, updated_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, '', 1, 'pending', ?, ?)
-                        """,
-                        (
-                            tmdb_id,
-                            title,
-                            poster_url,
-                            overview,
-                            rating,
-                            release_date,
-                            now_iso,
-                            now_iso,
-                        ),
-                    )
-                    added += 1
-
-            conn.commit()
-
-        set_setting("last_auto_fetch", now_iso)
-        return {"ok": True, "added": added, "skipped": skipped, "min_date": date_filter}
-    except Exception as exc:
-        return {"ok": False, "error": str(exc), "added": added, "skipped": skipped}
-
-
-def maybe_run_daily_fetch():
-    last_fetch_str = get_setting("last_auto_fetch", "")
-    now = datetime.now(timezone.utc)
-    if not last_fetch_str:
-        fetch_from_tmdb(pages=2)
-        return
-    try:
-        last_fetch = datetime.fromisoformat(last_fetch_str)
-        if last_fetch.tzinfo is None:
-            last_fetch = last_fetch.replace(tzinfo=timezone.utc)
-        if (now - last_fetch).total_seconds() >= 86400:
-            fetch_from_tmdb(pages=2)
-    except Exception:
-        fetch_from_tmdb(pages=2)
-
-
 def is_admin() -> bool:
     return session.get("admin_logged_in") is True
 
 
 init_db()
-
-
-@app.before_request
-def before_any_request():
-    if request.endpoint not in ("static",):
-        maybe_run_daily_fetch()
 
 
 def filter_and_rank(items: list[dict], raw_q: str) -> list[dict]:
@@ -289,7 +86,7 @@ def filter_and_rank(items: list[dict], raw_q: str) -> list[dict]:
             matched.append(copy_item)
 
     matched.sort(
-        key=lambda x: (x["_score"], x.get("release_date") or "", x.get("id") or 0),
+        key=lambda x: (x["_score"], x.get("id") or 0),
         reverse=False,
     )
     for m in matched:
@@ -311,16 +108,15 @@ def home():
             rows = conn.execute(
                 """
                 SELECT * FROM movies
-                WHERE status = 'approved' AND is_upcoming = 1
-                ORDER BY release_date ASC, id DESC
+                WHERE is_upcoming = 1
+                ORDER BY id DESC
                 """
             ).fetchall()
         else:
             rows = conn.execute(
                 """
                 SELECT * FROM movies
-                WHERE status = 'approved'
-                ORDER BY release_date DESC, id DESC
+                ORDER BY id DESC
                 """
             ).fetchall()
 
@@ -345,10 +141,7 @@ def home():
 @app.route("/watch/<int:movie_id>")
 def watch_movie(movie_id: int):
     with get_db() as conn:
-        row = conn.execute(
-            "SELECT * FROM movies WHERE id = ? AND status = 'approved'",
-            (movie_id,),
-        ).fetchone()
+        row = conn.execute("SELECT * FROM movies WHERE id = ?", (movie_id,)).fetchone()
 
     if not row:
         return redirect("/")
@@ -384,153 +177,90 @@ def admin_panel():
         elif is_admin():
             now_iso = datetime.now(timezone.utc).isoformat()
 
-            if action == "add_promo":
-                title = request.form.get("promo_title", "").strip()
-                poster_url = request.form.get("promo_poster", "").strip()
-                release_date = request.form.get("promo_date", "").strip() or "Yakında"
-                overview = request.form.get("promo_overview", "").strip() or "Vizyona çıkacak özel tanıtım."
-                source_url = request.form.get("promo_source", "").strip()
+            if action == "add_item":
+                title = request.form.get("title", "").strip()
+                poster_url = request.form.get("poster_url", "").strip()
+                release_date = request.form.get("release_date", "").strip() or "Yakında"
+                overview = request.form.get("overview", "").strip()
+                source_url = request.form.get("source_url", "").strip()
+                is_upcoming = 1 if request.form.get("is_upcoming") == "1" else 0
 
                 if not title:
-                    error = "Tanıtım için film adı girmelisin."
+                    error = "Başlık girmelisin."
                 elif poster_url and not is_safe_http_url(poster_url):
                     error = "Afiş URL'si http:// veya https:// ile başlamalı."
                 elif source_url and not is_safe_http_url(source_url):
-                    error = "Fragman/Kaynak URL'si http:// veya https:// ile başlamalı."
+                    error = "Kaynak URL'si http:// veya https:// ile başlamalı."
                 else:
-                    fake_tmdb_id = -int(datetime.now(timezone.utc).timestamp() * 1000)
                     with get_db() as conn:
                         conn.execute(
                             """
                             INSERT INTO movies (
-                                tmdb_id, title, poster_url, overview, rating, release_date,
-                                source_url, is_upcoming, status, created_at, updated_at
-                            ) VALUES (?, ?, ?, ?, 0, ?, ?, 1, 'approved', ?, ?)
+                                title, poster_url, overview, release_date,
+                                source_url, is_upcoming, created_at, updated_at
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                             (
-                                fake_tmdb_id,
                                 title,
                                 poster_url,
                                 overview,
                                 release_date,
                                 source_url,
+                                is_upcoming,
                                 now_iso,
                                 now_iso,
                             ),
                         )
                         conn.commit()
-                    message = f"'{title}' Vizyonda tanıtım kartı olarak eklendi."
+                    message = f"'{title}' eklendi."
 
-            elif action == "save_date":
-                new_date = request.form.get("min_release_date", "").strip()
-                if new_date:
-                    set_setting("min_release_date", new_date)
-                    message = f"Başlangıç tarihi {new_date} olarak güncellendi."
-
-            elif action == "fetch_now":
-                new_date = request.form.get("min_release_date", "").strip()
-                if new_date:
-                    set_setting("min_release_date", new_date)
-                res = fetch_from_tmdb(min_date=new_date or None, pages=2)
-                if res["ok"]:
-                    message = (
-                        f"TMDB çekimi tamamlandı ({res['min_date']} sonrası). "
-                        f"Yeni eklenen: {res['added']}, Zaten kayıtlı: {res['skipped']}"
-                    )
-                else:
-                    error = f"Çekim hatası: {res.get('error')}"
-
-            elif action == "approve_one":
+            elif action == "update_item":
                 movie_id = request.form.get("movie_id")
+                title = request.form.get("title", "").strip()
                 source_url = request.form.get("source_url", "").strip()
                 is_upcoming = 1 if request.form.get("is_upcoming") == "1" else 0
-                if source_url and not is_safe_http_url(source_url):
-                    error = "Kaynak bağlantısı http:// veya https:// ile başlamalı."
+                if not title:
+                    error = "Başlık boş olamaz."
+                elif source_url and not is_safe_http_url(source_url):
+                    error = "Kaynak URL'si http:// veya https:// ile başlamalı."
                 else:
                     with get_db() as conn:
                         conn.execute(
                             """
                             UPDATE movies
-                            SET status = 'approved', source_url = ?, is_upcoming = ?, updated_at = ?
+                            SET title = ?, source_url = ?, is_upcoming = ?, updated_at = ?
                             WHERE id = ?
                             """,
-                            (source_url, is_upcoming, now_iso, movie_id),
+                            (title, source_url, is_upcoming, now_iso, movie_id),
                         )
                         conn.commit()
-                    message = "Film onaylandı."
+                    message = "Güncellendi."
 
-            elif action == "reject_one":
+            elif action == "delete_item":
                 movie_id = request.form.get("movie_id")
                 with get_db() as conn:
-                    conn.execute(
-                        "UPDATE movies SET status = 'rejected', updated_at = ? WHERE id = ?",
-                        (now_iso, movie_id),
-                    )
+                    conn.execute("DELETE FROM movies WHERE id = ?", (movie_id,))
                     conn.commit()
-                message = "Film reddedildi."
+                message = "Kayıt silindi."
 
-            elif action == "approve_all":
+            elif action == "clear_all":
                 with get_db() as conn:
-                    cur = conn.execute(
-                        "UPDATE movies SET status = 'approved', updated_at = ? WHERE status = 'pending'",
-                        (now_iso,),
-                    )
+                    conn.execute("DELETE FROM movies")
                     conn.commit()
-                message = f"{cur.rowcount} bekleyen film toplu olarak onaylandı."
-
-            elif action == "update_source":
-                movie_id = request.form.get("movie_id")
-                source_url = request.form.get("source_url", "").strip()
-                is_upcoming = 1 if request.form.get("is_upcoming") == "1" else 0
-                if source_url and not is_safe_http_url(source_url):
-                    error = "Kaynak bağlantısı http:// veya https:// ile başlamalı."
-                else:
-                    with get_db() as conn:
-                        conn.execute(
-                            "UPDATE movies SET source_url = ?, is_upcoming = ?, updated_at = ? WHERE id = ?",
-                            (source_url, is_upcoming, now_iso, movie_id),
-                        )
-                        conn.commit()
-                    message = "Film ayarları güncellendi."
+                message = "Tüm kayıtlar temizlendi."
 
     if not is_admin():
         return render_template_string(ADMIN_LOGIN_HTML, error=error)
 
     with get_db() as conn:
-        pending_rows = conn.execute(
-            "SELECT * FROM movies WHERE status = 'pending' ORDER BY release_date DESC, id DESC"
-        ).fetchall()
-        approved_rows = conn.execute(
-            "SELECT * FROM movies WHERE status = 'approved' ORDER BY id DESC LIMIT 30"
-        ).fetchall()
-        approved_count = conn.execute(
-            "SELECT COUNT(*) AS c FROM movies WHERE status = 'approved'"
-        ).fetchone()["c"]
-        rejected_count = conn.execute(
-            "SELECT COUNT(*) AS c FROM movies WHERE status = 'rejected'"
-        ).fetchone()["c"]
+        rows = conn.execute("SELECT * FROM movies ORDER BY id DESC").fetchall()
 
     return render_template_string(
         ADMIN_PANEL_HTML,
-        pending_movies=[dict(r) for r in pending_rows],
-        approved_movies=[dict(r) for r in approved_rows],
-        min_release_date=get_setting("min_release_date", DEFAULT_MIN_DATE),
-        last_auto_fetch=get_setting("last_auto_fetch", "Henüz çalışmadı"),
-        approved_count=approved_count,
-        rejected_count=rejected_count,
+        items=[dict(r) for r in rows],
         message=message,
         error=error,
     )
-
-
-@app.route("/cron/fetch")
-def cron_fetch():
-    token = request.args.get("token", "")
-    if token != CRON_TOKEN:
-        return jsonify({"ok": False, "error": "Yetkisiz token"}), 403
-    res = fetch_from_tmdb(pages=2)
-    status_code = 200 if res.get("ok") else 500
-    return jsonify(res), status_code
 
 
 PUBLIC_HTML = """
@@ -539,4 +269,395 @@ PUBLIC_HTML = """
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MEDUSAFILM</titl
+  <title>MEDUSAFILM</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0f14;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #121620;
+      border-bottom: 1px solid #222938;
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .brand {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #f59e0b;
+      text-decoration: none;
+    }
+    .nav-links { display: flex; align-items: center; gap: 10px; }
+    .nav-btn {
+      text-decoration: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #1d2332;
+      color: #e5e7eb;
+      border: 1px solid #2c354b;
+    }
+    .nav-btn.support {
+      background: #22c55e;
+      color: #07130a;
+      border: none;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      flex: 1;
+    }
+    .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tab-btn {
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: #181e2b;
+      color: #cbd5e1;
+      border: 1px solid #283247;
+    }
+    .tab-btn.active {
+      background: #f59e0b;
+      color: #111827;
+      border-color: #f59e0b;
+    }
+    .search-form { display: flex; gap: 8px; margin-bottom: 20px; }
+    .search-input {
+      flex: 1;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid #283042;
+      background: #151a24;
+      color: #fff;
+      font-size: 1rem;
+    }
+    .search-btn {
+      padding: 11px 18px;
+      border-radius: 10px;
+      border: none;
+      background: #f59e0b;
+      color: #111827;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    @media (min-width: 768px) {
+      .grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    }
+    .card {
+      background: #151a24;
+      border: 1px solid #232b3c;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .badge-upcoming {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(245, 158, 11, 0.94);
+      color: #111827;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      z-index: 2;
+    }
+    .poster { aspect-ratio: 2 / 3; background: #0d1017; }
+    .poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .title { font-size: 1rem; font-weight: 700; }
+    .meta { font-size: 0.82rem; color: #9ca3af; }
+    .overview {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .watch-btn {
+      margin-top: auto;
+      display: inline-block;
+      text-align: center;
+      text-decoration: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      background: #f59e0b;
+      color: #111827;
+    }
+    .watch-btn.promo { background: #2563eb; color: #fff; }
+    .watch-btn.disabled { background: #222938; color: #9ca3af; }
+    footer {
+      border-top: 1px solid #222938;
+      background: #121620;
+      padding: 16px;
+      text-align: center;
+      font-size: 0.88rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">MEDUSAFILM</a>
+    <div class="nav-links">
+      <a class="nav-btn" href="/admin">Yönetim Paneli</a>
+      <a class="nav-btn support" href="https://www.instagram.com/ttlewiss21/" target="_blank" rel="noopener">Destek</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="tabs">
+      <a class="tab-btn {% if active_tab == 'tumu' %}active{% endif %}" href="/?tab=tumu{% if query %}&q={{ query }}{% endif %}">Tümü</a>
+      <a class="tab-btn {% if active_tab == 'vizyonda' %}active{% endif %}" href="/?tab=vizyonda{% if query %}&q={{ query }}{% endif %}">Vizyonda</a>
+    </div>
+
+    <form class="search-form" method="get" action="/">
+      <input type="hidden" name="tab" value="{{ active_tab }}" />
+      <input class="search-input" type="text" name="q" value="{{ query }}" placeholder="Ara..." />
+      <button class="search-btn" type="submit">Ara</button>
+    </form>
+
+    {% if movies %}
+      <div class="grid">
+        {% for m in movies %}
+          <article class="card">
+            {% if m.is_upcoming %}
+              <span class="badge-upcoming">VİZYONDA</span>
+            {% endif %}
+            <a class="poster" href="/watch/{{ m.id }}">
+              {% if m.poster_url %}
+                <img src="{{ m.poster_url }}" alt="{{ m.title }}" loading="lazy" />
+              {% endif %}
+            </a>
+            <div class="card-body">
+              <div class="title">{{ m.title }}</div>
+              <div class="meta">{{ m.release_date }}</div>
+              {% if m.overview %}
+                <p class="overview">{{ m.overview }}</p>
+              {% endif %}
+              {% if m.valid_source %}
+                <a class="watch-btn" href="/watch/{{ m.id }}">Aç</a>
+              {% elif m.is_upcoming %}
+                <a class="watch-btn promo" href="/watch/{{ m.id }}">Tanıtım</a>
+              {% else %}
+                <a class="watch-btn disabled" href="/watch/{{ m.id }}">Detay</a>
+              {% endif %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:#9ca3af;">Henüz içerik eklenmemiş.</p>
+    {% endif %}
+  </main>
+
+  <footer>MEDUSAFILM</footer>
+</body>
+</html>
+"""
+
+WATCH_HTML = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ movie.title }} — MEDUSAFILM</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0f14;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: #121620;
+      border-bottom: 1px solid #222938;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand { color: #f59e0b; font-weight: 800; text-decoration: none; font-size: 1.2rem; }
+    .back-btn {
+      color: #e5e7eb;
+      background: #1d2332;
+      border: 1px solid #2c354b;
+      padding: 7px 13px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 20px 16px 40px; }
+    .player-box {
+      background: #07090d;
+      border: 1px solid #232b3c;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      margin-bottom: 14px;
+    }
+    .player-box video, .player-box iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+    .promo-banner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #171c29, #0d1017);
+      gap: 8px;
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+    .ext-btn {
+      background: #22c55e;
+      color: #07130a;
+      text-decoration: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .info-box {
+      background: #151a24;
+      border: 1px solid #232b3c;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .title { font-size: 1.35rem; font-weight: 800; margin-bottom: 6px; }
+    .meta { color: #9ca3af; font-size: 0.9rem; margin-bottom: 12px; }
+    .desc { color: #cbd5e1; line-height: 1.55; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">MEDUSAFILM</a>
+    <a class="back-btn" href="/">← Geri Dön</a>
+  </header>
+
+  <main class="wrap">
+    <div class="player-box">
+      {% if movie.valid_source and movie.is_video_file %}
+        <video controls autoplay playsinline src="{{ movie.source_url }}"></video>
+      {% elif movie.valid_source %}
+        <iframe src="{{ movie.source_url }}" allowfullscreen referrerpolicy="no-referrer"></iframe>
+      {% else %}
+        <div class="promo-banner">
+          <h2 style="font-size:1.25rem;">{{ movie.title }}</h2>
+          <p style="color:#9ca3af;">{{ movie.release_date }}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if movie.valid_source %}
+      <div class="actions">
+        <a class="ext-btn" href="{{ movie.source_url }}" target="_blank" rel="noopener noreferrer">
+          Yeni Sekmede Aç
+        </a>
+      </div>
+    {% endif %}
+
+    <div class="info-box">
+      <h1 class="title">{{ movie.title }}</h1>
+      <div class="meta">{{ movie.release_date }}</div>
+      {% if movie.overview %}
+        <p class="desc">{{ movie.overview }}</p>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>
+"""
+
+ADMIN_LOGIN_HTML = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yönetim Girişi — MEDUSAFILM</title>
+  <style>
+    body {
+      background: #0d0f14;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .box {
+      background: #151a24;
+      border: 1px solid #262f42;
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+    }
+    h1 { font-size: 1.25rem; margin-bottom: 14px; color: #f59e0b; }
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 8px;
+      border: 1px solid #2d374c;
+      background: #0e1118;
+      color: #fff;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: #f59e0b;
+      color: #111827;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .err { color: #f87171; font-size: 0.9rem; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <form class="box" method="post">
+    <h1>MEDUSAFILM Admin Giriş</h1>
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+    <input type="hidden" name="action" value="login" />
+    <input type="password" name="password" placeholder="Yönetim şifresi" required />
+    <button type="submit">Gi
