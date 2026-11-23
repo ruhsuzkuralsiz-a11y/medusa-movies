@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template_string
 
 app = Flask(__name__)
@@ -27,7 +28,6 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       color: #ffffff;
     }
 
-    /* ÜST BANNER (İNCE & YATAY UYUMLU) */
     .top-banner {
       min-height: 60px;
       max-height: 13vh;
@@ -64,14 +64,12 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       white-space: nowrap;
     }
 
-    /* ORTA OYUN ALANI */
     .game-area {
       flex: 1;
       background: transparent;
       pointer-events: none;
     }
 
-    /* CANLI BİLDİRİM BANDI (ALT BANNER ÜSTÜNDE İNCE ŞERİT) */
     .alert-strip {
       display: none;
       align-items: center;
@@ -92,7 +90,6 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       display: flex;
     }
 
-    /* ALT BANNER (KOMPAKT & YATAY UYUMLU) */
     .bottom-banner {
       min-height: 72px;
       max-height: 16vh;
@@ -172,7 +169,6 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       flex-shrink: 0;
     }
 
-    /* YATAY EKRAN AYARI */
     @media (orientation: landscape) and (max-height: 500px) {
       .top-banner {
         min-height: 42px;
@@ -204,7 +200,6 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       }
     }
 
-    /* DÜZENLEME & SES PANELİ */
     .edit-toggle {
       position: fixed;
       top: 6px;
@@ -455,9 +450,15 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
 </body>
 </html>"""
 
+@app.route("/")
+def home():
+    return "MEDUSA Overlay Aktif. Banner için /overlay adresine git."
+
 @app.route("/overlay")
 def overlay():
     return render_template_string(OVERLAY_HTML)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+  
