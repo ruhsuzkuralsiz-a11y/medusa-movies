@@ -1,15 +1,15 @@
-from urllib.parse import urlparse
+import html
+from urllib.parse import quote, urlparse
 from flask import Flask, render_template_string, request, redirect
 
 app = Flask(__name__)
 
-# Vizyona girecek filmlerin tanıtım / afiş listesi
-# Çalışan doğrudan görsel linklerini (https://.../afis.jpg) poster_url alanına ekleyebilirsin.
 UPCOMING_PROMOS = [
     {
         "title": "Avengers: Doomsday",
         "release_date": "18 Aralık 2026",
         "poster_url": "",
+        "accent": "#ef4444",
         "overview": "MCU'nun yeni büyük buluşması ve yaklaşan vizyon filmi.",
         "trailer_url": "",
     },
@@ -17,6 +17,7 @@ UPCOMING_PROMOS = [
         "title": "Dune: Part Three",
         "release_date": "18 Aralık 2026",
         "poster_url": "",
+        "accent": "#f59e0b",
         "overview": "Arrakis destanının devamı ve vizyona girecek yeni film.",
         "trailer_url": "",
     },
@@ -24,6 +25,7 @@ UPCOMING_PROMOS = [
         "title": "The Angry Birds Movie 3",
         "release_date": "23 Aralık 2026",
         "poster_url": "",
+        "accent": "#22c55e",
         "overview": "Animasyon serisinin yaklaşan yeni vizyon yapımı.",
         "trailer_url": "",
     },
@@ -31,6 +33,7 @@ UPCOMING_PROMOS = [
         "title": "Jumanji: Open World",
         "release_date": "25 Aralık 2026",
         "poster_url": "",
+        "accent": "#10b981",
         "overview": "Macera serisinin vizyona girecek yeni filmi.",
         "trailer_url": "",
     },
@@ -38,6 +41,7 @@ UPCOMING_PROMOS = [
         "title": "The Beekeeper 2",
         "release_date": "15 Ocak 2027",
         "poster_url": "",
+        "accent": "#eab308",
         "overview": "Aksiyon devam filmi vizyon takviminde.",
         "trailer_url": "",
     },
@@ -45,6 +49,7 @@ UPCOMING_PROMOS = [
         "title": "Ice Age: Boiling Point",
         "release_date": "5 Şubat 2027",
         "poster_url": "",
+        "accent": "#38bdf8",
         "overview": "Buz Devri serisinin yaklaşan yeni macerası.",
         "trailer_url": "",
     },
@@ -52,6 +57,7 @@ UPCOMING_PROMOS = [
         "title": "Sonic the Hedgehog 4",
         "release_date": "19 Mart 2027",
         "poster_url": "",
+        "accent": "#3b82f6",
         "overview": "Sonic serisinin vizyona çıkacak yeni filmi.",
         "trailer_url": "",
     },
@@ -59,6 +65,7 @@ UPCOMING_PROMOS = [
         "title": "Godzilla x Kong: Supernova",
         "release_date": "26 Mart 2027",
         "poster_url": "",
+        "accent": "#f97316",
         "overview": "MonsterVerse'ün yaklaşan yeni dev kapışması.",
         "trailer_url": "",
     },
@@ -66,6 +73,7 @@ UPCOMING_PROMOS = [
         "title": "Avengers: Secret Wars",
         "release_date": "17 Aralık 2027",
         "poster_url": "",
+        "accent": "#a855f7",
         "overview": "Çoklu evren finaline doğru yaklaşan büyük yapım.",
         "trailer_url": "",
     },
@@ -73,10 +81,56 @@ UPCOMING_PROMOS = [
         "title": "The Batman: Part II",
         "release_date": "Şubat 2028",
         "poster_url": "",
+        "accent": "#94a3b8",
         "overview": "Gotham evreninin beklenen devam filmi.",
         "trailer_url": "",
     },
 ]
+
+
+def build_svg_poster(title: str, release_date: str, accent: str) -> str:
+    safe_title = html.escape(title)
+    safe_date = html.escape(release_date)
+    safe_accent = accent if accent.startswith("#") and len(accent) in (4, 7) else "#f59e0b"
+
+    words = safe_title.split()
+    lines = []
+    current = ""
+    for w in words:
+        test = f"{current} {w}".strip()
+        if len(test) <= 14:
+            current = test
+        else:
+            if current:
+                lines.append(current)
+            current = w
+    if current:
+        lines.append(current)
+    lines = lines[:4]
+
+    start_y = 195 - (len(lines) - 1) * 18
+    tspans = "".join(
+        f'<tspan x="200" dy="{0 if idx == 0 else 36}">{line}</tspan>'
+        for idx, line in enumerate(lines)
+    )
+
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">'
+        f'<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">'
+        f'<stop offset="0%" stop-color="#1b2234"/>'
+        f'<stop offset="55%" stop-color="#10141f"/>'
+        f'<stop offset="100%" stop-color="#090b10"/>'
+        f'</linearGradient></defs>'
+        f'<rect width="400" height="600" fill="url(#bg)"/>'
+        f'<circle cx="200" cy="215" r="115" fill="{safe_accent}" fill-opacity="0.16"/>'
+        f'<rect x="28" y="28" width="344" height="544" rx="18" fill="none" stroke="{safe_accent}" stroke-opacity="0.45" stroke-width="2"/>'
+        f'<text x="200" y="{start_y}" text-anchor="middle" fill="#ffffff" font-family="Arial,sans-serif" font-size="30" font-weight="800">{tspans}</text>'
+        f'<rect x="95" y="455" width="210" height="34" rx="17" fill="{safe_accent}" fill-opacity="0.22"/>'
+        f'<text x="200" y="477" text-anchor="middle" fill="{safe_accent}" font-family="Arial,sans-serif" font-size="15" font-weight="700">{safe_date}</text>'
+        f'<text x="200" y="535" text-anchor="middle" fill="#94a3b8" font-family="Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="2">MEDUSAFILM</text>'
+        f'</svg>'
+    )
+    return "data:image/svg+xml;utf8," + quote(svg)
 
 
 def is_safe_http_url(url: str) -> bool:
@@ -132,7 +186,13 @@ def home():
             item = dict(p)
             raw_poster = (item.get("poster_url") or "").strip()
             raw_trailer = (item.get("trailer_url") or "").strip()
-            item["valid_poster"] = is_safe_http_url(raw_poster)
+            fallback_svg = build_svg_poster(
+                item.get("title", ""),
+                item.get("release_date", ""),
+                item.get("accent", "#f59e0b"),
+            )
+            item["display_poster"] = raw_poster if is_safe_http_url(raw_poster) else fallback_svg
+            item["fallback_poster"] = fallback_svg
             item["valid_trailer"] = is_safe_http_url(raw_trailer)
             prepared.append(item)
         promo_cards = rank_promos(prepared, raw_q)
@@ -269,12 +329,7 @@ MENU_HTML = """
     }
     .poster {
       aspect-ratio: 2 / 3;
-      background: linear-gradient(160deg, #1b2232, #0d1017);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 14px;
-      text-align: center;
+      background: #0d1017;
       overflow: hidden;
     }
     .poster img {
@@ -282,12 +337,6 @@ MENU_HTML = """
       height: 100%;
       object-fit: cover;
       display: block;
-    }
-    .poster-label {
-      color: #94a3b8;
-      font-size: 0.9rem;
-      font-weight: 700;
-      line-height: 1.35;
     }
     .card-body {
       padding: 12px;
@@ -348,12 +397,7 @@ MENU_HTML = """
             <article class="card">
               <span class="badge">YAKINDA VİZYONDA</span>
               <div class="poster">
-                {% if c.valid_poster %}
-                  <img src="{{ c.poster_url }}" alt="{{ c.title }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-                  <span class="poster-label" style="display:none;">{{ c.title }}</span>
-                {% else %}
-                  <span class="poster-label">{{ c.title }}</span>
-                {% endif %}
+                <img src="{{ c.display_poster }}" alt="{{ c.title }}" loading="lazy" onerror="this.onerror=null; this.src='{{ c.fallback_poster }}';" />
               </div>
               <div class="card-body">
                 <div class="title">{{ c.title }}</div>
@@ -375,8 +419,3 @@ MENU_HTML = """
   </main>
 </body>
 </html>
-"""
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
