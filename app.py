@@ -116,8 +116,7 @@ def not_found_redirect(e):
     return redirect("/")
 
 
-HUB_HTML = """
-<!DOCTYPE html>
+HUB_HTML = """<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
@@ -329,3 +328,8 @@ HUB_HTML = """
   </main>
 </body>
 </html>
+"""
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
