@@ -11,26 +11,26 @@ SUPPORT_HANDLE = "@ttlewiss21"
 CATALOG = [
     {
         "id": 1,
-        "title": "Ornek Video 1",
+        "title": "Icerik Karti 1",
         "category": "Filmler",
         "year": "2026",
-        "note": "Dogrudan mp4 linki veya harici oynatici linki ekleyebilecegin ilk kart.",
-        "media_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        "note": "Kendi ekleyecegin baglanti veya not icin hazir kart.",
+        "media_url": "",
     },
     {
         "id": 2,
-        "title": "Ornek Video 2",
+        "title": "Icerik Karti 2",
         "category": "Diziler",
         "year": "2026",
-        "note": "Kendi ekleyecegin dizi veya film baglantisi icin hazir kart.",
-        "media_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+        "note": "Kendi ekleyecegin baglanti veya not icin hazir kart.",
+        "media_url": "",
     },
     {
         "id": 3,
-        "title": "Harici Link Test Kartı",
+        "title": "Icerik Karti 3",
         "category": "Animasyon",
         "year": "2026",
-        "note": "Dis baglanti veya oynatici penceresi test karti.",
+        "note": "Kendi ekleyecegin baglanti veya not icin hazir kart.",
         "media_url": "",
     },
 ]
@@ -195,12 +195,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       background: #0f0f12;
       border: 1px solid #2d2d35;
       border-radius: 10px;
-      padding: 10px;
+      padding: 12px;
     }
     .player-area video,
     .player-area iframe {
       width: 100%;
-      height: 230px;
+      height: 220px;
       border: 0;
       border-radius: 8px;
       background: #000;
@@ -261,7 +261,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <section class="hero">
       <h1 id="welcomeText">Hos Geldin</h1>
-      <p id="subText">Karta tiklayarak oynatici penceresini acabilir veya sag ustteki Destek butonu ile __HANDLE__ hesabina gecebilirsin.</p>
+      <p id="subText">Kartlari inceleyebilir veya sag ustteki Destek butonu ile __HANDLE__ hesabina gecebilirsin.</p>
     </section>
 
     <div class="search-box">
@@ -348,7 +348,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     function buildPlayerHtml(url) {
       if (!url) {
-        return '<p style="font-size:0.84rem;color:#a1a1aa;">Bu kartta henuz baglanti yok. CATALOG icindeki media_url alanina link ekleyebilirsin.</p>';
+        return '<p style="font-size:0.84rem;color:#a1a1aa;">Bu karta henuz baglanti eklenmedi. Hazir oldugunda CATALOG icindeki media_url alanina link ekleyebilirsin.</p>';
       }
       const lower = url.toLowerCase();
       if (lower.indexOf(".mp4") !== -1 || lower.indexOf(".webm") !== -1 || lower.indexOf(".ogg") !== -1) {
@@ -367,7 +367,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (item.media_url) {
         extRow.innerHTML = '<a class="ext-link" href="' + item.media_url + '" target="_blank" rel="noopener noreferrer">Baglantiyi Yeni Sekmede Ac</a>';
       } else {
-        extRow.innerHTML = '<span style="font-size:0.78rem;color:#a1a1aa;">Harici baglanti tanimli degil.</span>';
+        extRow.innerHTML = '<span style="font-size:0.78rem;color:#a1a1aa;">Baglanti bos.</span>';
       }
       document.getElementById("playerModal").classList.add("open");
     }
