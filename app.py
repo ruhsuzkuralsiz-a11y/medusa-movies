@@ -8,13 +8,11 @@ AVATAR_SVG = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 
 GUEST_AVATAR_SVG = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%232563eb'/%3E%3Ccircle cx='50' cy='38' r='16' fill='%23ffffff'/%3E%3Cpath d='M22 84c2-16 14-26 28-26s26 10 28 26' fill='%23ffffff'/%3E%3C/svg%3E"
 
-# İsteğe bağlı destek veya yayın bağlantısı (boş bırakılırsa bilgilendirme uyarısı verir)
 SUPPORT_URL = ""
-
 CATALOG = []
+VERIFIED_USERS = []
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
+HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
@@ -28,10 +26,10 @@ HTML_TEMPLATE = """
       font-family: system-ui, -apple-system, sans-serif;
       min-height: 100vh;
     }
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: block; }
 
-    /* Profil Seçim Ekranı */
-    .profile-screen {
-      min-height: 100vh;
+    .profile-screen.active {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -39,16 +37,21 @@ HTML_TEMPLATE = """
       padding: 24px;
       background: radial-gradient(circle at top, #261010 0%, #141414 65%);
     }
-    .profile-screen.hidden { display: none; }
+    .logo {
+      color: #e50914;
+      font-weight: 900;
+      font-size: 1.25rem;
+      letter-spacing: 1px;
+    }
     .profile-title {
-      font-size: 1.5rem;
+      font-size: 1.45rem;
       font-weight: 700;
-      margin-bottom: 24px;
+      margin: 12px 0 22px;
       text-align: center;
     }
     .profiles {
       display: flex;
-      gap: 20px;
+      gap: 22px;
       flex-wrap: wrap;
       justify-content: center;
     }
@@ -67,18 +70,15 @@ HTML_TEMPLATE = """
       border: 2px solid transparent;
     }
     .profile-card:hover img { border-color: #ffffff; }
-    .profile-name { color: #b3b3b3; font-size: 0.92rem; font-weight: 600; }
+    .profile-name { color: #cccccc; font-size: 0.92rem; font-weight: 600; }
 
-    /* E-Posta Doğrulama Ekranı */
-    .verify-screen {
-      display: none;
-      min-height: 100vh;
+    .verify-screen.active {
+      display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
       background: radial-gradient(circle at top, #221012 0%, #141414 70%);
     }
-    .verify-screen.active { display: flex; }
     .verify-box {
       width: 100%;
       max-width: 420px;
@@ -87,7 +87,7 @@ HTML_TEMPLATE = """
       border-radius: 14px;
       padding: 22px 18px;
     }
-    .verify-box h2 { font-size: 1.2rem; margin-bottom: 6px; }
+    .verify-box h2 { font-size: 1.2rem; margin: 6px 0; }
     .verify-box p { font-size: 0.85rem; color: #b3b3b3; line-height: 1.45; margin-bottom: 14px; }
     .field {
       width: 100%;
@@ -127,7 +127,7 @@ HTML_TEMPLATE = """
       border-radius: 8px;
       background: #232329;
       border: 1px solid #3b3b47;
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       color: #fbbf24;
       display: none;
     }
@@ -137,10 +137,6 @@ HTML_TEMPLATE = """
       color: #f87171;
       min-height: 18px;
     }
-
-    /* Ana Platform Ekranı */
-    .app-screen { display: none; padding-bottom: 40px; }
-    .app-screen.active { display: block; }
 
     header {
       position: sticky;
@@ -153,12 +149,6 @@ HTML_TEMPLATE = """
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-    }
-    .logo {
-      color: #e50914;
-      font-weight: 900;
-      font-size: 1.15rem;
-      letter-spacing: 1px;
     }
     .nav-links {
       display: flex;
@@ -189,7 +179,6 @@ HTML_TEMPLATE = """
       font-size: 0.75rem;
       font-weight: 700;
       cursor: pointer;
-      white-space: nowrap;
     }
     .top-avatar {
       width: 32px;
@@ -198,7 +187,6 @@ HTML_TEMPLATE = """
       object-fit: cover;
       cursor: pointer;
     }
-
     .hero {
       margin: 14px 16px;
       padding: 20px 18px;
@@ -218,10 +206,7 @@ HTML_TEMPLATE = """
     }
     .hero h1 { font-size: 1.3rem; margin-bottom: 8px; }
     .hero p { font-size: 0.86rem; color: #d4d4d8; line-height: 1.45; }
-
-    .search-bar {
-      padding: 0 16px 12px;
-    }
+    .search-bar { padding: 0 16px 12px; }
     .search-bar input {
       width: 100%;
       background: #222222;
@@ -231,13 +216,7 @@ HTML_TEMPLATE = """
       padding: 9px 12px;
       font-size: 0.9rem;
     }
-
-    .section-title {
-      padding: 6px 16px 10px;
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
+    .section-title { padding: 6px 16px 10px; font-size: 1rem; font-weight: 700; }
     .empty-state {
       margin: 10px 16px;
       padding: 22px 16px;
@@ -249,9 +228,8 @@ HTML_TEMPLATE = """
       font-size: 0.88rem;
       line-height: 1.5;
     }
-
     .grid {
-      padding: 0 16px;
+      padding: 0 16px 36px;
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
@@ -276,7 +254,6 @@ HTML_TEMPLATE = """
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .modal {
       display: none;
       position: fixed;
@@ -317,65 +294,58 @@ HTML_TEMPLATE = """
 </head>
 <body>
 
-  <!-- 1. Profil Ekranı -->
-  <div class="profile-screen" id="profileScreen">
-    <div class="logo" style="font-size:1.6rem;margin-bottom:14px;">MEDUSAFILM</div>
+  <div class="screen profile-screen active" id="profileScreen">
+    <div class="logo" style="font-size:1.6rem;">MEDUSAFILM</div>
     <div class="profile-title">Kim izliyor?</div>
     <div class="profiles">
-      <div class="profile-card" onclick="startVerification('Medusa', '{{ avatar_url }}')">
-        <img src="{{ avatar_url }}" alt="Medusa" />
+      <div class="profile-card" data-name="Medusa" data-avatar="__AVATAR__">
+        <img src="__AVATAR__" alt="Medusa" />
         <span class="profile-name">Medusa</span>
       </div>
-      <div class="profile-card" onclick="startVerification('Misafir', '{{ guest_avatar_url }}')">
-        <img src="{{ guest_avatar_url }}" alt="Misafir" />
+      <div class="profile-card" data-name="Misafir" data-avatar="__GUEST_AVATAR__">
+        <img src="__GUEST_AVATAR__" alt="Misafir" />
         <span class="profile-name">Misafir</span>
       </div>
     </div>
   </div>
 
-  <!-- 2. E-Posta Doğrulama Ekranı -->
-  <div class="verify-screen" id="verifyScreen">
+  <div class="screen verify-screen" id="verifyScreen">
     <div class="verify-box">
-      <div class="logo" style="font-size:1.15rem;margin-bottom:8px;">MEDUSAFILM</div>
-      <h2>E-Posta Doğrulama</h2>
-      <p id="verifyDesc">Devam etmek için e-posta adresini gir ve doğrulama kodunu onayla.</p>
-
+      <div class="logo">MEDUSAFILM</div>
+      <h2>E-Posta Dogrulama</h2>
+      <p id="verifyDesc">Devam etmek icin e-posta adresini gir ve kodu onayla.</p>
       <input class="field" id="emailInput" type="email" placeholder="ornek@eposta.com" />
-      <button class="btn-red" id="sendCodeBtn" onclick="requestCode()">Doğrulama Kodu Oluştur</button>
-
+      <button class="btn-red" id="sendCodeBtn" type="button">Dogrulama Kodu Olustur</button>
       <div class="code-hint" id="codeHint"></div>
-
       <div id="codeStep" style="display:none;margin-top:12px;">
-        <input class="field" id="codeInput" type="text" inputmode="numeric" maxlength="6" placeholder="6 haneli doğrulama kodu" />
-        <button class="btn-red" onclick="verifyCode()">Kodu Onayla ve Giriş Yap</button>
+        <input class="field" id="codeInput" type="text" inputmode="numeric" maxlength="6" placeholder="6 haneli kod" />
+        <button class="btn-red" id="verifyCodeBtn" type="button">Kodu Onayla ve Giris Yap</button>
       </div>
-
       <div class="err-msg" id="verifyError"></div>
-      <button class="btn-ghost" onclick="backToProfiles()">Profil Ekranına Dön</button>
+      <button class="btn-ghost" id="backProfilesBtn" type="button">Profil Ekranina Don</button>
     </div>
   </div>
 
-  <!-- 3. Ana Platform -->
-  <div class="app-screen" id="appScreen">
+  <div class="screen app-screen" id="appScreen">
     <header>
       <div class="logo">MEDUSAFILM</div>
       <div class="nav-links" id="categoryTabs">
-        <button class="active" data-cat="">Tümü</button>
-        <button data-cat="Diziler">Diziler</button>
-        <button data-cat="Filmler">Filmler</button>
-        <button data-cat="Animasyon">Animasyon</button>
+        <button class="active" data-cat="" type="button">Tumu</button>
+        <button data-cat="Diziler" type="button">Diziler</button>
+        <button data-cat="Filmler" type="button">Filmler</button>
+        <button data-cat="Animasyon" type="button">Animasyon</button>
       </div>
       <div class="right-box">
-        <button class="support-btn" onclick="openSupport()">Destek</button>
+        <button class="support-btn" id="supportBtn" type="button">Destek</button>
         <span id="activeProfileLabel" style="font-size:0.78rem;color:#ccc;">Medusa</span>
-        <img class="top-avatar" id="topAvatar" src="{{ avatar_url }}" alt="Profil" onclick="showProfiles()" title="Profil Değiştir" />
+        <img class="top-avatar" id="topAvatar" src="__AVATAR__" alt="Profil" />
       </div>
     </header>
 
     <section class="hero">
-      <div class="hero-badge">DOĞRULANMIŞ GİRİŞ</div>
-      <h1 id="welcomeHeading">Hoş Geldin</h1>
-      <p id="verifiedUserInfo">E-posta doğrulaması aktif. Katalog ve oynatıcı altyapısı hazır.</p>
+      <div class="hero-badge">DOGRULANMIS GIRIS</div>
+      <h1 id="welcomeHeading">Hos Geldin</h1>
+      <p id="verifiedUserInfo">E-posta dogrulamasi aktif.</p>
     </section>
 
     <div class="search-bar">
@@ -383,16 +353,13 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="section-title" id="sectionTitle">Katalog</div>
-    <div class="empty-state" id="emptyState">
-      Katalog şu an boş (0 içerik). Doğrulama akışı eklendi; sıradaki adımda istediğin içerikleri ekleyebiliriz.
-    </div>
+    <div class="empty-state" id="emptyState">Katalog su an bos (0 icerik).</div>
     <div class="grid" id="grid"></div>
   </div>
 
-  <!-- Oynatıcı Penceresi -->
   <div class="modal" id="playerModal">
     <div class="modal-box">
-      <button class="close-btn" id="closeModal">Kapat</button>
+      <button class="close-btn" id="closeModal" type="button">Kapat</button>
       <h3 id="modalTitle"></h3>
       <p id="modalMeta" style="font-size:0.8rem;color:#b3b3b3;margin-top:4px;"></p>
       <video id="videoPlayer" controls playsinline></video>
@@ -400,112 +367,125 @@ HTML_TEMPLATE = """
   </div>
 
   <script>
-    const ITEMS = {{ items|tojson }};
-    const SUPPORT_URL = {{ support_url|tojson }};
+    const ITEMS = __ITEMS_JSON__;
+    const SUPPORT_URL = __SUPPORT_JSON__;
+
     let selectedCategory = "";
-    let pendingProfile = { name: "Medusa", avatar: "{{ avatar_url }}" };
+    let pendingProfile = { name: "Medusa", avatar: "__AVATAR__" };
     let generatedCode = "";
 
     const profileScreen = document.getElementById("profileScreen");
     const verifyScreen = document.getElementById("verifyScreen");
     const appScreen = document.getElementById("appScreen");
-    const grid = document.getElementById("grid");
-    const emptyState = document.getElementById("emptyState");
-    const searchInput = document.getElementById("searchInput");
-    const modal = document.getElementById("playerModal");
-    const videoPlayer = document.getElementById("videoPlayer");
 
-    function startVerification(name, avatar) {
-      pendingProfile = { name, avatar };
-      generatedCode = "";
-      document.getElementById("verifyDesc").textContent = `"${name}" profili için e-posta adresini gir ve kodu doğrula.`;
-      document.getElementById("emailInput").value = "";
-      document.getElementById("codeInput").value = "";
-      document.getElementById("codeHint").style.display = "none";
-      document.getElementById("codeStep").style.display = "none";
-      document.getElementById("verifyError").textContent = "";
-      profileScreen.classList.add("hidden");
-      verifyScreen.classList.add("active");
-    }
-
-    function backToProfiles() {
+    function showScreen(target) {
+      profileScreen.classList.remove("active");
       verifyScreen.classList.remove("active");
-      profileScreen.classList.remove("hidden");
+      appScreen.classList.remove("active");
+      target.classList.add("active");
     }
 
-    async function requestCode() {
+    document.querySelectorAll(".profile-card").forEach(function(card) {
+      card.addEventListener("click", function() {
+        pendingProfile = {
+          name: card.getAttribute("data-name") || "Medusa",
+          avatar: card.getAttribute("data-avatar") || ""
+        };
+        generatedCode = "";
+        document.getElementById("verifyDesc").textContent = '"' + pendingProfile.name + '" profili icin e-posta adresini gir.';
+        document.getElementById("emailInput").value = "";
+        document.getElementById("codeInput").value = "";
+        document.getElementById("codeHint").style.display = "none";
+        document.getElementById("codeStep").style.display = "none";
+        document.getElementById("verifyError").textContent = "";
+        showScreen(verifyScreen);
+      });
+    });
+
+    document.getElementById("backProfilesBtn").addEventListener("click", function() {
+      showScreen(profileScreen);
+    });
+
+    document.getElementById("topAvatar").addEventListener("click", function() {
+      showScreen(profileScreen);
+    });
+
+    document.getElementById("sendCodeBtn").addEventListener("click", async function() {
       const email = document.getElementById("emailInput").value.trim();
       const errEl = document.getElementById("verifyError");
       errEl.textContent = "";
 
-      if (!email || !email.includes("@") || !email.includes(".")) {
-        errEl.textContent = "Lütfen geçerli bir e-posta adresi gir.";
+      if (!email || email.indexOf("@") === -1 || email.indexOf(".") === -1) {
+        errEl.textContent = "Gecerli bir e-posta adresi gir.";
         return;
       }
 
-      const res = await fetch("/api/send-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, profile: pendingProfile.name })
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        errEl.textContent = data.error || "Kod oluşturulamadı.";
-        return;
+      try {
+        const res = await fetch("/api/send-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email, profile: pendingProfile.name })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          errEl.textContent = data.error || "Kod olusturulamadi.";
+          return;
+        }
+        generatedCode = String(data.code);
+        const hint = document.getElementById("codeHint");
+        hint.innerHTML = "Dogrulama Kodu: <strong>" + generatedCode + "</strong>";
+        hint.style.display = "block";
+        document.getElementById("codeStep").style.display = "block";
+      } catch (e) {
+        errEl.textContent = "Baglanti hatasi olustu.";
       }
+    });
 
-      generatedCode = data.code;
-      const hint = document.getElementById("codeHint");
-      hint.innerHTML = `Doğrulama kodu oluşturuldu: <strong>${generatedCode}</strong><br><span style="color:#d4d4d8;">(Harici e-posta sunucusu bağlı olmadığından kod test/ekran modunda gösteriliyor.)</span>`;
-      hint.style.display = "block";
-      document.getElementById("codeStep").style.display = "block";
-    }
-
-    async function verifyCode() {
+    document.getElementById("verifyCodeBtn").addEventListener("click", async function() {
       const email = document.getElementById("emailInput").value.trim();
       const code = document.getElementById("codeInput").value.trim();
       const errEl = document.getElementById("verifyError");
       errEl.textContent = "";
 
       if (!code || code !== generatedCode) {
-        errEl.textContent = "Doğrulama kodu eşleşmedi.";
+        errEl.textContent = "Dogrulama kodu eslesmedi.";
         return;
       }
 
-      await fetch("/api/verify-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, profile: pendingProfile.name })
-      });
+      try {
+        await fetch("/api/verify-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email, profile: pendingProfile.name })
+        });
+      } catch (e) {}
 
       document.getElementById("activeProfileLabel").textContent = pendingProfile.name;
-      document.getElementById("topAvatar").src = pendingProfile.avatar;
-      document.getElementById("welcomeHeading").textContent = `Hoş Geldin, ${pendingProfile.name}`;
-      document.getElementById("verifiedUserInfo").textContent = `Doğrulanan e-posta: ${email}`;
-
-      verifyScreen.classList.remove("active");
-      appScreen.classList.add("active");
+      if (pendingProfile.avatar) {
+        document.getElementById("topAvatar").src = pendingProfile.avatar;
+      }
+      document.getElementById("welcomeHeading").textContent = "Hos Geldin, " + pendingProfile.name;
+      document.getElementById("verifiedUserInfo").textContent = "Dogrulanan e-posta: " + email;
+      showScreen(appScreen);
       renderItems();
-    }
+    });
 
-    function showProfiles() {
-      appScreen.classList.remove("active");
-      profileScreen.classList.remove("hidden");
-    }
-
-    function openSupport() {
+    document.getElementById("supportBtn").addEventListener("click", function() {
       if (SUPPORT_URL) {
         window.open(SUPPORT_URL, "_blank", "noopener,noreferrer");
       } else {
-        alert("Destek bağlantısı henüz ayarlanmamış. SUPPORT_URL alanına kendi bağlantını ekleyebilirsin.");
+        alert("Destek baglantisi henuz eklenmedi.");
       }
-    }
+    });
 
     function renderItems() {
-      const q = searchInput.value.trim().toLowerCase();
-      const filtered = ITEMS.filter(item => {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const grid = document.getElementById("grid");
+      const emptyState = document.getElementById("emptyState");
+
+      const filtered = ITEMS.filter(function(item) {
         const matchCat = !selectedCategory || item.category === selectedCategory;
-        const matchQ = !q || (item.title || "").toLowerCase().includes(q);
+        const matchQ = !q || (item.title || "").toLowerCase().indexOf(q) !== -1;
         return matchCat && matchQ;
       });
 
@@ -516,58 +496,49 @@ HTML_TEMPLATE = """
       }
 
       emptyState.style.display = "none";
-      grid.innerHTML = filtered.map(item => `
-        <div class="card" onclick="openPlayer(${item.id})">
-          <img src="${item.poster}" alt="${item.title}" />
-          <div class="card-title">${item.title}</div>
-        </div>
-      `).join("");
+      grid.innerHTML = filtered.map(function(item) {
+        return '<div class="card" data-id="' + item.id + '">' +
+          '<img src="' + item.poster + '" alt="' + item.title + '" />' +
+          '<div class="card-title">' + item.title + '</div>' +
+          '</div>';
+      }).join("");
     }
 
-    function openPlayer(id) {
-      const item = ITEMS.find(x => x.id === id);
-      if (!item) return;
-      document.getElementById("modalTitle").textContent = item.title;
-      document.getElementById("modalMeta").textContent = item.category || "";
-      videoPlayer.src = item.video_url || "";
-      modal.classList.add("open");
-      if (item.video_url) videoPlayer.play().catch(() => {});
-    }
+    document.getElementById("searchInput").addEventListener("input", renderItems);
 
-    document.getElementById("closeModal").onclick = () => {
-      videoPlayer.pause();
-      videoPlayer.removeAttribute("src");
-      modal.classList.remove("open");
-    };
-
-    searchInput.addEventListener("input", renderItems);
-
-    document.querySelectorAll("#categoryTabs button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll("#categoryTabs button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll("#categoryTabs button").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        document.querySelectorAll("#categoryTabs button").forEach(function(b) { b.classList.remove("active"); });
         btn.classList.add("active");
-        selectedCategory = btn.dataset.cat;
+        selectedCategory = btn.getAttribute("data-cat") || "";
         document.getElementById("sectionTitle").textContent = selectedCategory || "Katalog";
         renderItems();
       });
     });
+
+    document.getElementById("closeModal").addEventListener("click", function() {
+      const vp = document.getElementById("videoPlayer");
+      vp.pause();
+      vp.removeAttribute("src");
+      document.getElementById("playerModal").classList.remove("open");
+    });
   </script>
 </body>
-</html>
-"""
+</html>"""
 
-VERIFIED_USERS = []
+
+def render_app():
+    import json
+    page = HTML_TEMPLATE.replace("__AVATAR__", AVATAR_SVG)
+    page = page.replace("__GUEST_AVATAR__", GUEST_AVATAR_SVG)
+    page = page.replace("__ITEMS_JSON__", json.dumps(CATALOG))
+    page = page.replace("__SUPPORT_JSON__", json.dumps(SUPPORT_URL))
+    return page
 
 
 @app.route("/")
 def index():
-    return render_template_string(
-        HTML_TEMPLATE,
-        items=CATALOG,
-        avatar_url=AVATAR_SVG,
-        guest_avatar_url=GUEST_AVATAR_SVG,
-        support_url=SUPPORT_URL,
-    )
+    return render_app()
 
 
 @app.route("/api/send-code", methods=["POST"])
@@ -575,7 +546,7 @@ def api_send_code():
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
     if "@" not in email or "." not in email:
-        return jsonify({"ok": False, "error": "Geçersiz e-posta adresi."}), 400
+        return jsonify({"ok": False, "error": "Gecersiz e-posta adresi."}), 400
     code = f"{random.randint(100000, 999999)}"
     return jsonify({"ok": True, "code": code})
 
@@ -585,7 +556,7 @@ def api_verify_code():
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
     profile = (data.get("profile") or "Medusa").strip()
-    if email and email not in VERIFIED_USERS:
+    if email and not any(u["email"] == email for u in VERIFIED_USERS):
         VERIFIED_USERS.append({"email": email, "profile": profile})
     return jsonify({"ok": True, "verified_count": len(VERIFIED_USERS)})
 
