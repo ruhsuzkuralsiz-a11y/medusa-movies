@@ -1,216 +1,344 @@
 import os
+import sqlite3
+from datetime import datetime, timezone
 import requests
-from flask import Flask, render_template_string, request, jsonify
+from flask import (
+    Flask,
+    render_template_string,
+    request,
+    redirect,
+    url_for,
+    jsonify,
+    session,
+)
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "medusafilm-gizli-anahtar-degistir")
 
-# Kendi TMDB API anahtarını buraya ya da ortam değişkenine (TMDB_API_KEY) gir
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "BURAYA_TMDB_API_KEY_YAZ")
-TMDB_BASE = "https://api.themoviedb.org/3"
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "medusa123")
+CRON_TOKEN = os.environ.get("CRON_TOKEN", "medusa-cron-gizli-token")
+DEFAULT_MIN_DATE = os.environ.get("MIN_RELEASE_DATE", "2020-01-01")
+
+DB_PATH = os.environ.get("DB_PATH", "movies.db")
+TMDB_DISCOVER_URL = "https://api.themoviedb.org/3/discover/movie"
 IMG_BASE = "https://image.tmdb.org/t/p/w500"
 
-# İsteğe bağlı özel kartlar
-CUSTOM_ITEMS = []
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
-def fetch_tmdb_movies(endpoint: str, page: int = 1):
+def init_db():
+    with get_db() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS movies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tmdb_id INTEGER UNIQUE NOT NULL,
+                title TEXT NOT NULL,
+                poster_url TEXT,
+                overview TEXT,
+                rating REAL DEFAULT 0,
+                release_date TEXT,
+                status TEXT NOT NULL DEFAULT 'pending',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO settings (key, value)
+            VALUES ('min_release_date', ?)
+            """,
+            (DEFAULT_MIN_DATE,),
+        )
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO settings (key, value)
+            VALUES ('last_auto_fetch', '')
+            """
+        )
+        conn.commit()
+
+
+def get_setting(key: str, default: str = "") -> str:
+    with get_db() as conn:
+        row = conn.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+        return row["value"] if row else default
+
+
+def set_setting(key: str, value: str):
+    with get_db() as conn:
+        conn.execute(
+            """
+            INSERT INTO settings (key, value) VALUES (?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            """,
+            (key, value),
+        )
+        conn.commit()
+
+
+def fetch_from_tmdb(min_date: str | None = None, pages: int = 2) -> dict:
     if not TMDB_API_KEY or TMDB_API_KEY == "BURAYA_TMDB_API_KEY_YAZ":
-        return []
+        return {"ok": False, "error": "TMDB_API_KEY ayarlanmamış.", "added": 0, "skipped": 0}
+
+    date_filter = (min_date or get_setting("min_release_date", DEFAULT_MIN_DATE)).strip()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    added = 0
+    skipped = 0
+
     try:
-        resp = requests.get(
-            f"{TMDB_BASE}/{endpoint}",
-            params={
-                "api_key": TMDB_API_KEY,
-                "language": "tr-TR",
-                "page": page,
-            },
-            timeout=10,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        movies = []
-        for item in data.get("results", []):
-            poster_path = item.get("poster_path")
-            movies.append({
-                "id": f"tmdb-{item.get('id')}",
-                "tmdb_id": item.get("id"),
-                "title": item.get("title") or item.get("name") or "İsimsiz Film",
-                "year": (item.get("release_date") or "")[:4] or "—",
-                "rating": round(float(item.get("vote_average") or 0), 1),
-                "overview": item.get("overview") or "Bu film için henüz Türkçe özet eklenmemiş.",
-                "poster": f"{IMG_BASE}{poster_path}" if poster_path else "",
-                "category": "Vizyonda" if "now_playing" in endpoint else "Filmler",
-                "source": "tmdb",
-                "embed_url": None,
-                "external_url": None,
-            })
-        return movies
-    except Exception:
-        return []
+        with get_db() as conn:
+            for page in range(1, pages + 1):
+                resp = requests.get(
+                    TMDB_DISCOVER_URL,
+                    params={
+                        "api_key": TMDB_API_KEY,
+                        "language": "tr-TR",
+                        "primary_release_date.gte": date_filter,
+                        "sort_by": "popularity.desc",
+                        "page": page,
+                    },
+                    timeout=12,
+                )
+                resp.raise_for_status()
+                results = resp.json().get("results", [])
+                if not results:
+                    break
+
+                for item in results:
+                    tmdb_id = item.get("id")
+                    if not tmdb_id:
+                        continue
+
+                    exists = conn.execute(
+                        "SELECT id FROM movies WHERE tmdb_id = ?", (tmdb_id,)
+                    ).fetchone()
+                    if exists:
+                        skipped += 1
+                        continue
+
+                    title = item.get("title") or item.get("original_title") or "İsimsiz Film"
+                    poster_path = item.get("poster_path")
+                    poster_url = f"{IMG_BASE}{poster_path}" if poster_path else ""
+                    overview = item.get("overview") or "Özet bilgisi bulunmuyor."
+                    rating = round(float(item.get("vote_average") or 0), 1)
+                    release_date = item.get("release_date") or "—"
+
+                    conn.execute(
+                        """
+                        INSERT INTO movies (
+                            tmdb_id, title, poster_url, overview, rating, release_date,
+                            status, created_at, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+                        """,
+                        (
+                            tmdb_id,
+                            title,
+                            poster_url,
+                            overview,
+                            rating,
+                            release_date,
+                            now_iso,
+                            now_iso,
+                        ),
+                    )
+                    added += 1
+
+            conn.commit()
+
+        set_setting("last_auto_fetch", now_iso)
+        return {"ok": True, "added": added, "skipped": skipped, "min_date": date_filter}
+    except Exception as exc:
+        return {"ok": False, "error": str(exc), "added": added, "skipped": skipped}
 
 
-def fetch_archive_movies(query: str = "", rows: int = 24):
-    # Internet Archive üzerinde kamu malı / açık arşiv video kayıtları
-    q_parts = [
-        'mediatype:(movies)',
-        '(collection:(feature_films) OR collection:(opensource_movies) OR collection:(classic_tv) OR subject:("public domain"))',
-    ]
-    if query:
-        safe_q = query.replace('"', "").strip()
-        if safe_q:
-            q_parts.append(f'({safe_q})')
-
-    search_query = " AND ".join(q_parts)
+def maybe_run_daily_fetch():
+    last_fetch_str = get_setting("last_auto_fetch", "")
+    now = datetime.now(timezone.utc)
+    if not last_fetch_str:
+        fetch_from_tmdb(pages=2)
+        return
     try:
-        resp = requests.get(
-            "https://archive.org/advancedsearch.php",
-            params={
-                "q": search_query,
-                "fl[]": ["identifier", "title", "year", "description"],
-                "sort[]": "downloads desc",
-                "rows": rows,
-                "page": 1,
-                "output": "json",
-            },
-            timeout=12,
-        )
-        resp.raise_for_status()
-        docs = resp.json().get("response", {}).get("docs", [])
-        items = []
-        for doc in docs:
-            ident = doc.get("identifier")
-            if not ident:
-                continue
-            desc = doc.get("description")
-            if isinstance(desc, list):
-                desc_text = " ".join(str(x) for x in desc if x)
-            else:
-                desc_text = str(desc or "")
-            clean_desc = " ".join(desc_text.split())
-            if not clean_desc:
-                clean_desc = "Internet Archive açık arşiv kaydı."
-            elif len(clean_desc) > 280:
-                clean_desc = clean_desc[:277] + "..."
-
-            year_val = doc.get("year")
-            if isinstance(year_val, list):
-                year_str = str(year_val[0])[:4] if year_val else "—"
-            else:
-                year_str = str(year_val)[:4] if year_val else "—"
-
-            items.append({
-                "id": f"ia-{ident}",
-                "tmdb_id": None,
-                "title": str(doc.get("title") or ident),
-                "year": year_str or "—",
-                "rating": "Arşiv",
-                "overview": clean_desc,
-                "poster": f"https://archive.org/services/img/{ident}",
-                "category": "Açık Arşiv",
-                "source": "archive",
-                "embed_url": f"https://archive.org/embed/{ident}",
-                "external_url": f"https://archive.org/details/{ident}",
-            })
-        return items
+        last_fetch = datetime.fromisoformat(last_fetch_str)
+        if last_fetch.tzinfo is None:
+            last_fetch = last_fetch.replace(tzinfo=timezone.utc)
+        elapsed_seconds = (now - last_fetch).total_seconds()
+        if elapsed_seconds >= 86400:  # 24 saat geçtiyse
+            fetch_from_tmdb(pages=2)
     except Exception:
-        return []
+        fetch_from_tmdb(pages=2)
+
+
+def is_admin() -> bool:
+    return session.get("admin_logged_in") is True
+
+
+init_db()
+
+
+@app.before_request
+def before_any_request():
+    if request.endpoint not in ("static",):
+        maybe_run_daily_fetch()
 
 
 @app.route("/")
-def index():
-    return render_template_string(HTML_TEMPLATE)
+def home():
+    q = request.args.get("q", "").strip().lower()
+    with get_db() as conn:
+        if q:
+            rows = conn.execute(
+                """
+                SELECT * FROM movies
+                WHERE status = 'approved'
+                  AND (LOWER(title) LIKE ? OR LOWER(overview) LIKE ?)
+                ORDER BY release_date DESC, id DESC
+                """,
+                (f"%{q}%", f"%{q}%"),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT * FROM movies
+                WHERE status = 'approved'
+                ORDER BY release_date DESC, id DESC
+                """
+            ).fetchall()
+
+    return render_template_string(
+        PUBLIC_HTML,
+        movies=[dict(r) for r in rows],
+        query=request.args.get("q", ""),
+    )
 
 
-@app.route("/api/movies")
-def api_movies():
-    category = request.args.get("category", "Tümü")
-    query = request.args.get("q", "").strip()
-    q_lower = query.lower()
+@app.route("/admin", methods=["GET", "POST"])
+def admin_panel():
+    message = None
+    error = None
 
-    combined = []
+    if request.method == "POST":
+        action = request.form.get("action")
 
-    if category in ("Tümü", "Vizyonda", "Filmler"):
-        now_playing = fetch_tmdb_movies("movie/now_playing", page=1)
-        popular = fetch_tmdb_movies("movie/popular", page=1)
-        seen_ids = set()
+        if action == "login":
+            password = request.form.get("password", "")
+            if password == ADMIN_PASSWORD:
+                session["admin_logged_in"] = True
+                return redirect(url_for("admin_panel"))
+            error = "Hatalı şifre."
 
-        for m in now_playing:
-            if m["id"] not in seen_ids:
-                seen_ids.add(m["id"])
-                combined.append(m)
+        elif action == "logout":
+            session.pop("admin_logged_in", None)
+            return redirect(url_for("admin_panel"))
 
-        for m in popular:
-            if m["id"] not in seen_ids:
-                seen_ids.add(m["id"])
-                combined.append(m)
+        elif is_admin():
+            now_iso = datetime.now(timezone.utc).isoformat()
 
-    if category in ("Tümü", "Açık Arşiv"):
-        archive_rows = 12 if category == "Tümü" else 28
-        archive_list = fetch_archive_movies(query=query, rows=archive_rows)
-        combined.extend(archive_list)
+            if action == "save_date":
+                new_date = request.form.get("min_release_date", "").strip()
+                if new_date:
+                    set_setting("min_release_date", new_date)
+                    message = f"Başlangıç tarihi {new_date} olarak güncellendi."
 
-    for item in CUSTOM_ITEMS:
-        combined.append(item)
+            elif action == "fetch_now":
+                new_date = request.form.get("min_release_date", "").strip()
+                if new_date:
+                    set_setting("min_release_date", new_date)
+                res = fetch_from_tmdb(min_date=new_date or None, pages=2)
+                if res["ok"]:
+                    message = (
+                        f"TMDB çekimi tamamlandı ({res['min_date']} sonrası). "
+                        f"Yeni eklenen: {res['added']}, Zaten kayıtlı: {res['skipped']}"
+                    )
+                else:
+                    error = f"Çekim hatası: {res.get('error')}"
 
-    if category == "Vizyonda":
-        filtered = [m for m in combined if m["category"] == "Vizyonda"]
-    elif category == "Filmler":
-        filtered = [m for m in combined if m["category"] == "Filmler"]
-    elif category == "Açık Arşiv":
-        filtered = [m for m in combined if m["category"] == "Açık Arşiv"]
-    else:
-        filtered = combined
+            elif action == "approve_one":
+                movie_id = request.form.get("movie_id")
+                with get_db() as conn:
+                    conn.execute(
+                        "UPDATE movies SET status = 'approved', updated_at = ? WHERE id = ?",
+                        (now_iso, movie_id),
+                    )
+                    conn.commit()
+                message = "Film onaylandı ve yayına alındı."
 
-    if q_lower:
-        filtered = [
-            m for m in filtered
-            if q_lower in str(m["title"]).lower() or q_lower in str(m["overview"]).lower()
-        ]
+            elif action == "reject_one":
+                movie_id = request.form.get("movie_id")
+                with get_db() as conn:
+                    conn.execute(
+                        "UPDATE movies SET status = 'rejected', updated_at = ? WHERE id = ?",
+                        (now_iso, movie_id),
+                    )
+                    conn.commit()
+                message = "Film reddedildi."
 
-    return jsonify({
-        "movies": filtered,
-        "has_api_key": bool(TMDB_API_KEY and TMDB_API_KEY != "BURAYA_TMDB_API_KEY_YAZ"),
-    })
+            elif action == "approve_all":
+                with get_db() as conn:
+                    cur = conn.execute(
+                        "UPDATE movies SET status = 'approved', updated_at = ? WHERE status = 'pending'",
+                        (now_iso,),
+                    )
+                    conn.commit()
+                message = f"{cur.rowcount} bekleyen film toplu olarak onaylandı."
+
+    if not is_admin():
+        return render_template_string(ADMIN_LOGIN_HTML, error=error)
+
+    with get_db() as conn:
+        pending_rows = conn.execute(
+            "SELECT * FROM movies WHERE status = 'pending' ORDER BY release_date DESC, id DESC"
+        ).fetchall()
+        approved_count = conn.execute(
+            "SELECT COUNT(*) AS c FROM movies WHERE status = 'approved'"
+        ).fetchone()["c"]
+        rejected_count = conn.execute(
+            "SELECT COUNT(*) AS c FROM movies WHERE status = 'rejected'"
+        ).fetchone()["c"]
+
+    return render_template_string(
+        ADMIN_PANEL_HTML,
+        pending_movies=[dict(r) for r in pending_rows],
+        min_release_date=get_setting("min_release_date", DEFAULT_MIN_DATE),
+        last_auto_fetch=get_setting("last_auto_fetch", "Henüz çalışmadı"),
+        approved_count=approved_count,
+        rejected_count=rejected_count,
+        message=message,
+        error=error,
+    )
 
 
-@app.route("/api/movie/<int:tmdb_id>/trailer")
-def api_movie_trailer(tmdb_id: int):
-    if not TMDB_API_KEY or TMDB_API_KEY == "BURAYA_TMDB_API_KEY_YAZ":
-        return jsonify({"youtube_url": None, "embed_url": None})
-    try:
-        resp = requests.get(
-            f"{TMDB_BASE}/movie/{tmdb_id}/videos",
-            params={"api_key": TMDB_API_KEY, "language": "tr-TR"},
-            timeout=10,
-        )
-        videos = resp.json().get("results", [])
-
-        if not videos:
-            resp_en = requests.get(
-                f"{TMDB_BASE}/movie/{tmdb_id}/videos",
-                params={"api_key": TMDB_API_KEY, "language": "en-US"},
-                timeout=10,
-            )
-            videos = resp_en.json().get("results", [])
-
-        for v in videos:
-            if v.get("site") == "YouTube" and v.get("key"):
-                return jsonify({
-                    "youtube_url": f"https://www.youtube.com/watch?v={v['key']}",
-                    "embed_url": f"https://www.youtube.com/embed/{v['key']}",
-                })
-    except Exception:
-        pass
-    return jsonify({"youtube_url": None, "embed_url": None})
+@app.route("/cron/fetch")
+def cron_fetch():
+    token = request.args.get("token", "")
+    if token != CRON_TOKEN:
+        return jsonify({"ok": False, "error": "Yetkisiz token"}), 403
+    res = fetch_from_tmdb(pages=2)
+    status_code = 200 if res.get("ok") else 500
+    return jsonify(res), status_code
 
 
-HTML_TEMPLATE = """
+PUBLIC_HTML = """
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MEDUSAFILM</title>
+  <title>MEDUSAFILM — Filmler</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -218,82 +346,75 @@ HTML_TEMPLATE = """
       color: #f3f4f6;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
     header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      background: rgba(13, 15, 20, 0.92);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid #1f2430;
-      padding: 12px 16px;
+      background: #121620;
+      border-bottom: 1px solid #222938;
+      padding: 14px 18px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 12px;
     }
     .brand {
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: 800;
       letter-spacing: 1px;
-      background: linear-gradient(90deg, #f59e0b, #ef4444);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #f59e0b;
+      text-decoration: none;
     }
-    .tabs {
+    .nav-links {
       display: flex;
-      gap: 8px;
-      overflow-x: auto;
+      align-items: center;
+      gap: 10px;
     }
-    .tab-btn {
-      background: #181c26;
-      color: #cbd5e1;
-      border: 1px solid #262c3a;
-      padding: 7px 14px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      white-space: nowrap;
-    }
-    .tab-btn.active {
-      background: #f59e0b;
-      color: #111827;
-      border-color: #f59e0b;
-      font-weight: 700;
-    }
-    .support-btn {
-      background: #22c55e;
-      color: #08130b;
+    .nav-btn {
       text-decoration: none;
       padding: 7px 14px;
-      border-radius: 999px;
-      font-weight: 700;
+      border-radius: 8px;
       font-size: 0.9rem;
+      font-weight: 600;
+      background: #1d2332;
+      color: #e5e7eb;
+      border: 1px solid #2c354b;
+    }
+    .nav-btn.support {
+      background: #22c55e;
+      color: #07130a;
+      border: none;
     }
     .container {
       max-width: 1200px;
-      margin: 0 auto;
-      padding: 18px 16px 40px;
-    }
-    .search-box {
       width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid #262c3a;
-      background: #151922;
-      color: #f9fafb;
-      font-size: 1rem;
-      margin-bottom: 18px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      flex: 1;
     }
-    .notice {
-      background: #1c1917;
-      border: 1px solid #78350f;
-      color: #fde68a;
-      padding: 12px 14px;
+    .search-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .search-input {
+      flex: 1;
+      padding: 11px 14px;
       border-radius: 10px;
-      margin-bottom: 16px;
-      font-size: 0.92rem;
+      border: 1px solid #283042;
+      background: #151a24;
+      color: #fff;
+      font-size: 1rem;
+    }
+    .search-btn {
+      padding: 11px 18px;
+      border-radius: 10px;
+      border: none;
+      background: #f59e0b;
+      color: #111827;
+      font-weight: 700;
+      cursor: pointer;
     }
     .grid {
       display: grid;
@@ -307,301 +428,264 @@ HTML_TEMPLATE = """
       }
     }
     .card {
-      background: #151922;
-      border: 1px solid #222836;
+      background: #151a24;
+      border: 1px solid #232b3c;
       border-radius: 12px;
       overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease;
       display: flex;
       flex-direction: column;
     }
-    .card:hover {
-      transform: translateY(-3px);
-      border-color: #f59e0b;
-    }
-    .poster-wrap {
-      position: relative;
+    .poster {
       aspect-ratio: 2 / 3;
-      background: #0f1218;
+      background: #0d1017;
     }
-    .poster-wrap img {
+    .poster img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
-    .badge {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      background: rgba(245, 158, 11, 0.92);
-      color: #111827;
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
-    }
-    .badge.archive {
-      background: rgba(34, 197, 94, 0.92);
-      color: #07140b;
-    }
     .card-body {
-      padding: 10px 12px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
+      flex: 1;
     }
-    .card-title {
-      font-size: 0.95rem;
+    .title {
+      font-size: 1rem;
       font-weight: 700;
-      line-height: 1.3;
     }
-    .card-meta {
+    .meta {
       display: flex;
       justify-content: space-between;
       font-size: 0.82rem;
       color: #9ca3af;
     }
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.78);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 50;
-    }
-    .modal-backdrop.open {
-      display: flex;
-    }
-    .modal {
-      background: #151922;
-      border: 1px solid #2c3446;
-      border-radius: 14px;
-      max-width: 720px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      padding: 18px;
-    }
-    .modal-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .close-btn {
-      background: #242a38;
-      color: #f3f4f6;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-size: 0.95rem;
-    }
-    .video-box {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #0b0d12;
-      border-radius: 10px;
+    .overview {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #9ca3af;
+    }
+    footer {
+      border-top: 1px solid #222938;
+      background: #121620;
+      padding: 16px;
       text-align: center;
-      padding: 12px;
-    }
-    .video-box iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    .modal-overview {
-      color: #d1d5db;
-      line-height: 1.55;
-      font-size: 0.95rem;
-      margin-bottom: 14px;
-    }
-    .modal-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .btn-link {
-      background: #f59e0b;
-      color: #111827;
-      text-decoration: none;
-      padding: 9px 14px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      color: #9ca3af;
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="brand">MEDUSAFILM</div>
-    <div class="tabs">
-      <button class="tab-btn active" data-cat="Tümü">Tümü</button>
-      <button class="tab-btn" data-cat="Vizyonda">Vizyonda</button>
-      <button class="tab-btn" data-cat="Filmler">Filmler</button>
-      <button class="tab-btn" data-cat="Açık Arşiv">Açık Arşiv</button>
+    <a class="brand" href="/">MEDUSAFILM</a>
+    <div class="nav-links">
+      <a class="nav-btn" href="/admin">Yönetim Paneli</a>
+      <a class="nav-btn support" href="https://www.instagram.com/ttlewiss21/" target="_blank" rel="noopener">Destek</a>
     </div>
-    <a class="support-btn" href="https://www.instagram.com/ttlewiss21/" target="_blank" rel="noopener">Destek</a>
   </header>
 
   <main class="container">
-    <input id="searchInput" class="search-box" type="text" placeholder="Film adı veya açıklama ara..." />
-    <div id="apiNotice" class="notice" style="display:none;">
-      TMDB API anahtarı girilmediği için Vizyonda/Filmler listesi boş gelebilir; <b>Açık Arşiv</b> sekmesindeki filmleri yine de görebilirsin.
-    </div>
-    <div id="movieGrid" class="grid"></div>
+    <form class="search-form" method="get" action="/">
+      <input
+        class="search-input"
+        type="text"
+        name="q"
+        value="{{ query }}"
+        placeholder="Onaylanmış filmlerde ara..."
+      />
+      <button class="search-btn" type="submit">Ara</button>
+    </form>
+
+    {% if movies %}
+      <div class="grid">
+        {% for m in movies %}
+          <article class="card">
+            <div class="poster">
+              {% if m.poster_url %}
+                <img src="{{ m.poster_url }}" alt="{{ m.title }}" loading="lazy" />
+              {% endif %}
+            </div>
+            <div class="card-body">
+              <div class="title">{{ m.title }}</div>
+              <div class="meta">
+                <span>{{ m.release_date }}</span>
+                <span>★ {{ m.rating }}</span>
+              </div>
+              <p class="overview">{{ m.overview }}</p>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:#9ca3af;">Henüz onaylanmış film bulunmuyor. Yönetim panelinden yeni filmleri çekip onaylayabilirsin.</p>
+    {% endif %}
   </main>
 
-  <div id="movieModal" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-top">
-        <h2 id="modalTitle">Film Başlığı</h2>
-        <button id="closeModal" class="close-btn">Kapat</button>
-      </div>
-      <div id="modalMeta" style="color:#9ca3af; font-size:0.88rem; margin-bottom:12px;"></div>
-      <div id="videoBox" class="video-box">Oynatıcı hazırlanıyor...</div>
-      <p id="modalOverview" class="modal-overview"></p>
-      <div class="modal-actions">
-        <a id="extLink" class="btn-link" href="#" target="_blank" rel="noopener" style="display:none;">Kaynakta Aç</a>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    let currentCategory = "Tümü";
-    let searchTimer = null;
-
-    const grid = document.getElementById("movieGrid");
-    const searchInput = document.getElementById("searchInput");
-    const apiNotice = document.getElementById("apiNotice");
-    const modal = document.getElementById("movieModal");
-    const closeModal = document.getElementById("closeModal");
-    const videoBox = document.getElementById("videoBox");
-    const extLink = document.getElementById("extLink");
-
-    async function loadMovies() {
-      const q = encodeURIComponent(searchInput.value.trim());
-      const cat = encodeURIComponent(currentCategory);
-      grid.innerHTML = "<p style='color:#9ca3af;'>Yükleniyor...</p>";
-
-      const res = await fetch(`/api/movies?category=${cat}&q=${q}`);
-      const data = await res.json();
-
-      apiNotice.style.display = (!data.has_api_key && currentCategory !== "Açık Arşiv") ? "block" : "none";
-
-      if (!data.movies || data.movies.length === 0) {
-        grid.innerHTML = "<p style='color:#9ca3af;'>Gösterilecek film bulunamadı.</p>";
-        return;
-      }
-
-      grid.innerHTML = "";
-      data.movies.forEach((m) => {
-        const card = document.createElement("div");
-        card.className = "card";
-        let badgeHtml = "";
-        if (m.category === "Vizyonda") {
-          badgeHtml = `<span class="badge">VİZYONDA</span>`;
-        } else if (m.category === "Açık Arşiv") {
-          badgeHtml = `<span class="badge archive">AÇIK ARŞİV</span>`;
-        }
-
-        const ratingText = typeof m.rating === "number" ? `★ ${m.rating}` : m.rating;
-
-        card.innerHTML = `
-          <div class="poster-wrap">
-            ${m.poster ? `<img src="${m.poster}" alt="${m.title}" loading="lazy" onerror="this.style.display='none'" />` : ""}
-            ${badgeHtml}
-          </div>
-          <div class="card-body">
-            <div class="card-title">${m.title}</div>
-            <div class="card-meta">
-              <span>${m.year}</span>
-              <span>${ratingText}</span>
-            </div>
-          </div>
-        `;
-        card.addEventListener("click", () => openMovieModal(m));
-        grid.appendChild(card);
-      });
-    }
-
-    async function openMovieModal(movie) {
-      document.getElementById("modalTitle").textContent = movie.title;
-      const ratingText = typeof movie.rating === "number" ? `★ ${movie.rating}` : movie.rating;
-      document.getElementById("modalMeta").textContent = `Yıl: ${movie.year}  •  ${ratingText}  •  ${movie.category}`;
-      document.getElementById("modalOverview").textContent = movie.overview;
-      videoBox.innerHTML = "Oynatıcı yükleniyor...";
-      extLink.style.display = "none";
-      modal.classList.add("open");
-
-      if (movie.source === "archive" && movie.embed_url) {
-        videoBox.innerHTML = `<iframe src="${movie.embed_url}" allowfullscreen></iframe>`;
-        if (movie.external_url) {
-          extLink.href = movie.external_url;
-          extLink.textContent = "Archive.org Sayfasında Aç";
-          extLink.style.display = "inline-block";
-        }
-      } else if (movie.source === "tmdb" && movie.tmdb_id) {
-        const res = await fetch(`/api/movie/${movie.tmdb_id}/trailer`);
-        const tData = await res.json();
-        if (tData.embed_url) {
-          videoBox.innerHTML = `<iframe src="${tData.embed_url}" allowfullscreen></iframe>`;
-        } else {
-          videoBox.innerHTML = "Bu film için gömülü fragman bulunamadı.";
-        }
-        if (tData.youtube_url) {
-          extLink.href = tData.youtube_url;
-          extLink.textContent = "YouTube'da Aç";
-          extLink.style.display = "inline-block";
-        }
-      } else {
-        videoBox.innerHTML = "Özel kart içeriği.";
-      }
-    }
-
-    document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentCategory = btn.dataset.cat;
-        loadMovies();
-      });
-    });
-
-    searchInput.addEventListener("input", () => {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(loadMovies, 350);
-    });
-
-    closeModal.addEventListener("click", () => {
-      modal.classList.remove("open");
-      videoBox.innerHTML = "";
-    });
-
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) {
-        modal.classList.remove("open");
-        videoBox.innerHTML = "";
-      }
-    });
-
-    loadMovies();
-  </script>
+  <footer>
+    Bu ürün TMDB API kullanır ancak TMDB tarafından onaylanmamış veya sertifikalandırılmamıştır.
+  </footer>
 </body>
 </html>
 """
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+ADMIN_LOGIN_HTML = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yönetim Girişi — MEDUSAFILM</title>
+  <style>
+    body {
+      background: #0d0f14;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .box {
+      background: #151a24;
+      border: 1px solid #262f42;
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+    }
+    h1 { font-size: 1.25rem; margin-bottom: 14px; color: #f59e0b; }
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 8px;
+      border: 1px solid #2d374c;
+      background: #0e1118;
+      color: #fff;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: #f59e0b;
+      color: #111827;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .err { color: #f87171; font-size: 0.9rem; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <form class="box" method="post">
+    <h1>MEDUSAFILM Admin Giriş</h1>
+    {% if error %}<div class="err">{{ error }}</div>{% endif %}
+    <input type="hidden" name="action" value="login" />
+    <input type="password" name="password" placeholder="Yönetim şifresi" required />
+    <button type="submit">Giriş Yap</button>
+  </form>
+</body>
+</html>
+"""
+
+ADMIN_PANEL_HTML = """
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Onay Kuyruğu — MEDUSAFILM</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0f14;
+      color: #f3f4f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 16px;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    .top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #222938;
+    }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .btn-amber { background: #f59e0b; color: #111827; }
+    .btn-green { background: #22c55e; color: #07130a; }
+    .btn-red { background: #ef4444; color: #fff; }
+    .btn-gray { background: #232a3a; color: #e5e7eb; }
+    .panel-box {
+      background: #151a24;
+      border: 1px solid #232b3c;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    input[type="date"] {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #2f394e;
+      background: #0e1118;
+      color: #fff;
+    }
+    .stats {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: #9ca3af;
+    }
+    .msg {
+      background: #13281c;
+      border: 1px solid #22c55e;
+      color: #86efac;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+    }
+    .err {
+      background: #2c1518;
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 14px;
+    }
+    @media (min-width: 768px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .item {
+      background: #151a24;
+      border: 1px solid #232b3c;
+      bo
