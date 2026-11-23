@@ -11,11 +11,8 @@ from flask import (
     jsonify,
     session,
 )
-from tmdb_makine import makine_bp
 
 app = Flask(__name__)
-app.register_blueprint(makine_bp)
-
 app.secret_key = os.environ.get("SECRET_KEY", "medusafilm-gizli-anahtar-degistir")
 
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip()
@@ -200,6 +197,7 @@ def before_any_request():
 
 
 @app.route("/")
+@app.route("/makine")
 def home():
     q = request.args.get("q", "").strip().lower()
     with get_db() as conn:
@@ -230,6 +228,7 @@ def home():
 
 
 @app.route("/admin", methods=["GET", "POST"])
+@app.route("/makine/panel", methods=["GET", "POST"])
 def admin_panel():
     message = None
     error = None
@@ -241,12 +240,12 @@ def admin_panel():
             password = request.form.get("password", "")
             if password == ADMIN_PASSWORD:
                 session["admin_logged_in"] = True
-                return redirect(url_for("admin_panel"))
+                return redirect(request.path)
             error = "Hatalı şifre."
 
         elif action == "logout":
             session.pop("admin_logged_in", None)
-            return redirect(url_for("admin_panel"))
+            return redirect(request.path)
 
         elif is_admin():
             now_iso = datetime.now(timezone.utc).isoformat()
@@ -489,7 +488,6 @@ PUBLIC_HTML = """
     <a class="brand" href="/">MEDUSAFILM</a>
     <div class="nav-links">
       <a class="nav-btn" href="/admin">Yönetim Paneli</a>
-      <a class="nav-btn" href="/makine">Makine Vitrini</a>
       <a class="nav-btn support" href="https://www.instagram.com/ttlewiss21/" target="_blank" rel="noopener">Destek</a>
     </div>
   </header>
@@ -689,4 +687,7 @@ ADMIN_PANEL_HTML = """
     @media (min-width: 768px) {
       .grid { grid-template-columns: repeat(2, 1fr); }
     }
-    .ite
+    .item {
+      background: #151a24;
+      border: 1px solid #232b3c;
+      bor
