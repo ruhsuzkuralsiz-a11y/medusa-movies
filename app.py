@@ -1,347 +1,13 @@
-import os
-from urllib.parse import urlparse
-from flask import Flask, render_template_string, request, redirect
+from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
-SUPPORT_URL = os.environ.get("SUPPORT_URL", "https://www.instagram.com/ttlewiss21/").strip()
-
-ITEMS = [
-    {
-        "tab": "paketler",
-        "badge": "TEKİL İŞ",
-        "title": "Özel Görsel, Afiş & Duyuru Kartı",
-        "tag": "Sipariş / Hazırlık",
-        "summary": "Yayın afişi, etkinlik duyurusu veya profil/kapak görseli hazırlanır. İsteğini ve tarzını yazarak hızlıca fiyat ve teslim süresi alabilirsin.",
-        "action_label": "Sipariş Ver",
-        "action_url": SUPPORT_URL,
-    },
-    {
-        "tab": "paketler",
-        "badge": "PAKET",
-        "title": "Yayıncı & Oyuncu Görsel Paketi",
-        "tag": "Çoklu Parça",
-        "summary": "Profil görseli, banner/afiş ve duyuru/kural kartı düzeni tek pakette hazırlanır. Tek tek uğraşmak yerine bütünlüklü görünüm isteyenler için uygundur.",
-        "action_label": "Paket Sor",
-        "action_url": SUPPORT_URL,
-    },
-    {
-        "tab": "paketler",
-        "badge": "ÖZEL İSTEK",
-        "title": "Kişiye Özel Düzen & Ek Talepler",
-        "tag": "Birebir Çalışma",
-        "summary": "Mevcut görsel düzenleme, özel tema veya ekstra parça talepleri netleştirilir. Önce ne istediğini yaz, ona göre net dönüş yapalım.",
-        "action_label": "Detay Yaz",
-        "action_url": SUPPORT_URL,
-    },
-    {
-        "tab": "kurallar",
-        "badge": "KURAL",
-        "title": "Sipariş & Yayın Kuralları",
-        "tag": "Net İşleyiş",
-        "summary": "Özel işlerde önce istek ve detaylar netleşir. Yayında ve sohbetlerde spam, hakaret ve gereksiz oyalama yapılmaması esastır.",
-        "action_label": "",
-        "action_url": "",
-    },
-    {
-        "tab": "kurallar",
-        "badge": "İLETİŞİM",
-        "title": "Doğrudan İletişim & Destek",
-        "tag": "Tek Kanal",
-        "summary": "Fiyat sormak, özel iş vermek veya yayın desteği konuşmak için tek iletişim bağlantısı üzerinden doğrudan mesaj bırakabilirsin.",
-        "action_label": "Mesaj Gönder",
-        "action_url": SUPPORT_URL,
-    },
-]
-
-
-def is_safe_http_url(url: str) -> bool:
-    if not url:
-        return False
-    parsed = urlparse(url.strip())
-    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
-
-
-def filter_items(items: list[dict], tab: str, raw_q: str) -> list[dict]:
-    q_norm = " ".join(raw_q.lower().split())
-    terms = [t for t in q_norm.split(" ") if t]
-
-    result = []
-    for item in items:
-        if tab != "tumu" and item.get("tab") != tab:
-            continue
-
-        haystack = " ".join([
-            item.get("title", ""),
-            item.get("tag", ""),
-            item.get("badge", ""),
-            item.get("summary", ""),
-        ]).lower()
-        haystack = " ".join(haystack.split())
-
-        if all(t in haystack for t in terms):
-            copy_item = dict(item)
-            copy_item["has_action"] = is_safe_http_url(copy_item.get("action_url", ""))
-            result.append(copy_item)
-
-    return result
-
-
-@app.route("/")
-@app.route("/makine")
-def home():
-    tab = request.args.get("tab", "paketler").strip().lower()
-    if tab not in ("paketler", "kurallar", "tumu"):
-        tab = "paketler"
-
-    raw_q = request.args.get("q", "").strip()
-    cards = filter_items(ITEMS, tab, raw_q)
-
-    return render_template_string(
-        HUB_HTML,
-        query=raw_q,
-        active_tab=tab,
-        cards=cards,
-        support_url=SUPPORT_URL if is_safe_http_url(SUPPORT_URL) else "#",
-    )
-
-
-@app.route("/overlay")
-def overlay():
-    return render_template_string(OVERLAY_HTML)
-
-
-@app.route("/watch/<int:movie_id>")
-def watch_movie(movie_id: int):
-    return redirect("/")
-
-
-@app.errorhandler(404)
-def not_found_redirect(e):
-    return redirect("/")
-
-
-HUB_HTML = """<!DOCTYPE html>
+OVERLAY_HTML = r"""<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MEDUSA MERKEZ</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0d0f14;
-      color: #f3f4f6;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
-    }
-    header {
-      background: #121620;
-      border-bottom: 1px solid #222938;
-      padding: 14px 18px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .brand {
-      font-size: 1.25rem;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      color: #f59e0b;
-      text-decoration: none;
-    }
-    .nav-btn.support {
-      text-decoration: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      background: #22c55e;
-      color: #07130a;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px 16px 40px;
-    }
-    .hero {
-      background: #151a24;
-      border: 1px solid #232b3c;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .hero h1 {
-      font-size: 1.15rem;
-      margin-bottom: 6px;
-      color: #fff;
-    }
-    .hero p {
-      font-size: 0.9rem;
-      color: #cbd5e1;
-      line-height: 1.45;
-    }
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-    .tab-btn {
-      text-decoration: none;
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-size: 0.88rem;
-      font-weight: 700;
-      background: #181e2b;
-      color: #cbd5e1;
-      border: 1px solid #283247;
-    }
-    .tab-btn.active {
-      background: #f59e0b;
-      color: #111827;
-      border-color: #f59e0b;
-    }
-    .search-form {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-    .search-input {
-      flex: 1;
-      padding: 11px 14px;
-      border-radius: 10px;
-      border: 1px solid #283042;
-      background: #151a24;
-      color: #fff;
-      font-size: 0.98rem;
-    }
-    .search-btn {
-      padding: 11px 18px;
-      border-radius: 10px;
-      border: none;
-      background: #f59e0b;
-      color: #111827;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-    @media (min-width: 720px) {
-      .grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-    }
-    .card {
-      background: #151a24;
-      border: 1px solid #232b3c;
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .card-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .badge {
-      background: rgba(245, 158, 11, 0.16);
-      color: #f59e0b;
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
-    }
-    .tag {
-      font-size: 0.78rem;
-      color: #94a3b8;
-      font-weight: 600;
-    }
-    .title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fff;
-    }
-    .summary {
-      font-size: 0.88rem;
-      color: #cbd5e1;
-      line-height: 1.5;
-    }
-    .card-btn {
-      margin-top: auto;
-      align-self: flex-start;
-      text-decoration: none;
-      padding: 8px 14px;
-      border-radius: 8px;
-      font-size: 0.86rem;
-      font-weight: 700;
-      background: #2563eb;
-      color: #fff;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <a class="brand" href="/">MEDUSA MERKEZ</a>
-    <a class="nav-btn support" href="{{ support_url }}" target="_blank" rel="noopener">Destek & İletişim</a>
-  </header>
-
-  <main class="container">
-    <section class="hero">
-      <h1>Özel Görsel, Afiş & Düzen Sipariş Merkezi</h1>
-      <p>Yayın ve profil görselleri, afişler ve özel düzen talepleri için tek merkez. İsteğini seçip doğrudan yazabilirsin.</p>
-    </section>
-
-    <div class="tabs">
-      <a class="tab-btn {% if active_tab == 'paketler' %}active{% endif %}" href="/?tab=paketler{% if query %}&q={{ query }}{% endif %}">Paketler & İşler</a>
-      <a class="tab-btn {% if active_tab == 'kurallar' %}active{% endif %}" href="/?tab=kurallar{% if query %}&q={{ query }}{% endif %}">Kurallar & İletişim</a>
-      <a class="tab-btn {% if active_tab == 'tumu' %}active{% endif %}" href="/?tab=tumu{% if query %}&q={{ query }}{% endif %}">Tümü</a>
-      <a class="tab-btn" href="/overlay">Yayın Banner</a>
-    </div>
-
-    <form class="search-form" method="get" action="/">
-      <input type="hidden" name="tab" value="{{ active_tab }}" />
-      <input class="search-input" type="text" name="q" value="{{ query }}" placeholder="Paket, afiş veya iletişim ara..." />
-      <button class="search-btn" type="submit">Ara</button>
-    </form>
-
-    {% if cards %}
-      <div class="grid">
-        {% for c in cards %}
-          <article class="card">
-            <div class="card-top">
-              <span class="badge">{{ c.badge }}</span>
-              <span class="tag">{{ c.tag }}</span>
-            </div>
-            <div class="title">{{ c.title }}</div>
-            <p class="summary">{{ c.summary }}</p>
-            {% if c.has_action %}
-              <a class="card-btn" href="{{ c.action_url }}" target="_blank" rel="noopener noreferrer">{{ c.action_label }}</a>
-            {% endif %}
-          </article>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p style="color:#9ca3af;">Aramanla eşleşen bir kayıt bulunamadı.</p>
-    {% endif %}
-  </main>
-</body>
-</html>
-"""
-
-OVERLAY_HTML = """<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MEDUSA - Yayın Banner</title>
+  <title>MEDUSA - Yayın Banner & Sesli Bildirim</title>
   <style>
     * {
       box-sizing: border-box;
@@ -349,6 +15,7 @@ OVERLAY_HTML = """<!DOCTYPE html>
       padding: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
     }
+
     body {
       width: 100vw;
       height: 100vh;
@@ -359,165 +26,306 @@ OVERLAY_HTML = """<!DOCTYPE html>
       overflow: hidden;
       color: #ffffff;
     }
+
+    /* ÜST BANNER (İNCE & YATAY UYUMLU) */
     .top-banner {
-      height: 21vh;
-      min-height: 125px;
-      background: linear-gradient(135deg, rgba(10, 14, 12, 0.96), rgba(18, 34, 24, 0.96));
-      border-bottom: 3px solid #39ff14;
-      box-shadow: 0 6px 25px rgba(57, 255, 20, 0.25);
+      min-height: 60px;
+      max-height: 13vh;
+      background: linear-gradient(135deg, rgba(10, 14, 12, 0.94), rgba(18, 34, 24, 0.94));
+      border-bottom: 2px solid #39ff14;
+      box-shadow: 0 4px 16px rgba(57, 255, 20, 0.2);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 16px;
+      padding: 5px 12px;
       text-align: center;
     }
+
     .brand-title {
-      font-size: clamp(2.1rem, 8vw, 3.8rem);
+      font-size: clamp(1.1rem, 3.4vw, 1.75rem);
       font-weight: 900;
-      letter-spacing: 6px;
+      letter-spacing: 3.5px;
       color: #39ff14;
-      text-shadow: 0 0 18px rgba(57, 255, 20, 0.65);
+      text-shadow: 0 0 12px rgba(57, 255, 20, 0.55);
       line-height: 1.05;
     }
+
     .sub-tag {
-      margin-top: 6px;
-      font-size: 0.9rem;
+      margin-top: 2px;
+      font-size: clamp(0.6rem, 1.4vw, 0.74rem);
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 1.1px;
       color: #e6ffe6;
       background: rgba(57, 255, 20, 0.12);
       border: 1px solid rgba(57, 255, 20, 0.45);
-      padding: 4px 14px;
+      padding: 2px 10px;
       border-radius: 999px;
+      white-space: nowrap;
     }
+
+    /* ORTA OYUN ALANI */
     .game-area {
       flex: 1;
       background: transparent;
       pointer-events: none;
     }
+
+    /* CANLI BİLDİRİM BANDI (ALT BANNER ÜSTÜNDE İNCE ŞERİT) */
+    .alert-strip {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(10, 20, 14, 0.96);
+      border-top: 1px solid rgba(57, 255, 20, 0.55);
+      padding: 4px 10px;
+      font-size: clamp(0.66rem, 1.6vw, 0.78rem);
+      font-weight: 700;
+      color: #b7ffb0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .alert-strip.show {
+      display: flex;
+    }
+
+    /* ALT BANNER (KOMPAKT & YATAY UYUMLU) */
     .bottom-banner {
-      height: 24vh;
-      min-height: 152px;
-      background: linear-gradient(180deg, rgba(14, 18, 16, 0.96), rgba(8, 10, 9, 0.99));
-      border-top: 3px solid #39ff14;
-      box-shadow: 0 -6px 25px rgba(57, 255, 20, 0.2);
-      padding: 12px 14px;
+      min-height: 72px;
+      max-height: 16vh;
+      background: linear-gradient(180deg, rgba(14, 18, 16, 0.95), rgba(8, 10, 9, 0.98));
+      border-top: 2px solid #39ff14;
+      box-shadow: 0 -4px 16px rgba(57, 255, 20, 0.18);
+      padding: 6px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
     }
+
     .bottom-left {
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 6px;
+      gap: 2px;
       min-width: 0;
     }
+
     .channel-name {
-      font-size: clamp(1.2rem, 5vw, 1.55rem);
+      font-size: clamp(0.84rem, 2.4vw, 1.12rem);
       font-weight: 900;
       color: #ffffff;
+      letter-spacing: 0.4px;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+
     .channel-name span {
       color: #39ff14;
     }
+
     .live-note {
-      font-size: 0.88rem;
+      font-size: clamp(0.64rem, 1.6vw, 0.76rem);
       color: #b9c7bc;
-      line-height: 1.3;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+
     .action-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      width: 44%;
-      max-width: 190px;
+      gap: 4px;
+      width: auto;
+      max-width: 145px;
       flex-shrink: 0;
     }
+
     .action-btn {
       background: rgba(24, 28, 26, 0.95);
-      border: 1.5px solid rgba(57, 255, 20, 0.65);
-      border-radius: 10px;
-      padding: 8px 10px;
-      font-size: 0.85rem;
+      border: 1px solid rgba(57, 255, 20, 0.65);
+      border-radius: 7px;
+      padding: 4px 8px;
+      font-size: clamp(0.6rem, 1.45vw, 0.72rem);
       font-weight: 800;
       color: #ffffff;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
+      white-space: nowrap;
     }
+
     .dot {
-      width: 9px;
-      height: 9px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: #39ff14;
-      box-shadow: 0 0 8px #39ff14;
+      box-shadow: 0 0 6px #39ff14;
       flex-shrink: 0;
     }
+
+    /* YATAY EKRAN AYARI */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .top-banner {
+        min-height: 42px;
+        max-height: 12vh;
+        padding: 3px 10px;
+      }
+      .brand-title {
+        font-size: 1rem;
+        letter-spacing: 2.5px;
+      }
+      .sub-tag {
+        font-size: 0.56rem;
+        padding: 1px 8px;
+        margin-top: 1px;
+      }
+      .bottom-banner {
+        min-height: 50px;
+        max-height: 15vh;
+        padding: 4px 10px;
+      }
+      .action-list {
+        flex-direction: row;
+        max-width: none;
+        gap: 5px;
+      }
+      .action-btn {
+        padding: 3px 7px;
+        font-size: 0.58rem;
+      }
+    }
+
+    /* DÜZENLEME & SES PANELİ */
     .edit-toggle {
       position: fixed;
-      top: 10px;
-      right: 10px;
+      top: 6px;
+      right: 6px;
       z-index: 50;
-      background: rgba(15, 20, 17, 0.9);
+      background: rgba(15, 20, 17, 0.92);
       color: #39ff14;
       border: 1px solid rgba(57, 255, 20, 0.6);
-      border-radius: 8px;
-      padding: 5px 10px;
-      font-size: 0.75rem;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 0.65rem;
       font-weight: 700;
+      cursor: pointer;
     }
+
     .panel {
       display: none;
       position: fixed;
-      top: 44px;
-      right: 10px;
+      top: 30px;
+      right: 6px;
       z-index: 50;
-      width: 240px;
+      width: 245px;
+      max-height: 82vh;
+      overflow-y: auto;
       background: rgba(12, 16, 14, 0.98);
       border: 1.5px solid #39ff14;
-      border-radius: 12px;
-      padding: 12px;
+      border-radius: 10px;
+      padding: 9px;
     }
+
     .panel.open {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
-    .panel input {
+
+    .section-label {
+      font-size: 0.64rem;
+      font-weight: 800;
+      color: #39ff14;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    .panel input[type="text"] {
       width: 100%;
-      padding: 7px 9px;
-      border-radius: 7px;
+      padding: 5px 7px;
+      border-radius: 6px;
       border: 1px solid rgba(57, 255, 20, 0.4);
       background: #080b09;
       color: #fff;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
     }
+
+    .volume-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.68rem;
+      color: #d7e5da;
+    }
+
+    .volume-row input[type="range"] {
+      flex: 1;
+      accent-color: #39ff14;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
     .panel button {
-      padding: 7px;
+      flex: 1;
+      padding: 5px 6px;
       border: none;
-      border-radius: 7px;
+      border-radius: 6px;
       background: #39ff14;
       color: #000;
       font-weight: 800;
-      font-size: 0.8rem;
+      font-size: 0.68rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .panel button.secondary {
+      background: #1a241e;
+      color: #d8ffd4;
+      border: 1px solid rgba(57, 255, 20, 0.45);
     }
   </style>
 </head>
 <body>
-  <button class="edit-toggle" onclick="togglePanel()">DÜZENLE</button>
+  <button class="edit-toggle" onclick="togglePanel()">AYAR / SES</button>
+
   <div class="panel" id="editPanel">
-    <input type="text" id="inTitle" value="MEDUSA" />
-    <input type="text" id="inSub" value="CANLI YAYIN • İYİ SEYİRLER" />
-    <input type="text" id="inChannel" value="@MEDUSA" />
-    <input type="text" id="inNote" value="Desteğin için teşekkürler!" />
-    <button onclick="applyChanges()">UYGULA</button>
+    <div class="section-label">Banner Metinleri</div>
+    <input type="text" id="inTitle" value="MEDUSA" placeholder="Üst başlık" />
+    <input type="text" id="inSub" value="CANLI YAYIN • İYİ SEYİRLER" placeholder="Alt etiket" />
+    <input type="text" id="inChannel" value="@MEDUSA" placeholder="Kanal adı" />
+    <input type="text" id="inNote" value="Desteğin için teşekkürler!" placeholder="Alt not" />
+    <button onclick="applyBanner()">BANNER UYGULA</button>
+
+    <div class="section-label">Ses & Okuma Ayarı</div>
+    <div class="volume-row">
+      <span>Ses:</span>
+      <input type="range" id="volumeRange" min="0" max="100" value="85" oninput="updateVolumeLabel()" />
+      <span id="volumeText">85%</span>
+    </div>
+    <input type="text" id="inPrefix" value="." placeholder="Yorum öneki (örn: .)" />
+
+    <div class="section-label">Yorum / Takip / Hediye Test</div>
+    <input type="text" id="inUser" value="Ahmet" placeholder="Kullanıcı adı" />
+    <input type="text" id="inComment" value=".merhaba" placeholder="Yorum (örn: .merhaba)" />
+    <div class="btn-row">
+      <button onclick="handleSimulatedComment()">YORUM OKU</button>
+      <button class="secondary" onclick="handleFollowEvent()">TAKİP</button>
+      <button class="secondary" onclick="handleGiftEvent()">HEDİYE</button>
+    </div>
   </div>
 
   <header class="top-banner">
@@ -526,6 +334,11 @@ OVERLAY_HTML = """<!DOCTYPE html>
   </header>
 
   <main class="game-area"></main>
+
+  <div class="alert-strip" id="alertStrip">
+    <span class="dot"></span>
+    <span id="alertText">Hazır</span>
+  </div>
 
   <footer class="bottom-banner">
     <div class="bottom-left">
@@ -540,10 +353,47 @@ OVERLAY_HTML = """<!DOCTYPE html>
   </footer>
 
   <script>
+    let alertTimer = null;
+
     function togglePanel() {
       document.getElementById('editPanel').classList.toggle('open');
     }
-    function applyChanges() {
+
+    function updateVolumeLabel() {
+      const val = document.getElementById('volumeRange').value;
+      document.getElementById('volumeText').textContent = `${val}%`;
+    }
+
+    function getVolumeFloat() {
+      const val = Number(document.getElementById('volumeRange').value || 85);
+      return Math.max(0, Math.min(1, val / 100));
+    }
+
+    function speakText(text) {
+      if (!('speechSynthesis' in window) || !text) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'tr-TR';
+      utter.volume = getVolumeFloat();
+      utter.rate = 1.02;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function showAlertBanner(visualText, spokenText) {
+      const strip = document.getElementById('alertStrip');
+      const alertText = document.getElementById('alertText');
+      alertText.textContent = visualText;
+      strip.classList.add('show');
+
+      if (alertTimer) clearTimeout(alertTimer);
+      alertTimer = setTimeout(() => {
+        strip.classList.remove('show');
+      }, 4500);
+
+      speakText(spokenText);
+    }
+
+    function applyBanner() {
       const title = document.getElementById('inTitle').value.trim() || 'MEDUSA';
       const sub = document.getElementById('inSub').value.trim() || 'CANLI YAYIN • İYİ SEYİRLER';
       const rawChannel = document.getElementById('inChannel').value.trim() || '@MEDUSA';
@@ -555,11 +405,59 @@ OVERLAY_HTML = """<!DOCTYPE html>
       document.getElementById('outChannel').innerHTML = `<span>@</span>${rawChannel.replace(/^@+/, '')}`;
       togglePanel();
     }
+
+    function handleSimulatedComment() {
+      const user = document.getElementById('inUser').value.trim() || 'İzleyici';
+      const comment = document.getElementById('inComment').value.trim();
+      const prefix = document.getElementById('inPrefix').value.trim();
+
+      if (!comment) return;
+
+      if (prefix && !comment.startsWith(prefix)) {
+        showAlertBanner(`Önek eşleşmedi (${prefix} ile başlamalı)`, '');
+        return;
+      }
+
+      const cleanMsg = prefix ? comment.slice(prefix.length).trim() : comment;
+      const finalSpeech = cleanMsg || comment;
+      showAlertBanner(`${user}: ${comment}`, `${user} diyor ki: ${finalSpeech}`);
+    }
+
+    function handleFollowEvent() {
+      const user = document.getElementById('inUser').value.trim() || 'Yeni Takipçi';
+      showAlertBanner(`Yeni Takip: ${user} — Hoş geldiniz!`, `${user}, hoş geldiniz!`);
+    }
+
+    function handleGiftEvent(giftName = 'Gül', count = 1) {
+      const user = document.getElementById('inUser').value.trim() || 'Bir İzleyici';
+      const gName = document.getElementById('inComment').value.startsWith('.')
+        ? 'Hediye'
+        : (document.getElementById('inComment').value.trim() || giftName);
+      showAlertBanner(`Hediye: ${user} (${count}x ${gName})`, `${user}, ${count} adet ${gName} hediye gönderdi, teşekkürler!`);
+    }
+
+    window.MedusaLiveEvents = {
+      onComment: (user, text) => {
+        document.getElementById('inUser').value = user;
+        document.getElementById('inComment').value = text;
+        handleSimulatedComment();
+      },
+      onFollow: (user) => {
+        document.getElementById('inUser').value = user;
+        handleFollowEvent();
+      },
+      onGift: (user, giftName, count = 1) => {
+        document.getElementById('inUser').value = user;
+        showAlertBanner(`Hediye: ${user} (${count}x ${giftName})`, `${user}, ${count} adet ${giftName} hediye gönderdi, teşekkürler!`);
+      }
+    };
   </script>
 </body>
-</html>
-"""
+</html>"""
+
+@app.route("/overlay")
+def overlay():
+    return render_template_string(OVERLAY_HTML)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
