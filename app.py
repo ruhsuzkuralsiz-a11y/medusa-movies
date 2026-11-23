@@ -28,6 +28,48 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       color: #ffffff;
     }
 
+    .overlay-hidden .top-banner,
+    .overlay-hidden .bottom-banner,
+    .overlay-hidden .alert-strip {
+      display: none !important;
+    }
+
+    /* ÜST BAR (TEK TUŞ KONTROLLER) */
+    .top-controls {
+      position: fixed;
+      top: 6px;
+      right: 6px;
+      z-index: 60;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .ctrl-btn {
+      background: rgba(15, 20, 17, 0.92);
+      color: #39ff14;
+      border: 1px solid rgba(57, 255, 20, 0.65);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.66rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .ctrl-btn.live-btn {
+      background: #39ff14;
+      color: #000000;
+      border-color: #39ff14;
+    }
+
+    .ctrl-btn.off-state {
+      background: rgba(45, 14, 14, 0.94);
+      color: #ff9e9e;
+      border-color: rgba(255, 90, 90, 0.7);
+    }
+
+    /* ÜST BANNER */
     .top-banner {
       min-height: 60px;
       max-height: 13vh;
@@ -200,27 +242,12 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
       }
     }
 
-    .edit-toggle {
-      position: fixed;
-      top: 6px;
-      right: 6px;
-      z-index: 50;
-      background: rgba(15, 20, 17, 0.92);
-      color: #39ff14;
-      border: 1px solid rgba(57, 255, 20, 0.6);
-      border-radius: 6px;
-      padding: 3px 7px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
     .panel {
       display: none;
       position: fixed;
-      top: 30px;
+      top: 34px;
       right: 6px;
-      z-index: 50;
+      z-index: 60;
       width: 245px;
       max-height: 82vh;
       overflow-y: auto;
@@ -295,7 +322,10 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
   </style>
 </head>
 <body>
-  <button class="edit-toggle" onclick="togglePanel()">AYAR / SES</button>
+  <div class="top-controls">
+    <button class="ctrl-btn live-btn" id="toggleOverlayBtn" onclick="toggleOverlayVisibility()">YAYINDA: AÇIK</button>
+    <button class="ctrl-btn" onclick="togglePanel()">AYAR / SES</button>
+  </div>
 
   <div class="panel" id="editPanel">
     <div class="section-label">Banner Metinleri</div>
@@ -349,6 +379,22 @@ OVERLAY_HTML = r"""<!DOCTYPE html>
 
   <script>
     let alertTimer = null;
+    let overlayVisible = true;
+
+    function toggleOverlayVisibility() {
+      overlayVisible = !overlayVisible;
+      document.body.classList.toggle('overlay-hidden', !overlayVisible);
+      const btn = document.getElementById('toggleOverlayBtn');
+      if (overlayVisible) {
+        btn.textContent = 'YAYINDA: AÇIK';
+        btn.classList.remove('off-state');
+        btn.classList.add('live-btn');
+      } else {
+        btn.textContent = 'YAYINDA: GİZLİ';
+        btn.classList.remove('live-btn');
+        btn.classList.add('off-state');
+      }
+    }
 
     function togglePanel() {
       document.getElementById('editPanel').classList.toggle('open');
@@ -461,4 +507,3 @@ def overlay():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-  
