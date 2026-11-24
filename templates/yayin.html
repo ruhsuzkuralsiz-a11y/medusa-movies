@@ -1,282 +1,207 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MEDUSA Yayın Ekranı</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #070907;
-      color: #e8ffe8;
-      font-family: system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 12px;
-      gap: 10px;
-    }
-
-    .stage {
-      position: relative;
-      width: 100%;
-      max-width: 460px;
-      aspect-ratio: 9 / 16;
-      background: #0d120d;
-      border: 2px solid #1f3d1f;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 0 28px rgba(57, 255, 20, 0.14);
-    }
-
-    video#screenVideo {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: #050705;
-      display: block;
-    }
-
-    .top-banner {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: rgba(10, 14, 10, 0.82);
-      border: 1px solid rgba(57, 255, 20, 0.45);
-      border-radius: 10px;
-      pointer-events: none;
-      z-index: 5;
-    }
-
-    .brand {
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: #39ff14;
-      font-size: 13px;
-    }
-
-    .live-pill {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(57, 255, 20, 0.16);
-      color: #7dff66;
-      border: 1px solid rgba(57, 255, 20, 0.4);
-    }
-
-    .alert-box {
-      position: absolute;
-      left: 14px;
-      right: 14px;
-      bottom: 64px;
-      padding: 12px 14px;
-      background: rgba(12, 18, 12, 0.92);
-      border-left: 4px solid #39ff14;
-      border-radius: 10px;
-      color: #ffffff;
-      font-size: 14px;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.25s ease;
-      pointer-events: none;
-      z-index: 6;
-    }
-
-    .alert-box.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .panel {
-      width: 100%;
-      max-width: 460px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    input[type="text"] {
-      flex: 1;
-      min-width: 180px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #2c472c;
-      background: #101610;
-      color: #e8ffe8;
-      font-size: 13px;
-      outline: none;
-    }
-
-    input[type="text"]:focus {
-      border-color: #39ff14;
-    }
-
-    button, label.btn-file {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #39ff14;
-      background: #112211;
-      color: #39ff14;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      text-align: center;
-    }
-
-    button.secondary, label.btn-file.secondary {
-      border-color: #2c472c;
-      background: #141914;
-      color: #cfe8cf;
-    }
-
-    input[type="file"] {
-      display: none;
-    }
-
-    .status {
-      width: 100%;
-      max-width: 460px;
-      font-size: 12px;
-      color: #9ec29e;
-      text-align: center;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>MEDUSA • YAYIN</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;color:#fff;font-family:system-ui,sans-serif;overflow:hidden}
+  #stage{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center}
+  #stage video,#stage iframe{width:100%;height:100%;border:0;background:#000;object-fit:contain}
+  #empty{opacity:.5;text-align:center;padding:20px;font-size:15px}
+  #banner{position:fixed;top:0;left:0;right:0;z-index:5;padding:calc(8px + env(safe-area-inset-top)) 14px 8px;
+    background:linear-gradient(90deg,#6d28d9,#db2777);font-weight:800;letter-spacing:1.5px;
+    font-size:15px;text-align:center;text-transform:uppercase}
+  #alert{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));z-index:6;
+    transform:translate(-50%,160%);transition:transform .35s ease;max-width:92%;width:max-content;
+    background:#111;border:2px solid #db2777;border-radius:14px;padding:14px 20px;
+    font-size:18px;font-weight:700;text-align:center;box-shadow:0 6px 24px #000a}
+  #alert.on{transform:translate(-50%,0)}
+  #start{position:fixed;inset:0;z-index:9;background:#000d;display:none;align-items:center;
+    justify-content:center;font-size:20px;font-weight:700;text-align:center;padding:30px}
+  #panel{position:fixed;left:0;right:0;bottom:0;z-index:8;max-height:70vh;overflow:auto;
+    background:#14141c;border-top:2px solid #6d28d9;padding:12px;transform:translateY(100%);
+    transition:transform .25s ease}
+  #panel.open{transform:none}
+  #fab{position:fixed;right:12px;bottom:12px;z-index:9;width:48px;height:48px;border-radius:50%;
+    border:0;background:#6d28d9;color:#fff;font-size:22px}
+  body.clean #panel,body.clean #fab{display:none}
+  label{display:block;font-size:12px;opacity:.7;margin:10px 0 4px}
+  input[type=text],input[type=password],input[type=number]{width:100%;padding:11px;border-radius:8px;
+    border:1px solid #333;background:#0b0b10;color:#fff;font-size:15px}
+  .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  button.b{flex:1;padding:11px;border:0;border-radius:8px;background:#db2777;color:#fff;
+    font-weight:700;font-size:14px;min-width:90px}
+  button.g{background:#333}
+  #msg{font-size:12px;opacity:.7;margin-top:8px;min-height:16px}
+</style>
 </head>
 <body>
+<div id="stage"><div id="empty">Akış yok.<br>Panelden bir bağlantı gönder<br>veya ?stream=URL kullan.</div></div>
+<div id="banner"></div>
+<div id="alert"></div>
+<div id="start">Dokun → tam ekran + ses</div>
 
-  <div class="stage">
-    <div class="top-banner">
-      <span class="brand">MEDUSA • YAYIN</span>
-      <span class="live-pill" id="liveStatus">HAZIR</span>
-    </div>
-
-    <video id="screenVideo" autoplay playsinline controls muted></video>
-
-    <div class="alert-box" id="alertBox"></div>
+<button id="fab">⚙</button>
+<div id="panel">
+  <label>Gizli anahtar (YAYIN_KEY)</label>
+  <input type="password" id="key" placeholder="anahtar">
+  <label>Başlık</label>
+  <input type="text" id="inTitle" placeholder="MEDUSA • YAYIN">
+  <label>Akış URL (m3u8 / mp4 / YouTube / sayfa)</label>
+  <input type="text" id="inStream" placeholder="https://...">
+  <div class="row">
+    <button class="b" id="bSend">Sahneye gönder</button>
+    <button class="b g" id="bLocal">Yerel video</button>
+    <button class="b g" id="bStop">Akışı durdur</button>
   </div>
-
-  <div class="panel">
-    <div class="row">
-      <input type="text" id="streamUrlInput" placeholder="Akış / MP4 / WebM linki yapıştır..." />
-      <button id="loadUrlBtn">Yayına Al</button>
-    </div>
-
-    <div class="row">
-      <label class="btn-file secondary" for="videoFileInput">Video Seç</label>
-      <input type="file" id="videoFileInput" accept="video/*" />
-      <button id="stopBtn" class="secondary">Durdur</button>
-      <button id="testAlertBtn" class="secondary">Test Bildirim</button>
-    </div>
+  <label>Bildirim</label>
+  <input type="text" id="inAlert" placeholder="Yeni takipçi!">
+  <label>Süre (sn)</label>
+  <input type="number" id="inTtl" value="8" min="2" max="60">
+  <div class="row">
+    <button class="b" id="bAlert">Bildirim gönder</button>
+    <button class="b g" id="bClear">Bildirimi kaldır</button>
   </div>
+  <div class="row">
+    <button class="b g" id="bFs">Tam ekran</button>
+    <button class="b g" id="bClean">Sade mod aç</button>
+  </div>
+  <div id="msg"></div>
+  <input type="file" id="file" accept="video/*" hidden>
+</div>
 
-  <div class="status" id="statusText">Android tarayıcıda ekran çekme kapalı; harici akış linki veya video ile yayına alabilirsin.</div>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const qs = new URLSearchParams(location.search);
+  const stage = $('stage'), empty = $('empty');
+  let hls = null, curSrc = null, localMode = false, lastV = -1, lastAlertId = -1, alertTimer = null;
 
-  <script>
-    const loadUrlBtn = document.getElementById("loadUrlBtn");
-    const streamUrlInput = document.getElementById("streamUrlInput");
-    const videoFileInput = document.getElementById("videoFileInput");
-    const stopBtn = document.getElementById("stopBtn");
-    const testAlertBtn = document.getElementById("testAlertBtn");
-    const screenVideo = document.getElementById("screenVideo");
-    const statusText = document.getElementById("statusText");
-    const liveStatus = document.getElementById("liveStatus");
-    const alertBox = document.getElementById("alertBox");
+  if (qs.get('clean') === '1') document.body.classList.add('clean');
+  const urlStream = qs.get('stream');
+  const urlTitle = qs.get('title');
+  const urlAlert = qs.get('alert');
+  const urlTtl = parseInt(qs.get('ttl') || '8', 10);
 
-    let alertTimer = null;
-    let objectUrl = null;
+  function setTitle(t){ $('banner').textContent = t || 'MEDUSA • YAYIN'; document.title = t || 'MEDUSA • YAYIN'; }
+  function showAlert(text, ttl){
+    const el = $('alert');
+    clearTimeout(alertTimer);
+    if (!text){ el.classList.remove('on'); return; }
+    el.textContent = text;
+    el.classList.add('on');
+    alertTimer = setTimeout(() => el.classList.remove('on'), (ttl || 8) * 1000);
+  }
 
-    function showAlert(text) {
-      if (!text) return;
-      alertBox.textContent = text;
-      alertBox.classList.add("show");
-      clearTimeout(alertTimer);
-      alertTimer = setTimeout(() => {
-        alertBox.classList.remove("show");
-      }, 3500);
-    }
-
-    function setLive(isLive, msg) {
-      liveStatus.textContent = isLive ? "YAYINDA" : "HAZIR";
-      statusText.textContent = msg;
-    }
-
-    loadUrlBtn.addEventListener("click", () => {
-      const url = streamUrlInput.value.trim();
-      if (!url) {
-        statusText.textContent = "Önce bir video veya akış bağlantısı gir.";
-        return;
+  function clearStage(){
+    if (hls){ hls.destroy(); hls = null; }
+    stage.querySelectorAll('video,iframe').forEach(n => { n.pause && n.pause(); n.remove(); });
+    empty.style.display = 'block';
+    curSrc = null;
+  }
+  function mkVideo(){
+    const v = document.createElement('video');
+    v.autoplay = true; v.muted = !stage.dataset.unmuted; v.playsInline = true; v.controls = false;
+    v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+    stage.appendChild(v); return v;
+  }
+  function mkFrame(src){
+    const f = document.createElement('iframe');
+    f.src = src; f.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+    f.allowFullscreen = true; stage.appendChild(f);
+  }
+  function ytId(u){
+    const m = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/))([\w-]{11})/);
+    return m ? m[1] : null;
+  }
+  function play(url){
+    if (url === curSrc) return;
+    clearStage();
+    if (!url) return;
+    curSrc = url; empty.style.display = 'none';
+    const yt = ytId(url);
+    if (yt) { mkFrame(`https://www.youtube.com/embed/${yt}?autoplay=1&mute=1&playsinline=1&rel=0`); return; }
+    if (/\.m3u8(\?|$)/i.test(url)) {
+      const v = mkVideo();
+      if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; }
+      else if (window.Hls && Hls.isSupported()) {
+        hls = new Hls({lowLatencyMode:true, backBufferLength:30, maxBufferLength:20});
+        hls.loadSource(url); hls.attachMedia(v);
+        hls.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) { d.type === Hls.ErrorTypes.NETWORK_ERROR ? hls.startLoad() : hls.recoverMediaError(); } });
       }
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-        objectUrl = null;
-      }
-      screenVideo.srcObject = null;
-      screenVideo.src = url;
-      screenVideo.play().then(() => {
-        setLive(true, "Bağlantı sahneye alındı.");
-        showAlert("🎬 Yayın akışı başlatıldı!");
-      }).catch((err) => {
-        setLive(false, "Akış oynatılamadı: " + err.message);
-      });
-    });
-
-    videoFileInput.addEventListener("change", (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-      objectUrl = URL.createObjectURL(file);
-      screenVideo.srcObject = null;
-      screenVideo.src = objectUrl;
-      screenVideo.play().then(() => {
-        setLive(true, "Yerel video sahneye alındı: " + file.name);
-        showAlert("📹 Video yayına alındı!");
-      }).catch((err) => {
-        setLive(false, "Video açılamadı: " + err.message);
-      });
-    });
-
-    stopBtn.addEventListener("click", () => {
-      screenVideo.pause();
-      screenVideo.removeAttribute("src");
-      screenVideo.load();
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-        objectUrl = null;
-      }
-      setLive(false, "Yayın durduruldu.");
-    });
-
-    testAlertBtn.addEventListener("click", () => {
-      showAlert("🔥 Yeni Bildirim: Medusa yayında!");
-    });
-
-    const params = new URLSearchParams(window.location.search);
-    const initialStream = params.get("stream");
-    const initialAlert = params.get("alert");
-    if (initialStream) {
-      streamUrlInput.value = initialStream;
-      loadUrlBtn.click();
+      v.play().catch(()=>{}); return;
     }
-    if (initialAlert) {
-      showAlert(initialAlert);
+    if (/\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(url) || url.startsWith('blob:')) {
+      const v = mkVideo(); v.src = url; v.loop = false; v.play().catch(()=>{}); return;
     }
-  </script>
+    mkFrame(url);
+  }
+
+  async function poll(){
+    if (document.hidden) return;
+    try {
+      const r = await fetch('/api/yayin/state?v=' + lastV, {cache:'no-store'});
+      const s = await r.json();
+      if (!s.changed) return;
+      lastV = s.v;
+      if (!urlTitle) setTitle(s.title);
+      if (!urlStream && !localMode) play(s.stream);
+      if (s.alert_id !== lastAlertId) {
+        if (lastAlertId !== -1 || s.alert) showAlert(s.alert, s.ttl);
+        lastAlertId = s.alert_id;
+      }
+    } catch(e){}
+  }
+  async function send(payload){
+    const key = $('key').value.trim();
+    if (key) localStorage.setItem('yk', key);
+    try {
+      const r = await fetch('/api/yayin/state', {method:'POST',
+        headers:{'Content-Type':'application/json','X-Key':key}, body: JSON.stringify(payload)});
+      $('msg').textContent = r.ok ? 'Gönderildi ✔' : (r.status === 403 ? 'Anahtar yanlış' : 'Hata ' + r.status);
+      if (r.ok) { lastV = -1; poll(); }
+    } catch(e){ $('msg').textContent = 'Bağlantı hatası'; }
+  }
+
+  $('key').value = localStorage.getItem('yk') || '';
+  $('fab').onclick = () => $('panel').classList.toggle('open');
+  $('bSend').onclick = () => { localMode = false;
+    send({title: $('inTitle').value.trim() || 'MEDUSA • YAYIN', stream: $('inStream').value.trim()}); };
+  $('bStop').onclick = () => send({stream:''});
+  $('bAlert').onclick = () => { const t = $('inAlert').value.trim(); if (t) send({alert:t, ttl:+$('inTtl').value||8}); };
+  $('bClear').onclick = () => send({clear_alert:true});
+  $('bLocal').onclick = () => $('file').click();
+  $('file').onchange = e => { const f = e.target.files[0]; if (!f) return;
+    localMode = true; play(URL.createObjectURL(f)); $('panel').classList.remove('open'); };
+  $('bClean').onclick = () => { const u = new URL(location.href); u.searchParams.set('clean','1'); location.href = u; };
+
+  let wake = null;
+  async function keepAwake(){ try { wake = await navigator.wakeLock.request('screen'); } catch(e){} }
+  async function goFull(){
+    const el = document.documentElement;
+    try { (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch(e){}
+    stage.dataset.unmuted = '1';
+    stage.querySelectorAll('video').forEach(v => { v.muted = false; v.play().catch(()=>{}); });
+    keepAwake();
+  }
+  $('bFs').onclick = goFull;
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { keepAwake(); poll(); } });
+
+  const start = $('start');
+  if (document.body.classList.contains('clean')) {
+    start.style.display = 'flex';
+    start.onclick = () => { start.style.display = 'none'; goFull(); };
+  }
+
+  setTitle(urlTitle);
+  if (urlStream) play(urlStream);
+  if (urlAlert) showAlert(urlAlert, urlTtl);
+  poll(); setInterval(poll, 2500);
+})();
+</script>
 </body>
 </html>
