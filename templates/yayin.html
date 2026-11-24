@@ -16,7 +16,7 @@
       align-items: center;
       justify-content: center;
       padding: 12px;
-      gap: 12px;
+      gap: 10px;
     }
 
     .stage {
@@ -94,18 +94,40 @@
       transform: translateY(0);
     }
 
-    .controls {
+    .panel {
       width: 100%;
       max-width: 460px;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 8px;
     }
 
-    button {
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
       flex: 1;
-      min-width: 130px;
-      padding: 11px 14px;
+      min-width: 180px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #2c472c;
+      background: #101610;
+      color: #e8ffe8;
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: #39ff14;
+    }
+
+    button, label.btn-file {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 12px;
       border-radius: 10px;
       border: 1px solid #39ff14;
       background: #112211;
@@ -113,12 +135,17 @@
       font-weight: 700;
       font-size: 13px;
       cursor: pointer;
+      text-align: center;
     }
 
-    button.secondary {
+    button.secondary, label.btn-file.secondary {
       border-color: #2c472c;
       background: #141914;
       color: #cfe8cf;
+    }
+
+    input[type="file"] {
+      display: none;
     }
 
     .status {
@@ -138,21 +165,31 @@
       <span class="live-pill" id="liveStatus">HAZIR</span>
     </div>
 
-    <video id="screenVideo" autoplay playsinline muted></video>
+    <video id="screenVideo" autoplay playsinline controls muted></video>
 
     <div class="alert-box" id="alertBox"></div>
   </div>
 
-  <div class="controls">
-    <button id="shareBtn">Ekranı Paylaş</button>
-    <button id="stopBtn" class="secondary">Durdur</button>
-    <button id="testAlertBtn" class="secondary">Test Bildirim</button>
+  <div class="panel">
+    <div class="row">
+      <input type="text" id="streamUrlInput" placeholder="Akış / MP4 / WebM linki yapıştır..." />
+      <button id="loadUrlBtn">Yayına Al</button>
+    </div>
+
+    <div class="row">
+      <label class="btn-file secondary" for="videoFileInput">Video Seç</label>
+      <input type="file" id="videoFileInput" accept="video/*" />
+      <button id="stopBtn" class="secondary">Durdur</button>
+      <button id="testAlertBtn" class="secondary">Test Bildirim</button>
+    </div>
   </div>
 
-  <div class="status" id="statusText">Tarayıcıda "Ekranı Paylaş" butonuna basarak test et.</div>
+  <div class="status" id="statusText">Android tarayıcıda ekran çekme kapalı; harici akış linki veya video ile yayına alabilirsin.</div>
 
   <script>
-    const shareBtn = document.getElementById("shareBtn");
+    const loadUrlBtn = document.getElementById("loadUrlBtn");
+    const streamUrlInput = document.getElementById("streamUrlInput");
+    const videoFileInput = document.getElementById("videoFileInput");
     const stopBtn = document.getElementById("stopBtn");
     const testAlertBtn = document.getElementById("testAlertBtn");
     const screenVideo = document.getElementById("screenVideo");
@@ -160,59 +197,86 @@
     const liveStatus = document.getElementById("liveStatus");
     const alertBox = document.getElementById("alertBox");
 
-    let activeStream = null;
     let alertTimer = null;
+    let objectUrl = null;
 
     function showAlert(text) {
+      if (!text) return;
       alertBox.textContent = text;
       alertBox.classList.add("show");
       clearTimeout(alertTimer);
       alertTimer = setTimeout(() => {
         alertBox.classList.remove("show");
-      }, 3000);
+      }, 3500);
     }
 
-    shareBtn.addEventListener("click", async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        statusText.textContent = "Bu tarayıcı getDisplayMedia desteklemiyor (Chrome'da HTTPS üzerinde dene).";
+    function setLive(isLive, msg) {
+      liveStatus.textContent = isLive ? "YAYINDA" : "HAZIR";
+      statusText.textContent = msg;
+    }
+
+    loadUrlBtn.addEventListener("click", () => {
+      const url = streamUrlInput.value.trim();
+      if (!url) {
+        statusText.textContent = "Önce bir video veya akış bağlantısı gir.";
         return;
       }
-
-      try {
-        activeStream = await navigator.mediaDevices.getDisplayMedia({
-          video: { frameRate: { ideal: 30, max: 60 } },
-          audio: true
-        });
-
-        screenVideo.srcObject = activeStream;
-        liveStatus.textContent = "YAYINDA";
-        statusText.textContent = "Ekran paylaşımı aktif!";
-        showAlert("Ekran paylaşımı başlatıldı!");
-
-        const videoTrack = activeStream.getVideoTracks()[0];
-        if (videoTrack) {
-          videoTrack.onended = () => stopShare();
-        }
-      } catch (err) {
-        statusText.textContent = "Paylaşım iptal edildi veya hata: " + err.message;
-      }
-    });
-
-    function stopShare() {
-      if (activeStream) {
-        activeStream.getTracks().forEach(t => t.stop());
-        activeStream = null;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
       }
       screenVideo.srcObject = null;
-      liveStatus.textContent = "HAZIR";
-      statusText.textContent = "Ekran paylaşımı durduruldu.";
-    }
+      screenVideo.src = url;
+      screenVideo.play().then(() => {
+        setLive(true, "Bağlantı sahneye alındı.");
+        showAlert("🎬 Yayın akışı başlatıldı!");
+      }).catch((err) => {
+        setLive(false, "Akış oynatılamadı: " + err.message);
+      });
+    });
 
-    stopBtn.addEventListener("click", stopShare);
+    videoFileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      objectUrl = URL.createObjectURL(file);
+      screenVideo.srcObject = null;
+      screenVideo.src = objectUrl;
+      screenVideo.play().then(() => {
+        setLive(true, "Yerel video sahneye alındı: " + file.name);
+        showAlert("📹 Video yayına alındı!");
+      }).catch((err) => {
+        setLive(false, "Video açılamadı: " + err.message);
+      });
+    });
+
+    stopBtn.addEventListener("click", () => {
+      screenVideo.pause();
+      screenVideo.removeAttribute("src");
+      screenVideo.load();
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
+      setLive(false, "Yayın durduruldu.");
+    });
 
     testAlertBtn.addEventListener("click", () => {
       showAlert("🔥 Yeni Bildirim: Medusa yayında!");
     });
+
+    const params = new URLSearchParams(window.location.search);
+    const initialStream = params.get("stream");
+    const initialAlert = params.get("alert");
+    if (initialStream) {
+      streamUrlInput.value = initialStream;
+      loadUrlBtn.click();
+    }
+    if (initialAlert) {
+      showAlert(initialAlert);
+    }
   </script>
 </body>
 </html>
